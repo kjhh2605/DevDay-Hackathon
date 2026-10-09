@@ -1,0 +1,151 @@
+/* ============================================================
+   Design Tokens  v0.1  (2026-10-08)
+   보라 중심 컬러 시스템. 구조는 Na:viK 디자인 시스템(100~900 스케일,
+   Base, Opacity, Point, Background)을 따르고, 색만 보라 중심으로 재설정.
+   서비스 의미색(하이라이트·확인·동료·오류·녹음)은 --mc-* 로 노출.
+   ============================================================ */
+
+:root {
+  /* ---------- PrimaryPurple (Main) ---------- */
+  --pp-100: #F0E8FF;  /* 텍스트/배경 흰색 + 그림자 */
+  --pp-200: #DCCCFF;  /* 배경/서브 영역 + 스트로크 */
+  --pp-300: #C3A9FF;  /* 배경/서브 영역 + 스트로크 */
+  --pp-400: #A887FB;  /* 연한 포인트 */
+  --pp-500: #7F4FE6;  /* 서비스 메인 컬러 */
+  --pp-600: #6A3DC9;  /* 진한 포인트 · 눌림 */
+  --pp-700: #5431A6;  /* 서브 텍스트 */
+  --pp-800: #402585;  /* 서브 텍스트 */
+  --pp-900: #2E1A66;  /* 서브 텍스트 */
+
+  /* ---------- DeepViolet (정보 · 보조 포인트) ---------- */
+  --dv-100: #E4DCFF; --dv-200: #C9BAFF; --dv-300: #AB95FF; --dv-400: #8E74FF;
+  --dv-500: #6E4BFF; --dv-600: #5536DB; --dv-700: #4027B7; --dv-800: #2E1A93; --dv-900: #20107A;
+
+  /* ---------- Rose (사람 · 동료) ---------- */
+  --rs-100: #FFE1EC; --rs-200: #FFBDD4; --rs-300: #FF95BA; --rs-400: #F872A3;
+  --rs-500: #EF4A88; --rs-600: #CF3372; --rs-700: #AD235F; --rs-800: #8C164F; --rs-900: #700E42;
+
+  /* ---------- Honey (하이라이트 형광펜) ---------- */
+  --hn-100: #FFF3CF; --hn-200: #FFE59E; --hn-300: #FFD56A; --hn-400: #F9C43F;
+  --hn-500: #F0AF14; --hn-600: #CF9307; --hn-700: #A97603; --hn-800: #845B02; --hn-900: #634401;
+
+  /* ---------- Mint (확인 · 긍정) ---------- */
+  --mt-100: #D6FBEA; --mt-200: #AFF6D7; --mt-300: #82EDC0; --mt-400: #58E1AB;
+  --mt-500: #2ACF94; --mt-600: #1FAF7F; --mt-700: #178E6C; --mt-800: #106F57; --mt-900: #0A5343;
+
+  /* ---------- Base ---------- */
+  --base-900: #111111;  /* 기본 텍스트 */
+  --base-800: #1B1B1B;
+  --base-700: #2C2C2C;
+  --base-600: #454545;
+  --base-500: #5D5D5D;  /* 연한 텍스트 */
+  --base-400: #A6A6A6;  /* 비활성 */
+  --base-300: #D6D6D6;  /* 구분선 */
+  --base-200: #E3E3E3;  /* 칩 · 그림자 */
+  --base-100: #FFFFFF;
+
+  /* ---------- Background ---------- */
+  --bg-white:  #F8F6FF;  /* 기본 배경 (보라 기운) */
+  --bg-gray:   #F5F5F5;
+  --bg-purple: #F3EEFF;
+  --bg-violet: #F1EEFF;
+  --bg-rose:   #FFF3F7;
+  --bg-honey:  #FFF9EA;
+  --bg-mint:   #EFFCF6;
+
+  /* ---------- Opacity ---------- */
+  --black-80: rgba(17,17,17,.8); --black-60: rgba(17,17,17,.6); --black-40: rgba(17,17,17,.4); --black-20: rgba(17,17,17,.2); --black-10: rgba(17,17,17,.1);
+  --white-80: rgba(255,255,255,.8); --white-60: rgba(255,255,255,.6); --white-40: rgba(255,255,255,.4); --white-20: rgba(255,255,255,.2); --white-10: rgba(255,255,255,.1);
+  --purple-80: rgba(127,79,230,.8); --purple-60: rgba(127,79,230,.6); --purple-40: rgba(127,79,230,.4); --purple-20: rgba(127,79,230,.2); --purple-10: rgba(127,79,230,.1);
+
+  /* ---------- Point ---------- */
+  --point-red: #E72326;
+  --point-red-10: rgba(231,35,38,.1);
+
+  /* ---------- Semantic (서비스) ---------- */
+  --mc-bg: var(--bg-white);
+  --mc-surface: var(--base-100);
+  --mc-surface-2: var(--bg-gray);
+  --mc-ink: var(--base-900);
+  --mc-ink-2: var(--base-700);
+  --mc-muted: var(--base-500);
+  --mc-faint: var(--black-40);
+  --mc-line: var(--base-200);
+  --mc-shadow: 0 2px 8px var(--black-10);
+
+  --mc-brand: var(--pp-500);
+  --mc-brand-pressed: var(--pp-600);
+  --mc-brand-weak: var(--pp-100);
+  --mc-brand-stroke: var(--pp-200);
+  --mc-brand-fg: var(--pp-700);
+  --mc-on-brand: var(--base-100);
+
+  --mc-stuck: var(--hn-500);        /* 하이라이트 밑줄 */
+  --mc-stuck-weak: var(--hn-100);   /* 하이라이트 형광 배경 */
+  --mc-stuck-fg: var(--hn-800);     /* 하이라이트 글자 */
+
+  --mc-confirm: var(--mt-600);
+  --mc-confirm-weak: var(--mt-100);
+  --mc-confirm-fg: var(--mt-800);
+
+  --mc-peer: var(--rs-500);
+  --mc-peer-weak: var(--rs-100);
+  --mc-peer-fg: var(--rs-700);
+
+  --mc-info: var(--dv-500);
+  --mc-info-weak: var(--dv-100);
+  --mc-info-fg: var(--dv-700);
+
+  --mc-error: var(--point-red);
+  --mc-error-weak: var(--point-red-10);
+  --mc-rec: var(--point-red);
+  --mc-rec-weak: var(--point-red-10);
+
+  /* ---------- Typography ---------- */
+  --font-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+  --font-eng: Montserrat, "Pretendard Variable", Pretendard, sans-serif;
+
+  /* ---------- Shape ---------- */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+}
+
+/* ---------- Dark (제안) ---------- */
+:root[data-theme="dark"] {
+  --mc-bg: #141217;
+  --mc-surface: #1E1A26;
+  --mc-surface-2: #2A2533;
+  --mc-ink: #F4F1FA;
+  --mc-ink-2: #DCD6E8;
+  --mc-muted: rgba(244,241,250,.6);
+  --mc-faint: rgba(244,241,250,.4);
+  --mc-line: #3A3344;
+  --mc-shadow: 0 2px 8px rgba(0,0,0,.4);
+
+  --mc-brand: var(--pp-400);
+  --mc-brand-pressed: var(--pp-300);
+  --mc-brand-weak: #2E1A66;
+  --mc-brand-stroke: var(--pp-700);
+  --mc-brand-fg: var(--pp-300);
+  --mc-on-brand: #141217;
+
+  --mc-stuck: var(--hn-400);
+  --mc-stuck-weak: #4A3608;
+  --mc-stuck-fg: var(--hn-300);
+
+  --mc-confirm: var(--mt-400);
+  --mc-confirm-weak: #0D3A2E;
+  --mc-confirm-fg: var(--mt-300);
+
+  --mc-peer: var(--rs-400);
+  --mc-peer-weak: #4A1230;
+  --mc-peer-fg: var(--rs-300);
+
+  --mc-info: var(--dv-400);
+  --mc-info-weak: #20107A;
+  --mc-info-fg: var(--dv-300);
+
+  --mc-error: #F04E50;
+  --mc-error-weak: #3A1516;
+  --mc-rec: #F04E50;
+  --mc-rec-weak: #3A1516;
+}
