@@ -1,0 +1,25 @@
+{
+  "archiveScope": "Explicit mock AI, real Linux amd64 API image/PostgreSQL/media/restart.",
+  "sourceArtifact": ".local/image-validation-result.json",
+  "passedAt": "2026-10-09T04:25:41.446Z",
+  "platform": "linux/amd64",
+  "aiMode": "mock",
+  "database": "PostgreSQL 17",
+  "databaseName": "devday_study_image_1791519920338",
+  "sameMigration": true,
+  "imageRestartPersistence": true,
+  "studyId": "e76828bf-dcd6-4b66-9308-2cb879a045e8",
+  "experienceId": "d42517d5-b791-4fe3-9bed-552cec31926c",
+  "learningItems": 1,
+  "imageId": "7200ec69-8e22-462a-ace0-8a1361ae090e",
+  "imageBytes": 68,
+  "imageSha256": "5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15",
+  "limitation": "Explicit fixture AI; no physical microphone, live OpenAI or two-device acceptance claim.",
+  "containerImageId": "sha256:35611095620a6b0bd6346584623ad16ed9b69d5b4a547092aea4e06dc43fe0e5",
+  "node": "v24.20.0",
+  "runtimeInspection": {
+    "envFileIncluded": false,
+    "localTlsIncluded": false,
+    "rdsCaIncluded": true
+  }
+}

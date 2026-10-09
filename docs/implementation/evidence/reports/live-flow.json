@@ -1,0 +1,306 @@
+{
+  "archiveScope": "Live API/PostgreSQL/OpenAI with supplied synthetic audio; one laptop; not physical microphone or G3 acceptance.",
+  "sourceArtifact": ".local/validation/live-flow.json",
+  "startedAt": "2026-10-09T04:20:21.320Z",
+  "finishedAt": "2026-10-09T04:22:01.881Z",
+  "result": "passed_synthetic_product_integration_only",
+  "environment": {
+    "databaseName": "devday_live_1791519621319",
+    "apiOrigin": "http://127.0.0.1:4201",
+    "mediaDirectory": ".local/validation/live-media/devday_live_1791519621319",
+    "aiMode": "live",
+    "models": {
+      "text": "gpt-6-luna",
+      "raw": "gpt-live-transcribe",
+      "correction": "gpt-transcribe",
+      "image": "gpt-image-2.5-flare-2026-09-08"
+    }
+  },
+  "limitations": [
+    "One physical laptop; two HTTP cookie clients and WebSocket clients.",
+    "Audio source is a supplied file/synthetic sample, not either physical microphone.",
+    "No UI, LAN HTTPS/WSS, physical two-laptop or G2/G3 gate pass is claimed."
+  ],
+  "audio": {
+    "path": ".local/validation/single-voice/mixed.wav",
+    "sha256": "afc7a11bedaf317f57af335ec43cb058caa700b82037668e01379a1d27ecc9da",
+    "durationSeconds": 6.801166666666667
+  },
+  "steps": [
+    {
+      "name": "isolated PostgreSQL migration and real API process",
+      "startedAt": "2026-10-09T04:20:21.324Z",
+      "status": "passed",
+      "details": {
+        "databaseName": "devday_live_1791519621319",
+        "processId": 2549,
+        "ready": true
+      },
+      "durationMs": 4279
+    },
+    {
+      "name": "A01 distinct identities, duplicate rejection, private event sockets",
+      "startedAt": "2026-10-09T04:20:25.608Z",
+      "status": "passed",
+      "details": {
+        "a": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+        "b": "da863512-56af-4235-98fc-3a4d44df21b3",
+        "duplicateRejected": true
+      },
+      "durationMs": 124
+    },
+    {
+      "name": "A15/A16 live experience optional questions, skip, save, edit and reread",
+      "startedAt": "2026-10-09T04:20:25.733Z",
+      "status": "passed",
+      "details": {
+        "experienceId": "bc78fb81-4fb3-4257-b145-ec284e95b35f",
+        "ownerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+        "firstQuestionCount": 2,
+        "skippedQuestionCount": 0,
+        "revision": 1
+      },
+      "durationMs": 6252
+    },
+    {
+      "name": "A02/A04 actual invitation delivery, join and shared snapshots",
+      "startedAt": "2026-10-09T04:20:31.985Z",
+      "status": "passed",
+      "details": {
+        "studyId": "0d44f821-8d46-4451-b8d7-1ce9adee2119"
+      },
+      "durationMs": 153
+    },
+    {
+      "name": "A17/A19/A25 first live experience image and authenticated bytes",
+      "startedAt": "2026-10-09T04:20:32.140Z",
+      "status": "passed",
+      "details": {
+        "topicId": "bea81f69-0cf4-4d3c-953e-30c075620726",
+        "mediaId": "4db4a721-bff4-40d6-a198-5be1bc12f511",
+        "imageByteLength": 1757251,
+        "sha256": "573fb27ea6c82cef4d1a0f9142dba1e1597523c57685dcd8baccf9e6b326430a",
+        "content": {
+          "title": "Coffee and Travel by the Beach",
+          "situationText": "Imagine you are chatting with a friend at a café near a beach. You have coffee and are talking about travel.",
+          "conversationInstruction": "Take turns describing a trip you have taken or would like to take. Ask your partner where they would like to travel and what they enjoy doing there.",
+          "sourceExperienceIds": [
+            "bc78fb81-4fb3-4257-b145-ec284e95b35f"
+          ],
+          "learningExpressionIds": [],
+          "sharedExpressionIds": [],
+          "kind": "image",
+          "imageMediaId": "4db4a721-bff4-40d6-a198-5be1bc12f511",
+          "sentence": null
+        }
+      },
+      "durationMs": 14043
+    },
+    {
+      "name": "A06/A07/A08 FILE ONLY: two authenticated audio streams through real transcription and correction",
+      "startedAt": "2026-10-09T04:20:46.184Z",
+      "status": "passed",
+      "details": {
+        "source": "same supplied WAV replayed for both users; NOT physical microphones",
+        "segments": [
+          {
+            "id": "401565ae-cffb-4ae2-9b28-31f831d4c003",
+            "revision": 2,
+            "studyId": "0d44f821-8d46-4451-b8d7-1ce9adee2119",
+            "topicId": "bea81f69-0cf4-4d3c-953e-30c075620726",
+            "speakerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+            "startOrder": 0,
+            "startedAt": "2026-10-09T04:20:47.612Z",
+            "endedAt": "2026-10-09T04:20:54.413Z",
+            "rawText": "어제 친구를 만났어요. Yes, today I go to a cafe with my friend. The last word is human.",
+            "rawStatus": "ready",
+            "correctedText": "어제 친구를 만났어요. Yes, today I go to a cafe with my friend. The last word is human.",
+            "correctionStatus": "ready",
+            "sentenceStatus": "pending"
+          },
+          {
+            "id": "658b37d6-21eb-4650-88f4-94a23b8f376b",
+            "revision": 2,
+            "studyId": "0d44f821-8d46-4451-b8d7-1ce9adee2119",
+            "topicId": "bea81f69-0cf4-4d3c-953e-30c075620726",
+            "speakerUserId": "da863512-56af-4235-98fc-3a4d44df21b3",
+            "startOrder": 1,
+            "startedAt": "2026-10-09T04:20:52.673Z",
+            "endedAt": "2026-10-09T04:20:59.474Z",
+            "rawText": "어제 친구를 만났어요. Yesterday I go to a cafe with my friend. The last word is human.",
+            "rawStatus": "ready",
+            "correctedText": "어제 친구를 만났어요. Yes, today I go to a cafe with my friend. The last word is human.",
+            "correctionStatus": "ready",
+            "sentenceStatus": "pending"
+          }
+        ]
+      },
+      "durationMs": 10223
+    },
+    {
+      "name": "A10 live close flush, sentence segmentation and feedback",
+      "startedAt": "2026-10-09T04:20:56.408Z",
+      "status": "passed",
+      "details": {
+        "topicId": "bea81f69-0cf4-4d3c-953e-30c075620726",
+        "utteranceCount": 6,
+        "feedbackCount": 6,
+        "sources": [
+          {
+            "id": "ccc4b734-64d9-4f22-b43c-6dc3263fee64",
+            "speakerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+            "sourceRanges": [
+              {
+                "segmentId": "401565ae-cffb-4ae2-9b28-31f831d4c003",
+                "rawStart": 0,
+                "rawEnd": 12,
+                "correctedStart": 0,
+                "correctedEnd": 12
+              }
+            ]
+          },
+          {
+            "id": "2b212d28-82b3-42eb-9084-38dcb8c95179",
+            "speakerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+            "sourceRanges": [
+              {
+                "segmentId": "401565ae-cffb-4ae2-9b28-31f831d4c003",
+                "rawStart": 13,
+                "rawEnd": 54,
+                "correctedStart": 13,
+                "correctedEnd": 54
+              }
+            ]
+          },
+          {
+            "id": "43c5a23d-f6ca-484a-97ad-5b08c84b5c47",
+            "speakerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+            "sourceRanges": [
+              {
+                "segmentId": "401565ae-cffb-4ae2-9b28-31f831d4c003",
+                "rawStart": 55,
+                "rawEnd": 78,
+                "correctedStart": 55,
+                "correctedEnd": 78
+              }
+            ]
+          },
+          {
+            "id": "45466337-f77e-4da5-9944-890dedeb6c7f",
+            "speakerUserId": "da863512-56af-4235-98fc-3a4d44df21b3",
+            "sourceRanges": [
+              {
+                "segmentId": "658b37d6-21eb-4650-88f4-94a23b8f376b",
+                "rawStart": 0,
+                "rawEnd": 12,
+                "correctedStart": 0,
+                "correctedEnd": 12
+              }
+            ]
+          },
+          {
+            "id": "c3df19fc-1705-4374-9e0d-25b8e5bb5d00",
+            "speakerUserId": "da863512-56af-4235-98fc-3a4d44df21b3",
+            "sourceRanges": [
+              {
+                "segmentId": "658b37d6-21eb-4650-88f4-94a23b8f376b",
+                "rawStart": 13,
+                "rawEnd": 53,
+                "correctedStart": 13,
+                "correctedEnd": 54
+              }
+            ]
+          },
+          {
+            "id": "a6a78daa-730b-4a5d-81f4-f95b0574e126",
+            "speakerUserId": "da863512-56af-4235-98fc-3a4d44df21b3",
+            "sourceRanges": [
+              {
+                "segmentId": "658b37d6-21eb-4650-88f4-94a23b8f376b",
+                "rawStart": 54,
+                "rawEnd": 77,
+                "correctedStart": 55,
+                "correctedEnd": 78
+              }
+            ]
+          }
+        ]
+      },
+      "durationMs": 8192
+    },
+    {
+      "name": "A11/A12 B edits A correction, stale feedback and live rerequest",
+      "startedAt": "2026-10-09T04:21:04.601Z",
+      "status": "passed",
+      "details": {
+        "utteranceId": "2b212d28-82b3-42eb-9084-38dcb8c95179",
+        "speakerUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+        "editorUserId": "da863512-56af-4235-98fc-3a4d44df21b3",
+        "correctionRevision": 1,
+        "feedbackItems": 1
+      },
+      "durationMs": 2083
+    },
+    {
+      "name": "A05/A21/A22/A23 real chat word/expression saving, no/pending/yes and privacy",
+      "startedAt": "2026-10-09T04:21:06.685Z",
+      "status": "passed",
+      "details": {
+        "wordLearningItemIds": [
+          "54b5e061-7cab-4063-b8eb-1d308ef54466"
+        ],
+        "declinedProposalId": "e45dc828-80ea-409b-8422-5c5d3c404a75",
+        "pendingProposalId": "fbdab352-7f03-4f90-8854-81ed1328e055",
+        "acceptedProposalId": "fa91780f-0691-49cf-a254-2b8901cee1b7",
+        "sharedExpressionId": "934f6ecd-bec6-4682-ad49-d3373ba0c413",
+        "privateMessagesExposedToB": 0
+      },
+      "durationMs": 24571
+    },
+    {
+      "name": "A13/A17/A20 natural-language next approves speaker learning and live next topic",
+      "startedAt": "2026-10-09T04:21:31.257Z",
+      "status": "passed",
+      "details": {
+        "topicId": "70b62554-5add-4873-b11e-c2dfbeb4d34c",
+        "ordinal": 2,
+        "kind": "image",
+        "approvedSpeakerItemIds": [
+          "ebdad2b0-564c-4360-82c5-287d323f116d"
+        ],
+        "sharedInputIds": [
+          "934f6ecd-bec6-4682-ad49-d3373ba0c413"
+        ],
+        "feedbackInputCount": 6
+      },
+      "durationMs": 17258
+    },
+    {
+      "name": "A14/E08 final topic audio, first finish only reviews, second finish approves",
+      "startedAt": "2026-10-09T04:21:48.516Z",
+      "status": "passed",
+      "details": {
+        "topicId": "70b62554-5add-4873-b11e-c2dfbeb4d34c",
+        "status": "ended",
+        "finalUtteranceCount": 3,
+        "finalLearningCount": 3
+      },
+      "durationMs": 10909
+    },
+    {
+      "name": "A16/A24/E08 actual API process restart preserves sessions, experiences, learning and image bytes",
+      "startedAt": "2026-10-09T04:21:59.427Z",
+      "status": "passed",
+      "details": {
+        "previousPid": 2549,
+        "restartedPid": 6615,
+        "aLearningCount": 7,
+        "bLearningCount": 6,
+        "experienceCount": 1,
+        "persistedImageSha256": "573fb27ea6c82cef4d1a0f9142dba1e1597523c57685dcd8baccf9e6b326430a",
+        "newStudyId": "445d8d60-ff6c-47bb-84e3-6a0a4dbc45fe"
+      },
+      "durationMs": 2428
+    }
+  ]
+}

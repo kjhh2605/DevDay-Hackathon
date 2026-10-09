@@ -1,0 +1,9 @@
+node_modules/
+dist/
+cdk.out/
+.local/
+pnpm-lock.yaml
+design/
+docs/
+prompts/
+test-results/

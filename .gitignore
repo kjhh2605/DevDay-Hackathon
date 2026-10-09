@@ -1,0 +1,15 @@
+# Local configuration and generated private files
+.env.local
+.env.deploy.local
+.local/
+node_modules/
+dist/
+cdk.out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.DS_Store
+*.pem
+*.key
+*.wav

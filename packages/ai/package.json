@@ -1,0 +1,23 @@
+{
+  "name": "@devday/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@devday/contracts": "workspace:*",
+    "@devday/application-ports": "workspace:*",
+    "openai": "^6.32.0",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

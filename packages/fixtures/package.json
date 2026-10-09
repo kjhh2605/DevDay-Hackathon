@@ -1,0 +1,19 @@
+{
+  "name": "@devday/fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./handlers": "./src/handlers.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@devday/contracts": "workspace:*",
+    "msw": "^2.12.10"
+  }
+}

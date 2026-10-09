@@ -1,0 +1,13 @@
+{
+  "archiveScope": "Built preview and actual HTTPS/WSS through explicit public CA validation; OS/browser CA trust remains unverified.",
+  "sourceArtifact": ".local/https-validation-result.json",
+  "passedAt": "2026-10-09T04:26:48.435Z",
+  "origin": "https://172.24.100.52:5176",
+  "builtPreview": true,
+  "caAndHostnameVerified": true,
+  "secureHttpOnlyLaxCookie": true,
+  "anonymousApiJson401": true,
+  "eventsWss101AndHeartbeat": true,
+  "audioWss101AndHeartbeat": true,
+  "limitation": "Explicit CA verification by Node; OS/browser trust, microphones and two physical laptops remain separate manual checks."
+}

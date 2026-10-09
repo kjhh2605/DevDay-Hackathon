@@ -1,0 +1,45 @@
+{
+  "archiveScope": "After A15 fix: actual OpenAI grounded detailed-input draft returned zero follow-up questions; synthetic supplied experience, not a physical-device check.",
+  "sourceArtifact": ".local/validation/live-detailed-experience.json",
+  "startedAt": "2026-10-09T04:29:00.301Z",
+  "finishedAt": "2026-10-09T04:29:03.575Z",
+  "result": "passed_detailed_experience_only",
+  "databaseName": "devday_live_1791519621319",
+  "aiMode": "live",
+  "limitations": [
+    "One laptop API/WebSocket branch verification; not physical microphones, visual acceptance, or G3 pass."
+  ],
+  "providerRequests": [
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_c4c77f2057ae46ebadff1bfb2b9e9474"
+    }
+  ],
+  "steps": [
+    {
+      "name": "A15 detailed input produces draft without follow-up questions",
+      "status": "passed",
+      "startedAt": "2026-10-09T04:29:00.428Z",
+      "details": {
+        "draftId": "067b0a58-246c-47ef-b2ff-d5150ffb1fd2",
+        "questionCount": 0,
+        "summary": "지난 토요일 오후 2시에 서울숲에서 친구 민수와 3km를 걸었어요. 벤치에 앉아 도시락을 먹고 다음 달 제주도 여행 계획을 이야기했어요. 걷기와 여행에 관심이 있어요.",
+        "context": {
+          "place": "서울숲",
+          "people": [
+            "친구 민수"
+          ],
+          "event": "지난 토요일 오후 2시에 서울숲에서 친구 민수와 3km를 걸었어요.",
+          "actions": [
+            "3km를 걸었어요",
+            "벤치에 앉아 도시락을 먹고",
+            "다음 달 제주도 여행 계획을 이야기했어요"
+          ]
+        },
+        "saved": false
+      },
+      "durationMs": 3140
+    }
+  ]
+}

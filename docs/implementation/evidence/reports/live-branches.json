@@ -1,0 +1,144 @@
+{
+  "archiveScope": "Real OpenAI selected-owner image, no-experience sentence, second natural-language next branch; one laptop HTTP/API only.",
+  "sourceArtifact": ".local/validation/live-branches.json",
+  "startedAt": "2026-10-09T04:26:16.635Z",
+  "finishedAt": "2026-10-09T04:26:45.385Z",
+  "result": "passed_named_and_sentence_api_branches_only",
+  "databaseName": "devday_live_1791519621319",
+  "aiMode": "live",
+  "limitations": [
+    "One laptop API/WebSocket branch verification; not physical microphones, visual acceptance, or G3 pass."
+  ],
+  "providerRequests": [
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_687b5f3f03dc45cba163c4065cdf4df1"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_2541f531c4054a9291d40aec40f30560"
+    },
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_cb3c3af771154a3b8e452ef60d9eeee2"
+    },
+    {
+      "capability": "image",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "requestId": "req_4d7041a1b5a64211b1ac0a81aae03e23"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_476e3ab669654edaaa9d5d0753e99a5c"
+    },
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_1457870948d84831b5439ce15e05ee41"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_f3fae7bc29884257bd9739178e37042d"
+    },
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_b91afd63e898439aa842caa74e06d8a1"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_f8726c4152004427b3bf30107f80aa48"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_4d3d5e7a1bff4841bf5e051acb733ae6"
+    },
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_78f4f26cb0c04702b8f2f406961629c2"
+    }
+  ],
+  "steps": [
+    {
+      "name": "A18 named participant command freezes only selected owner experiences and generates live image",
+      "status": "passed",
+      "startedAt": "2026-10-09T04:26:16.760Z",
+      "details": {
+        "studyId": "f53db243-4faa-4bfb-9cfe-b085f146b3b2",
+        "topicId": "46341b45-5430-436d-8571-edb2b2f701f9",
+        "state": "talking",
+        "focusUserId": "3d17a3e2-b74c-49bb-ba19-e87d3a1c919d",
+        "generationExperienceIds": [
+          "bc78fb81-4fb3-4257-b145-ec284e95b35f"
+        ],
+        "contentExperienceIds": [
+          "bc78fb81-4fb3-4257-b145-ec284e95b35f"
+        ],
+        "kind": "image",
+        "conversationInstruction": "Describe the café and your conversation. Ask your partner about a place they would like to travel to, and discuss what you might do there."
+      },
+      "durationMs": 13993
+    },
+    {
+      "name": "A19 no-experience context gate and accepted expression generate live sentence with instruction",
+      "status": "passed",
+      "startedAt": "2026-10-09T04:26:30.793Z",
+      "details": {
+        "studyId": "218d4c52-3bda-41fa-bba4-db39e4f74e99",
+        "topicId": "df56e49c-565b-4ed6-a608-c03942809ab5",
+        "sharedExpressionId": "eb14717c-d7b1-4a86-a98a-b2f468113422",
+        "content": {
+          "title": "Rescheduling a Meeting",
+          "situationText": "You need to ask a colleague to move a meeting to a later date. Practice making the request politely and discussing the change.",
+          "conversationInstruction": "Use the expression below to ask to reschedule. Then explain your reason and respond to your colleague’s suggestions.",
+          "sourceExperienceIds": [],
+          "learningExpressionIds": [],
+          "sharedExpressionIds": [
+            "eb14717c-d7b1-4a86-a98a-b2f468113422"
+          ],
+          "kind": "sentence",
+          "imageMediaId": null,
+          "sentence": "I'd like to postpone the meeting until next week."
+        },
+        "contextRequiredBeforeSharing": true
+      },
+      "durationMs": 9837
+    },
+    {
+      "name": "E06 second next phrase executes approval and next live sentence generation",
+      "status": "passed",
+      "startedAt": "2026-10-09T04:26:40.631Z",
+      "details": {
+        "studyId": "218d4c52-3bda-41fa-bba4-db39e4f74e99",
+        "priorTopicId": "df56e49c-565b-4ed6-a608-c03942809ab5",
+        "priorState": "approved",
+        "nextTopicId": "8e689f9c-6957-4de6-9f9c-1dc65de0402a",
+        "ordinal": 2,
+        "content": {
+          "title": "Rescheduling a Meeting",
+          "situationText": "You need to ask a colleague to move a meeting to a later date. Practice making the request politely and discussing whether the change is possible.",
+          "conversationInstruction": "Use the shared expression to ask to reschedule the meeting. Then explain your preference and respond to your colleague’s answer.",
+          "sourceExperienceIds": [],
+          "learningExpressionIds": [],
+          "sharedExpressionIds": [
+            "eb14717c-d7b1-4a86-a98a-b2f468113422"
+          ],
+          "kind": "sentence",
+          "imageMediaId": null,
+          "sentence": "I'd like to postpone the meeting until next week."
+        },
+        "finalStatus": "ended",
+        "note": "This branch intentionally has no utterances; speaker-owned learning approval is covered by live-flow."
+      },
+      "durationMs": 4747
+    }
+  ]
+}

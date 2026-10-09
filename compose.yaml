@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:?Set DB_NAME through the local services wrapper}
+      POSTGRES_USER: ${DB_USER:?Set DB_USER through the local services wrapper}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD through the local services wrapper}
+    ports:
+      - '127.0.0.1:${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  api:
+    profiles: [production]
+    image: devday-study-api:local
+    platform: linux/amd64
+    user: '${LOCAL_API_UID:-1000}:${LOCAL_API_GID:-1000}'
+    init: true
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      APP_ENV: local
+      API_HOST: 0.0.0.0
+      PORT: 3000
+      WEB_PORT: ${WEB_PORT:-5173}
+      AI_MODE: ${AI_MODE:-live}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-6-luna}
+      OPENAI_LIVE_TRANSCRIBE_MODEL: ${OPENAI_LIVE_TRANSCRIBE_MODEL:-gpt-live-transcribe}
+      OPENAI_CORRECTION_MODEL: ${OPENAI_CORRECTION_MODEL:-gpt-transcribe}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-2.5-flare-2026-09-08}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL_MODE: disable
+      MEDIA_DRIVER: filesystem
+      MEDIA_LOCAL_DIR: /app/.local/media
+      LOCAL_WEB_ORIGIN: ${LOCAL_WEB_ORIGIN:-http://localhost:5173}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+    ports:
+      - '127.0.0.1:${PORT:-3000}:3000'
+    volumes:
+      - type: bind
+        source: ${MEDIA_LOCAL_DIR}
+        target: /app/.local/media
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  postgres-data:

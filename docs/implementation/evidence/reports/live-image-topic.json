@@ -1,0 +1,17 @@
+{
+  "archiveScope": "Rendered real generated image on one laptop; no physical microphone or two-device claim.",
+  "capturedAt": "2026-10-09T04:26:57.946Z",
+  "url": "http://127.0.0.1:5180/study/f53db243-4faa-4bfb-9cfe-b085f146b3b2",
+  "studyId": "f53db243-4faa-4bfb-9cfe-b085f146b3b2",
+  "topicId": "46341b45-5430-436d-8571-edb2b2f701f9",
+  "topicState": "talking",
+  "mediaId": "ed10d3e2-d647-413e-a369-92c205802578",
+  "imageDimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "imageReady": true,
+  "pageErrors": [],
+  "providerMode": "live",
+  "captureActions": "Authenticated read-only GET/WS subscription only; no generation or microphone input triggered"
+}

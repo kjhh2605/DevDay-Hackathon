@@ -1,0 +1,28 @@
+{
+  "archiveScope": "Preserved earlier real-OpenAI defect: detailed input unnecessarily returned a follow-up question; not a passing acceptance record.",
+  "sourceArtifact": ".local/validation/live-branches-detailed-question-regression.json",
+  "startedAt": "2026-10-09T04:25:24.253Z",
+  "finishedAt": "2026-10-09T04:25:28.698Z",
+  "result": "failed",
+  "databaseName": "devday_live_1791519621319",
+  "aiMode": "live",
+  "limitations": [
+    "One laptop API/WebSocket branch verification; not physical microphones, visual acceptance, or G3 pass."
+  ],
+  "providerRequests": [
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_e9e1061e37764641ba994adc8106df29"
+    }
+  ],
+  "steps": [
+    {
+      "name": "A15 detailed input produces draft without follow-up questions",
+      "status": "failed",
+      "startedAt": "2026-10-09T04:25:24.481Z",
+      "error": "Detailed grounded input should not require optional follow-up questions\n\n1 !== 0\n",
+      "durationMs": 4202
+    }
+  ]
+}

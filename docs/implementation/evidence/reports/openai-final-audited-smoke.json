@@ -1,0 +1,314 @@
+{
+  "archiveScope": "Four real OpenAI paths, synthetic single-voice source; inspect passed and transcriptionChecksPassed separately from API result statuses.",
+  "sourceArtifact": ".local/validation/final-audited-smoke/report.json",
+  "recordedAt": "2026-10-09T04:21:12.467Z",
+  "paidCalls": true,
+  "source": "synthetic macOS say single-voice Yuna fixture; NOT a real microphone acceptance test",
+  "audioPath": ".local/validation/final-audited-smoke/openai-smoke-audio.wav",
+  "expectedText": "어제 친구를 만났어요. Yesterday I go to a cafe with my friend. The last word is human.",
+  "audioDurationMs": 6583,
+  "settings": {
+    "languages": [
+      "ko",
+      "en"
+    ],
+    "delay": "low",
+    "turnDetection": null,
+    "sampleRate": 24000,
+    "channels": 1,
+    "bitDepth": 16,
+    "maxRetries": 0,
+    "correctionChunkingStrategy": "auto",
+    "textTimeoutMs": 60000,
+    "imageTimeoutMs": 180000
+  },
+  "realMicrophoneAcceptanceVerified": false,
+  "selectedCapabilities": [
+    "live-transcription",
+    "same-audio-correction",
+    "responses-structured-and-tools",
+    "image-generation"
+  ],
+  "allCapabilitiesIncluded": true,
+  "requiredQualityChecks": [
+    "koreanPresent",
+    "learnerGrammarPreserved",
+    "terminalHumanPresent"
+  ],
+  "results": [
+    {
+      "capability": "live-transcription",
+      "model": "gpt-live-transcribe",
+      "status": "passed",
+      "durationMs": 8921,
+      "details": {
+        "rawText": "어제 친구를 만났어요. Yesterday I go to a cafe with my friend.\nBut  toward  이제 휴먼",
+        "events": [
+          {
+            "type": "session.created",
+            "itemId": null,
+            "atMs": 1004
+          },
+          {
+            "type": "session.updated",
+            "itemId": null,
+            "atMs": 1327
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 2282
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 2291
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 2694
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 2891
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 3296
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 3307
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 3318
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 3328
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 4525
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 4916
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 5331
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 5519
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 5715
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 5928
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 6122
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 6365
+          },
+          {
+            "type": "input_audio_buffer.committed",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 6689
+          },
+          {
+            "type": "conversation.item.added",
+            "itemId": null,
+            "atMs": 6689
+          },
+          {
+            "type": "conversation.item.done",
+            "itemId": null,
+            "atMs": 6692
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 6881
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 6891
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.completed",
+            "itemId": "item_EWwON1tQAMhkXxWXagOJF",
+            "atMs": 7162
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 7352
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 7552
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 7764
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 7964
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 8164
+          },
+          {
+            "type": "input_audio_buffer.committed",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 8417
+          },
+          {
+            "type": "conversation.item.added",
+            "itemId": null,
+            "atMs": 8417
+          },
+          {
+            "type": "conversation.item.done",
+            "itemId": null,
+            "atMs": 8418
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 8573
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.delta",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 8584
+          },
+          {
+            "type": "conversation.item.input_audio_transcription.completed",
+            "itemId": "item_EWwOSHHYHS8n3SsrxnOBX",
+            "atMs": 8920
+          }
+        ],
+        "commitCount": 2,
+        "firstDeltaMs": 2282,
+        "terminalHumanPresent": false,
+        "koreanPresent": true,
+        "learnerGrammarPreserved": true
+      }
+    },
+    {
+      "capability": "same-audio-correction",
+      "model": "gpt-transcribe",
+      "status": "passed",
+      "durationMs": 707,
+      "details": {
+        "correctedText": "어제 친구를 만났어요. Yesterday I go to a cafe with my friend. The last word is human.",
+        "terminalHumanPresent": true,
+        "koreanPresent": true,
+        "learnerGrammarPreserved": true
+      }
+    },
+    {
+      "capability": "responses-structured-and-tools",
+      "model": "gpt-6-luna",
+      "status": "passed",
+      "durationMs": 4746,
+      "details": {
+        "feedbackItems": 1,
+        "feedback": {
+          "items": [
+            {
+              "category": "문법",
+              "summary": "과거형 사용",
+              "explanation": "어제 있었던 일을 말하므로 go의 과거형 went를 써야 해요.",
+              "expression": "I went to a café yesterday.",
+              "meaning": "나는 어제 카페에 갔어요.",
+              "example": "I went to a café yesterday and had some coffee."
+            }
+          ]
+        },
+        "tool": "get_study_context",
+        "reasoningItemsPreserved": 0,
+        "reply": "The current study status is **waiting**."
+      }
+    },
+    {
+      "capability": "image-generation",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "status": "passed",
+      "durationMs": 10306,
+      "details": {
+        "contentType": "image/png",
+        "byteLength": 1655103,
+        "sha256": "519902778b3a141fcf6b5a4e58dbcf3ecfbc3bcdbd60e9fd252b05982e59295c",
+        "imagePath": ".local/validation/final-audited-smoke/openai-smoke-image.png"
+      }
+    }
+  ],
+  "requestAudits": [
+    {
+      "capability": "transcribe",
+      "model": "gpt-transcribe",
+      "requestId": "req_2287cfba53674f75a06e7cc1f223eb12"
+    },
+    {
+      "capability": "realtime",
+      "model": "gpt-live-transcribe",
+      "requestId": null
+    },
+    {
+      "capability": "structured",
+      "model": "gpt-6-luna",
+      "requestId": "req_d7174412551b40b8a8d58356d8f3c2a5"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_367f466223664731909d9e495c1d4bf8"
+    },
+    {
+      "capability": "respond",
+      "model": "gpt-6-luna",
+      "requestId": "req_88d28a4cb4c8427898308c8bb3428959"
+    },
+    {
+      "capability": "image",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "requestId": "req_ec993d4f89a94a04944cf6a275546d9e"
+    }
+  ],
+  "passed": false,
+  "transcriptionChecksPassed": false,
+  "transcriptionCheckScope": "Only expected Korean presence, learner-grammar preservation and terminal human are checked. This is not an exact-transcript accuracy score or real-microphone acceptance."
+}

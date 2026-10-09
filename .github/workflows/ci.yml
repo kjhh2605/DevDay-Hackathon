@@ -1,0 +1,62 @@
+name: Local acceptance checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  local:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: devday_study
+          POSTGRES_USER: devday_app
+          POSTGRES_PASSWORD: ci-local-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U devday_app -d devday_study"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      APP_ENV: local
+      AI_MODE: mock
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_NAME: devday_study
+      DB_USER: devday_app
+      DB_PASSWORD: ci-local-only
+      DB_SSL_MODE: disable
+      MEDIA_DRIVER: filesystem
+      SESSION_COOKIE_SECURE: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm setup:local
+      - run: pnpm db:migrate:local
+      - run: pnpm typecheck
+      - run: pnpm contracts:check
+      - run: pnpm test:unit
+      - run: pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: pnpm build
+      - run: pnpm infra:synth
+      - run: pnpm build:api-image
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure
+          path: |
+            test-results
+            playwright-report
+
+# CI uses explicit AI_MODE=mock. It does not certify two physical laptops,
+# real microphones, live OpenAI, or grant permission to deploy AWS resources.

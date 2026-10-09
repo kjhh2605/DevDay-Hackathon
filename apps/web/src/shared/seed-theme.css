@@ -1,0 +1,65 @@
+/* Local service palette mapped to SEED 3.0 semantic tokens. Import after SEED
+   base.css and design/tokens.css. Component layout stays in CSS Modules. */
+:root,
+:root[data-seed-color-mode='light-only'] {
+  color-scheme: light;
+  --seed-font-family: var(--font-ui);
+  --seed-color-fg-brand: var(--mc-brand);
+  --seed-color-fg-brand-contrast: var(--mc-brand-fg);
+  --seed-color-fg-neutral: var(--mc-ink);
+  --seed-color-fg-neutral-muted: var(--mc-ink-2);
+  --seed-color-fg-neutral-subtle: var(--mc-muted);
+  --seed-color-fg-neutral-inverted: var(--mc-surface);
+  --seed-color-fg-placeholder: var(--mc-faint);
+  --seed-color-fg-disabled: var(--base-400);
+  --seed-color-fg-on-brand-solid: var(--mc-on-brand);
+  --seed-color-fg-critical: var(--mc-error);
+  --seed-color-fg-critical-contrast: var(--mc-error);
+  --seed-color-fg-positive: var(--mc-confirm);
+  --seed-color-fg-positive-contrast: var(--mc-confirm-fg);
+  --seed-color-fg-informative: var(--mc-info);
+  --seed-color-fg-informative-contrast: var(--mc-info-fg);
+  --seed-color-fg-warning: var(--mc-stuck);
+  --seed-color-fg-warning-contrast: var(--mc-stuck-fg);
+  --seed-color-bg-brand-solid: var(--mc-brand);
+  --seed-color-bg-brand-solid-pressed: var(--mc-brand-pressed);
+  --seed-color-bg-brand-weak: var(--mc-brand-weak);
+  --seed-color-bg-brand-weak-pressed: var(--mc-brand-stroke);
+  --seed-color-bg-layer-basement: var(--mc-bg);
+  --seed-color-bg-layer-default: var(--mc-surface);
+  --seed-color-bg-layer-default-pressed: var(--mc-surface-2);
+  --seed-color-bg-layer-floating: var(--mc-surface);
+  --seed-color-bg-layer-floating-pressed: var(--mc-surface-2);
+  --seed-color-bg-neutral-muted: var(--mc-surface-2);
+  --seed-color-bg-neutral-weak: var(--mc-surface-2);
+  --seed-color-bg-neutral-weak-pressed: var(--mc-line);
+  --seed-color-bg-neutral-subtle: var(--mc-surface);
+  --seed-color-bg-neutral-solid: var(--mc-ink-2);
+  --seed-color-bg-neutral-solid-pressed: var(--mc-ink);
+  --seed-color-bg-neutral-inverted: var(--mc-ink-2);
+  --seed-color-bg-neutral-inverted-pressed: var(--mc-ink);
+  --seed-color-bg-disabled: var(--mc-surface-2);
+  --seed-color-bg-critical-solid: var(--mc-error);
+  --seed-color-bg-critical-solid-pressed: var(--mc-error);
+  --seed-color-bg-critical-weak: var(--mc-error-weak);
+  --seed-color-bg-critical-weak-pressed: var(--mc-error-weak);
+  --seed-color-bg-positive-solid: var(--mc-confirm);
+  --seed-color-bg-positive-weak: var(--mc-confirm-weak);
+  --seed-color-bg-informative-solid: var(--mc-info);
+  --seed-color-bg-informative-weak: var(--mc-info-weak);
+  --seed-color-bg-warning-solid: var(--mc-stuck);
+  --seed-color-bg-warning-weak: var(--mc-stuck-weak);
+  --seed-color-bg-overlay: var(--black-40);
+  --seed-color-bg-overlay-muted: var(--black-20);
+  --seed-color-stroke-brand-solid: var(--mc-brand);
+  --seed-color-stroke-brand-weak: var(--mc-brand-stroke);
+  --seed-color-stroke-focus-ring: var(--mc-brand);
+  --seed-color-stroke-neutral-solid: var(--mc-ink-2);
+  --seed-color-stroke-neutral-weak: var(--mc-line);
+  --seed-color-stroke-neutral-muted: var(--mc-line);
+  --seed-color-stroke-neutral-subtle: var(--mc-line);
+  --seed-color-stroke-critical-solid: var(--mc-error);
+  --seed-color-stroke-positive-solid: var(--mc-confirm);
+  --seed-color-stroke-informative-solid: var(--mc-info);
+  --seed-color-stroke-warning-solid: var(--mc-stuck);
+}

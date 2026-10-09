@@ -1,0 +1,16 @@
+{
+  "name": "@devday/application-ports",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fakes": "./src/fakes.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@devday/contracts": "workspace:*"
+  }
+}

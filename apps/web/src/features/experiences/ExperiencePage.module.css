@@ -1,0 +1,246 @@
+.page {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--mc-brand-fg);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.heading {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 32px);
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+}
+.description {
+  margin: 10px 0 0;
+  color: var(--mc-muted);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+.editor {
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  scroll-margin-top: 24px;
+}
+.editorHeading {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.025em;
+}
+.editorIntro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.editorIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  color: var(--mc-brand-fg);
+  background: var(--mc-brand-weak);
+  border-radius: var(--radius-md);
+}
+.caption {
+  margin: 6px 0 0;
+  color: var(--mc-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.form {
+  display: grid;
+  gap: 20px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.privateNote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mc-muted);
+  font-size: 12px;
+}
+.questionList {
+  display: grid;
+  gap: 18px;
+  border-top: 1px solid var(--mc-line);
+  padding-top: 20px;
+}
+.questionHeading {
+  margin: 0;
+  font-size: 16px;
+}
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.context {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sectionLabel {
+  margin: 0;
+  color: var(--mc-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.divider {
+  height: 1px;
+  border: 0;
+  background: var(--mc-line);
+  margin: 0;
+}
+.success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--mc-confirm);
+  color: var(--mc-confirm-fg);
+  background: var(--mc-confirm-weak);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 14px;
+}
+.sectionHeading {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+.count {
+  color: var(--mc-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+.savedSection {
+  display: grid;
+  gap: 16px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.experienceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.date {
+  color: var(--mc-muted);
+  font-size: 12px;
+}
+.summary {
+  margin: 0;
+  color: var(--mc-ink);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag {
+  color: var(--mc-brand-fg);
+  background: var(--mc-brand-weak);
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+}
+.contextPreview {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--mc-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.original {
+  margin-top: auto;
+  border-top: 1px solid var(--mc-line);
+  padding-top: 14px;
+  color: var(--mc-muted);
+  font-size: 13px;
+}
+.original summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.original p {
+  margin-bottom: 0;
+  color: var(--mc-ink-2);
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+.loading {
+  color: var(--mc-muted);
+  margin: 0;
+  padding: 24px 0;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .page {
+    gap: 22px;
+  }
+  .header {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .editor {
+    padding: 20px;
+  }
+  .comparison,
+  .context,
+  .cards {
+    grid-template-columns: 1fr;
+  }
+  .row {
+    align-items: flex-start;
+  }
+  .experienceCard {
+    padding: 20px;
+  }
+}

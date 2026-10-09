@@ -1,0 +1,54 @@
+{
+  "name": "devday-study",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=24.0.0 <25",
+    "pnpm": ">=10.0.0 <11"
+  },
+  "scripts": {
+    "setup:local": "tsx scripts/local/setup.ts",
+    "dev:services": "tsx scripts/local/services.ts up",
+    "db:migrate:local": "pnpm --filter @devday/api db:migrate",
+    "dev": "pnpm --parallel --filter @devday/api --filter @devday/web dev",
+    "dev:lan": "pnpm --parallel --filter @devday/api --filter @devday/web dev:lan",
+    "preview:lan": "pnpm --filter @devday/web preview:lan",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck && tsc --noEmit -p tsconfig.tools.json",
+    "contracts:check": "pnpm --filter @devday/contracts check",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:e2e": "playwright test --config tests/e2e/playwright.config.ts",
+    "preflight": "tsx scripts/local/preflight.ts",
+    "smoke:openai": "tsx packages/ai/src/smoke.ts",
+    "infra:synth": "pnpm --filter @devday/infra synth",
+    "build:api-image": "docker build --platform linux/amd64 -t devday-study-api:local .",
+    "setup:cert": "tsx scripts/local/certificates.ts",
+    "services:local": "tsx scripts/local/services.ts",
+    "test:image": "tsx scripts/local/verify-image.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:audio-browser": "pnpm --filter @devday/audio-client test:browser",
+    "test:live": "tsx scripts/validation/live-flow.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.5",
+    "dotenv": "^17.2.0",
+    "esbuild": "0.28.2",
+    "pg": "^8.16.3",
+    "prettier": "3.8.1",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "5.9.3",
+      "vitest": "5.0.3"
+    }
+  }
+}

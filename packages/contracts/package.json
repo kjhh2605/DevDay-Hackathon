@@ -1,0 +1,17 @@
+{
+  "name": "@devday/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "cd ../.. && vitest run --project unit packages/contracts packages/client packages/fixtures packages/application-ports"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
+}
