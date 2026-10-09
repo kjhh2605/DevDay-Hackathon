@@ -1,0 +1,65 @@
+{
+  "account": "004376454721",
+  "region": "ap-northeast-2",
+  "origin": "https://d31qyxseqz8321.cloudfront.net",
+  "checkedAt": "2026-10-09T08:08:20Z",
+  "source": {
+    "commit": "a26b7959f6c2706742363be6ac97d318cccbaca3",
+    "sourceSha256AtDeployment": "dc2eaa07cec376dac12a2e3399b214ea85a8f5a51aaf008e3e05e7936c23cbcd",
+    "change": "packages/ai chat Decision confidence threshold 0.85 to 0.5; speech threshold remains 0.85",
+    "localChecks": "typecheck, unit 306 (chat 35), contracts 39, PostgreSQL integration 17, CDK synth, linux/amd64 API image build; web dist hashes matched prior S3 publication"
+  },
+  "deployment": {
+    "scope": "StudyApiStack only; Foundation, Edge, RDS schema and web assets unchanged",
+    "method": "repository api-stage, migrate, api-start commands with G3 source and account gate",
+    "cdkDiff": "Only AWS::ECS::TaskDefinition container image reference replacement; Foundation and Edge no differences",
+    "previousTaskDefinition": "StudyApiStackTask96185A21:1",
+    "taskDefinition": "StudyApiStackTask96185A21:2",
+    "assetTag": "3fd64191ea212c599eccf63aa3552fa7ca5619eb8477b689dd75b514d52e7d01",
+    "ecrImageDigest": "sha256:dd5eb4ec5987647d4ec41601d615bc30262a273f4754ac54f465d67959c149d1",
+    "migrationTaskId": "4ca276975b854cbda7c0fe811e61b70d",
+    "migrationExitCode": 0,
+    "migrationStartedAt": "2026-10-09T08:04:27.732Z",
+    "migrationStoppedAt": "2026-10-09T08:04:55.532Z",
+    "serviceTaskId": "480139150ddc4b708d94be269b2a58ad",
+    "stackStatus": "UPDATE_COMPLETE",
+    "serviceStatus": "ACTIVE",
+    "serviceRollout": "COMPLETED",
+    "serviceDesired": 1,
+    "serviceRunning": 1,
+    "servicePending": 0,
+    "containerHealth": "HEALTHY",
+    "albTargetHealth": "healthy",
+    "steadyStateAt": "2026-10-09T08:06:52.777Z",
+    "speechDecisionConfidenceEnvironment": "0.85",
+    "chatDecisionConfidenceInImageSourceMap": "0.5",
+    "imageVerification": "The locally built CDK asset source map contains CHAT_DECISION_CONFIDENCE=0.5; its ECR digest matches the running ECS container digest. This is image provenance, not a nondeterministic live AI confidence measurement."
+  },
+  "liveChecks": {
+    "anonymousMe": "HTTP 401 application/json; no-store",
+    "webIndex": "HTTP 200; ETag 6d75f84b0826e220e4fd9f9a3bd0f08d; no-cache",
+    "demoMe": "HTTP 200; handle malmoa-demo",
+    "demoExperiences": "HTTP 200; 10 saved experiences after task replacement",
+    "webIndexS3LastModified": "2026-10-09T07:38:46Z"
+  },
+  "fullServiceVerification": {
+    "report": "aws-verification.json",
+    "startedAt": "2026-10-09T08:08:55.446Z",
+    "finishedAt": "2026-10-09T08:09:23.933Z",
+    "result": "pass",
+    "httpsCookiesCacheAndWss": "pass",
+    "liveOpenAiRdsS3": "pass",
+    "studyId": "9490e5a3-982a-4d51-aac6-ba3f336da5db",
+    "imageSha256": "18e848d68fa5fbb73f204e8d6444103ff69953c2f7f2b338187b5cd6530c53b4",
+    "imageBytes": 1568404
+  },
+  "result": "pass",
+  "remaining": "AWS URL two physical laptop and real microphone G4 acceptance remains unobserved. A post-deployment live AI flow passed, but no deterministic live confidence value was asserted.",
+  "postDeploymentLiveVerification": {
+    "report": "reports/aws-verification.json",
+    "startedAt": "2026-10-09T08:08:55.446Z",
+    "finishedAt": "2026-10-09T08:09:23.933Z",
+    "result": "pass",
+    "scope": "HTTPS/cookies/cache/WSS, real OpenAI experience/image/chat, RDS, S3, two-user events"
+  }
+}

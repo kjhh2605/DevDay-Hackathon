@@ -5,9 +5,9 @@
 - 서비스: **https://d31qyxseqz8321.cloudfront.net**
 - [현재 인프라 다이어그램](../../architecture/aws-deployed-architecture.md): 요청 경로·네트워크·배포 흐름·실제 리소스.
 - 대상: `default`, AWS `004376454721`, `ap-northeast-2` (사용자 지정).
-- API 배포 기준: `35290d32715d4c2852c0c3f62aa12b1c3d726a79` + 검증 시점의 G4 배포 변경. 최초 검증 지문은 [이전 기록](reports/g3-before-web-redeployment.json)에 보존했다. 웹은 아래 [재배포 기록](#웹-재배포와-테스트-계정-2026-10-09)의 랜딩·힌트 변경을 추가로 반영했다.
+- 현재 API 배포 기준: `a26b7959f6c2706742363be6ac97d318cccbaca3`의 챗봇 임계값 `0.5`를 반영한 task definition `StudyApiStackTask96185A21:2`. 최초 G4 배포와 웹 재배포 내역은 아래에 보존하고, 최신 API 교체 결과는 [API 재배포](#api-임계값-재배포-2026-10-09)에 기록했다.
 - 모델: text/Decisions `gpt-6-luna`, live `gpt-live-transcribe`, correction `gpt-transcribe`, image `gpt-image-2.5-flare-2026-09-08`.
-- Decisions 설정: speech 2000ms, chat 10000ms, confidence 0.85.
+- Decisions 설정: speech 2000ms·confidence 0.85, chat 10000ms·실행 confidence 하한 0.5. 두 값은 독립적이다.
 - G3: 사용자 확인과 이번 세션의 자동 검사. [근거](local-validation.md#g4-진입-확인-2026-10-09).
 
 ## 배포 전 확인
@@ -24,9 +24,9 @@
 | --- | --- | --- |
 | Foundation / API / Edge | 세 스택 배포 완료. RDS 17.11, 앱 desired/running 1, ALB target healthy, CloudFront 서비스 응답 확인 | [실제 구성](../../architecture/aws-deployed-architecture.md#실제-배포-리소스) |
 | Migration | 동일 API image의 일회성 task `777282f35c3f4cdfb13e1a08ada9e44a`, exit 0 | [task 조회](reports/aws-runtime-initial.json) |
-| HTTPS·쿠키·캐시 | index 200/no-cache, 해시 JS immutable, 미인증 API JSON 401/no-store, Secure·HttpOnly·SameSite=Lax 세션 | [배포 검증](reports/aws-verification.json), [검증 코드](../../../scripts/deploy/verify.ts) |
-| 두 사용자·WebSocket | 사용자별 세션 분리, 초대·입장·snapshot, `/ws/events`·`/ws/audio` upgrade | [배포 검증](reports/aws-verification.json) |
-| 실제 OpenAI·RDS·S3 | 경험 저장, 이미지 주제, 챗봇·표현 저장, 개인 기록 분리, 스터디 종료, presigned 이미지 bytes | [배포 검증](reports/aws-verification.json) |
+| HTTPS·쿠키·캐시 | index 200/no-cache, 해시 JS immutable, 미인증 API JSON 401/no-store, Secure·HttpOnly·SameSite=Lax 세션 | [최초 배포 검증](reports/aws-verification-initial.json), [검증 코드](../../../scripts/deploy/verify.ts) |
+| 두 사용자·WebSocket | 사용자별 세션 분리, 초대·입장·snapshot, `/ws/events`·`/ws/audio` upgrade | [최초 배포 검증](reports/aws-verification-initial.json) |
+| 실제 OpenAI·RDS·S3 | 경험 저장, 이미지 주제, 챗봇·표현 저장, 개인 기록 분리, 스터디 종료, presigned 이미지 bytes | [최초 배포 검증](reports/aws-verification-initial.json) |
 | ECS 교체·영속성 | task 교체 후 같은 세션·경험·학습 기록·종료된 스터디·동일 이미지 SHA 재조회 | [교체 요청](reports/aws-restart-start.json), [새 task](reports/aws-runtime-final.json), [재조회](reports/aws-restart.json) |
 | 실제 배포 브라우저 | 등록·경험·학습 화면 확인, page error 0 | [결과](reports/aws-browser.json), [등록](screenshots/aws-register.png), [경험](screenshots/aws-experiences.png), [학습](screenshots/aws-learning.png) |
 | 두 물리 노트북·실마이크 | **AWS URL에서는 결과 미확인**. 자동 소켓 연결 검사가 실제 음성 인수를 대신하지 않음 | 사용자에게 결과 요청, 아직 응답 없음 |
@@ -96,4 +96,13 @@ lockfile SHA-256: `23c68c2eeae53f9dc0f4fd19734af0fe884b34227b21a73f3102e6bd40328
 - 테스트 계정: **`malmoa-demo` / 말모아 체험 친구**, user ID `2af35067-d50b-4ae8-b47a-fd239fc5e46e`. 여행·커피·운동·캠핑·요리·봉사·독서·전시·자전거·영어 발표에 대한 가상 경험 10개를 실제 API로 저장하고 재조회했다. [계정·경험 증거](reports/aws-demo-account.json)
 - 경험 준비 중 한 샘플이 `AI_FAILED`로 두 번 실패했다. 다른 가상 경험으로 교체한 뒤 저장을 완료했으며 실패 이력도 증거에 보존했다.
 - 테스트 계정의 쿠키는 git 제외된 `.local/deploy/004376454721-ap-northeast-2/demo-account-session.json`에 0600 권한으로 보관한다. 현재 제품은 가입 세션 방식이며 아이디만으로 기존 계정에 로그인하는 기능은 없다. 이 계정도 일반 초대 수락 흐름을 사용한다.
-- 실제 배포 검증: [브라우저·파일 확인 결과](reports/aws-web-redeployment-browser.json). 최종 결과는 검증 실행 후 이 보고서에 기록한다.
+- 실제 배포 검증: [브라우저·파일 확인 결과](reports/aws-web-redeployment-browser.json)는 `2026-10-09T07:42:30Z`–`07:44:02Z`에 **통과**했다. 게시한 `index.html`과 4개 해시 asset, 랜딩 영상·포스터·자막 18개를 CloudFront에서 확인했다. 실제 브라우저에서 영상 6개 재생 메타데이터, 테스트 계정의 경험 10개, 초대 아이디 안내, page error 0, 모바일 가로 넘침 없음이 확인됐다. 이 자동 브라우저 검사는 두 물리 노트북·실마이크 G4 인수를 대신하지 않는다.
+
+## API 임계값 재배포 (2026-10-09)
+
+- 대상: commit `a26b7959f6c2706742363be6ac97d318cccbaca3`의 `packages/ai` 챗봇 Decisions 실행 confidence 하한 `0.85 → 0.5`. 음성 Decisions 환경값 `0.85`는 유지했다. [재검증 범위](local-validation.md#챗봇-임계값-api-재배포-준비-2026-10-09)
+- 사전 검증: 타입 검사, 단위 306개(챗봇 35개), 계약 39개, PostgreSQL 통합 17개, CDK synth, linux/amd64 API image build 통과. 웹 production build의 `index.html`과 해시 asset 4개는 기존 게시 SHA-256과 일치했다.
+- 읽기 전용 CDK diff: Foundation·Edge 차이 없음. API의 ECS TaskDefinition 이미지 참조만 교체. 배포 wrapper의 소스 지문·계정 게이트 통과 후 `api-stage → migrate → api-start` 순서로 실행했다. 앱 task가 0개인 동안 API·WebSocket에 일시 중단이 있었다.
+- 결과: 새 task definition `StudyApiStackTask96185A21:2`, ECR 및 실행 중 컨테이너의 동일 digest `sha256:dd5eb4ec5987647d4ec41601d615bc30262a273f4754ac54f465d67959c149d1`. 동일 이미지의 migration task `4ca276975b854cbda7c0fe811e61b70d`는 exit 0. API 서비스 desired/running `1/1`, 컨테이너 `HEALTHY`, ALB target `healthy`, CloudFormation `UPDATE_COMPLETE`를 확인했다. CDK asset 이미지의 source map에서 챗봇 임계값 `0.5`를 확인했다.
+- 배포 URL 재조회: 익명 `/api/v1/me`는 JSON 401/no-store, 기존 `malmoa-demo` 세션의 `/api/v1/me`는 200, 경험 목록은 10개 그대로다. 정적 웹의 ETag·LastModified는 기존 게시와 동일해 웹 업로드·CloudFront invalidation을 다시 실행하지 않았다. [상세 AWS 증거](reports/aws-api-redeployment.json)
+- 배포 후 [실환경 자동 검증](reports/aws-verification.json)이 `2026-10-09T08:08:55Z`–`08:09:23Z`에 통과했다. HTTPS·Secure/HttpOnly 쿠키·캐시 경계·이벤트/오디오 WebSocket, 실제 OpenAI 경험·이미지·챗봇 호출, RDS 기록, S3 이미지 바이트, 두 사용자 이벤트를 확인했다. 최초 결과는 [별도 보관본](reports/aws-verification-initial.json)에 유지했다. 비결정적인 개별 confidence 수치를 고정해 검사한 결과는 아니며, 두 물리 노트북·실마이크 G4 인수는 여전히 미확인이다.

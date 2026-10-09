@@ -147,3 +147,11 @@ G3 필수 항목이 남아 있으므로 bootstrap, stack deploy, ECR 게시, 웹
 검증 기록의 현재 소스 지문은 `422738ea069d77423147ee3d799c4913d6a3b8f0a0c27ced2f7ed436fcce58c9`이다. 이전 G3 JSON은 [보관본](reports/g3-before-web-redeployment.json)에 남겼으며, 실기기·실마이크 및 변경 없는 서버의 기존 검증은 역사적 근거로 유지한다. 이번 웹 재배포에서 물리 기기 검사를 다시 수행하지 않았다.
 
 웹 게시, 실제 배포 브라우저 확인, 가상 경험 10개를 가진 테스트 계정의 결과는 [릴리스 기록](release.md#웹-재배포와-테스트-계정-2026-10-09)에 있다.
+
+## 챗봇 임계값 API 재배포 준비 (2026-10-09)
+
+검증 대상은 commit `a26b7959f6c2706742363be6ac97d318cccbaca3`이다. 챗봇 Decisions의 자동 실행 confidence 하한은 `0.85`에서 `0.5`로 낮췄고, 음성 Decisions의 `SPEECH_DECISION_CONFIDENCE=0.85`는 유지했다. `0.49` 및 비정상 confidence를 거부하는 경계 검사를 포함해 챗봇 단위 검사 35개가 통과했다.
+
+전체 TypeScript 검사, 단위 306개, 계약 39개, PostgreSQL 통합 17개, offline CDK synth, linux/amd64 API image build를 통과했다. 로컬 image ID는 `sha256:31fcf7528ff6028b114d91c4656c796ad1821d8b7425aca0a178edeee81bd574`다. 웹 production build의 `index.html`과 해시 asset 4개의 SHA-256은 [기존 웹 재배포 목록](reports/aws-web-redeployment.json)과 모두 일치했다. 웹 재게시가 필요하지 않다.
+
+이번 소스에서 브라우저 E2E 10개와 linux/amd64 image 재시작·기록 재조회도 다시 통과했다. 이전 G3의 실기기·실마이크 사용자 확인과 로컬 실제 OpenAI 호출은 역사적 근거이며, AWS URL의 두 물리 기기 G4 인수는 계속 미확인이다. 소스 지문과 실행 범위는 [JSON 기록](local-validation.json)에 남겼다. 배포 후 실제 OpenAI 검사는 [릴리스 기록](release.md#api-임계값-재배포-2026-10-09)에 구분해 기록했다.
