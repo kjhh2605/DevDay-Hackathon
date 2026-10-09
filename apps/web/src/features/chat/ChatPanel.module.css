@@ -111,6 +111,81 @@
   color: var(--mc-brand-fg);
   border-radius: 14px 4px 14px 14px;
 }
+.markdown {
+  white-space: normal;
+}
+.markdown > * {
+  margin: 0;
+}
+.markdown > * + * {
+  margin-top: 0.75em;
+}
+.markdown p {
+  white-space: pre-wrap;
+}
+.markdown ul,
+.markdown ol {
+  padding-left: 1.5em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li + li {
+  margin-top: 0.25em;
+}
+.markdown strong {
+  font-weight: 700;
+}
+.markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1.1em;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.markdown a {
+  text-decoration: underline;
+}
+.markdown blockquote {
+  padding-left: 0.75em;
+  border-left: 3px solid var(--mc-line);
+  color: var(--mc-muted);
+}
+.markdown code {
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background: var(--mc-surface);
+  font-size: 0.9em;
+}
+.markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.75em;
+  border-radius: 6px;
+  background: var(--mc-surface);
+  white-space: pre;
+}
+.markdown pre code {
+  padding: 0;
+  background: transparent;
+}
+.markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.markdown th,
+.markdown td {
+  padding: 0.35em 0.6em;
+  border: 1px solid var(--mc-line);
+  text-align: left;
+}
+.markdown img {
+  max-width: 100%;
+  height: auto;
+}
 .result,
 .saved {
   display: flex;

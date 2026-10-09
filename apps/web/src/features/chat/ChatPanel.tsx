@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { CommandResult } from '@devday/contracts';
 import { Badge, Button, ErrorMessage, Icon, TextArea, JobStatus } from '../../shared/ui';
 import { usePrivateChat, useCommandExecution } from './useChat';
@@ -87,7 +89,17 @@ export function ChatPanel({ studyId, ended }: { studyId: string; ended: boolean 
               <div className={s.messageLabel}>
                 {message.role === 'user' ? '나' : '말모아 도우미'}
               </div>
-              <div className={s.bubble}>{message.text || '요청을 살펴보고 있어요…'}</div>
+              <div className={s.bubble}>
+                {message.role === 'user' ? (
+                  message.text
+                ) : (
+                  <div className={s.markdown}>
+                    <Markdown remarkPlugins={[remarkGfm]}>
+                      {message.text || '요청을 살펴보고 있어요…'}
+                    </Markdown>
+                  </div>
+                )}
+              </div>
               {message.status === 'running' && <Badge tone="brand">답변 · 기능 실행 중</Badge>}
               {message.status === 'failed' && (
                 <Badge tone="error">요청 실패 · 새로 요청해 주세요</Badge>
