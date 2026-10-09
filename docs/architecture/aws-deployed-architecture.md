@@ -1,6 +1,6 @@
 # 현재 AWS 인프라 아키텍처
 
-2026-10-09 16:22 KST 배포·검증 기준이다. 서비스 주소는 **https://d31qyxseqz8321.cloudfront.net**이며, AWS 계정 `004376454721`의 서울 리전(`ap-northeast-2`)에 배포했다. 선언 코드는 [CDK stacks](../../infra/src/stacks.ts), 실행 근거는 [G4 릴리스 기록](../implementation/evidence/release.md)에 있다.
+2026-10-09 17:08 KST 배포·검증 기준이다. 서비스 주소는 **https://d31qyxseqz8321.cloudfront.net**이며, AWS 계정 `004376454721`의 서울 리전(`ap-northeast-2`)에 배포했다. 선언 코드는 [CDK stacks](../../infra/src/stacks.ts), 실행 근거는 [G4 릴리스 기록](../implementation/evidence/release.md)에 있다.
 
 확대·공유용 SVG: [서비스 인프라](aws-runtime.svg), [배포 흐름](aws-deployment.svg). 아래 Mermaid 원본에서 렌더링했다.
 
@@ -100,12 +100,12 @@ flowchart LR
 | ALB | `StudyA-Alb16-HgSeJhRNxOnn` |
 | ECS cluster | `StudyApiStack-ClusterEB0386A7-5DDeWJbIf145` |
 | ECS service | `StudyApiStack-ServiceD69D759B-DpxYtWISPJmI` |
-| Task definition | `StudyApiStackTask96185A21:1` |
+| Task definition | `StudyApiStackTask96185A21:2` |
 | RDS instance | `studyfoundationstack-databaseb269d8bb-zsniaurzmxtn` |
 | Web bucket | `studyfoundationstack-webbucket12880f5b-yt4rwc101kus` |
 | Media bucket | `studyfoundationstack-mediabucketbcbb02ba-buzj9yp32o3x` |
 | Log group | `StudyApiStack-ApiLogs3D05D88B-EzLxGclRElPQ` |
 
-API image digest는 `sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1`이며 `35290d3` 기반의 검증된 G4 snapshot이다. 웹은 독립적으로 S3에 게시한다. 최초 웹 배포 이후 랜딩 페이지·영상(`8343973`)과 테스트 초대 아이디 안내를 반영하는 재배포 이력은 [릴리스 기록](../implementation/evidence/release.md#웹-재배포와-테스트-계정-2026-10-09)을 따른다. API·네트워크 구성은 그대로이며, 각 검증의 소스 지문·lockfile 지문은 [검증 기록](../implementation/evidence/local-validation.json)에 남겼다.
+현재 API image digest는 `sha256:dd5eb4ec5987647d4ec41601d615bc30262a273f4754ac54f465d67959c149d1`이며 commit `a26b795`의 챗봇 Decisions 실행 confidence 하한 `0.5`를 포함한다. 음성 Decisions의 환경값 `0.85`는 유지한다. [API 재배포 증거](../implementation/evidence/reports/aws-api-redeployment.json)에서 migration exit 0, 새 task의 `HEALTHY`, ALB target `healthy`, 기존 세션·경험 10개 재조회를 확인할 수 있다. 웹은 독립적으로 S3에 게시했고 이번 API 교체 중 다시 게시하지 않았다. 랜딩 페이지·영상(`8343973`)과 테스트 초대 아이디 안내를 반영한 [웹 재배포 이력](../implementation/evidence/release.md#웹-재배포와-테스트-계정-2026-10-09)을 따른다. DB·네트워크 구성은 그대로다.
 
 HTTPS·쿠키·캐시·두 WebSocket upgrade, 실제 OpenAI·RDS·S3 연결, ECS task 교체 후 데이터 재조회는 통과했다. **AWS URL에서 두 물리 노트북·실마이크로 수행하는 G4 인수 결과는 아직 미확인**이다. 자세한 범위와 증거는 [릴리스 기록](../implementation/evidence/release.md)을 따른다.
