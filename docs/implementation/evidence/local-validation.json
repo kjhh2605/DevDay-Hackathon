@@ -1,9 +1,9 @@
 {
   "gate": "pass",
   "verifiedAt": "2026-10-09T08:09:23.933Z",
-  "targetCommit": "6052b3a39899a8f29c0dd5f95aa49a3420c292c3",
+  "targetCommit": "8f7b10f5084b02f8c1b4b65f831a4cc2d0bcc7f3",
   "lockfileSha256": "23c68c2eeae53f9dc0f4fd19734af0fe884b34227b21a73f3102e6bd403283c6",
-  "sourceSha256": "9e0534a1111ce947ac45c95f1fcab93cb7ae8d8b62d196c34714586b737d1739",
+  "sourceSha256": "babbe3db873be3cd340e16764beb44562f066d72c42e7b89f89db2fdef4795bd",
   "aiMode": "live",
   "models": {
     "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
@@ -205,5 +205,10 @@
     "apiImageId": "sha256:31fcf7528ff6028b114d91c4656c796ad1821d8b7425aca0a178edeee81bd574",
     "inheritedChecks": "Prior G3 two-device, real-microphone and local live OpenAI results remain historical. Current-source browser E2E and container restart persistence were rerun. AWS G4 physical acceptance remains pending.",
     "additionalVerification": "AWS post-deployment live OpenAI/RDS/S3 and two-user flow passed at 2026-10-09T08:09:23Z; see reports/aws-verification.json."
+  },
+  "postValidationSourceIdentity": {
+    "recordedAt": "2026-10-09T08:14:45Z",
+    "commit": "8f7b10f5084b02f8c1b4b65f831a4cc2d0bcc7f3",
+    "scope": "A Codex session-log archive was committed after application deployment and verification. It changes the repository source fingerprint but no application, infrastructure, lockfile, or web build input. Runtime deployment provenance remains the earlier a26b795 commit and dc2eaa07 source fingerprint."
   }
 }
