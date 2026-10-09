@@ -1,0 +1,16 @@
+{
+  "tasks": [
+    {
+      "arn": "arn:aws:ecs:ap-northeast-2:004376454721:task/StudyApiStack-ClusterEB0386A7-5DDeWJbIf145/bc860da64f5f4b2da55915ea97e9bf28",
+      "lastStatus": "RUNNING",
+      "healthStatus": "HEALTHY",
+      "startedAt": "2026-10-09T07:21:07.505000+00:00",
+      "containers": [
+        {
+          "name": "api",
+          "imageDigest": "sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1"
+        }
+      ]
+    }
+  ]
+}

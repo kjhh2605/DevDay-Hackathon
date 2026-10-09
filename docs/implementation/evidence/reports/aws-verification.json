@@ -1,0 +1,12 @@
+{
+  "origin": "https://d31qyxseqz8321.cloudfront.net",
+  "startedAt": "2026-10-09T07:17:18.749Z",
+  "physicalMicrophones": "not_run",
+  "httpsCookiesCacheAndWss": "pass",
+  "liveOpenAiRdsS3": "pass",
+  "imageSha256": "22fda0cb619b6fd54451bc214d7afc5d34b4114922cf833cfc7a86a6a87c5a45",
+  "imageBytes": 1794370,
+  "studyId": "3f5373aa-86e9-416b-9ae9-78484aa714a7",
+  "result": "pass",
+  "finishedAt": "2026-10-09T07:17:47.379Z"
+}

@@ -1,6 +1,6 @@
 # 로컬 검증 실행 기록
 
-검증일: 2026-10-09 (Asia/Seoul). **G3 미통과 — 구현과 로컬 자동 검사를 수행했으며, 두 물리 노트북·실마이크 인수와 실제 음성 품질의 최종 판정은 남아 있다.**
+검증일: 2026-10-09 (Asia/Seoul). **G3 통과 — 아래 최초 기록 이후 사용자가 현재 코드의 남은 실기기 검증 완료를 확인했다.** 최신 근거는 이 문서 마지막의 G4 진입 확인과 `local-validation.json`이다. 아래 최초 기록의 미실행·실패는 당시 사실로 보존한다.
 
 이 파일은 실제 실행 결과만 기록한다. 기계 판독 기록은 `local-validation.json`이며, AWS preflight는 G3 전체 항목 및 검증한 commit·lockfile·소스 지문을 확인하기 전 AWS API를 호출하지 않는다. G3 기록은 사용자 승인 절차를 추가하는 용도가 아니다.
 
@@ -131,3 +131,11 @@ Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중�
 3. `AI_MODE=live`의 실제 마이크 발화와 결과를 사람이 비교해야 한다. 합성 WAV와 fake audio는 이를 대체하지 않는다.
 
 G3 필수 항목이 남아 있으므로 bootstrap, stack deploy, ECR 게시, 웹 업로드를 수행하지 않았다.
+
+## G4 진입 확인 (2026-10-09)
+
+사용자는 남은 두 물리 노트북·실마이크 G3 검증을 묻는 질문에 **“검증 완료 — 결과 전달”**, 검증 버전 질문에 **“현재 코드로 배포 진행”**이라고 답했다. 이를 현재 앱 코드의 G3 완료 확인으로 기록했다. 실기기 검사 결과는 사용자 확인에 근거하며, 에이전트가 관찰한 결과가 아니다. 기기 모델·브라우저·녹음 자료는 전달되지 않았다. 이전 기계 판독 기록은 `reports/g3-before-user-confirmation.json`에 보존했다.
+
+배포 대상은 사용자가 선택한 `default` / `004376454721` / `ap-northeast-2`이다. 기준 commit은 `35290d32715d4c2852c0c3f62aa12b1c3d726a79`이며 G4 추가 파일은 아직 commit하지 않은 작업 트리다. 정확한 소스·lockfile 지문은 JSON에 기록했다. 사용자 소유 `prompts/project-presentation.md`는 수정하지 않았다.
+
+이번 세션에서 타입 검사, 단위 306개, 계약 39개, PostgreSQL 통합 17개, E2E 4개(50.8초), build, CDK synth, linux/amd64 image build, 동일 image migration 및 재시작 후 저장 재조회가 통과했다. 앱 기능 코드는 바꾸지 않았고 배포 도구·Decisions 환경 전달·컨테이너 readiness만 추가했다. AWS 환경의 실기기 G4 인수는 이 확인과 별개로 [릴리스 기록](release.md)에 남긴다.

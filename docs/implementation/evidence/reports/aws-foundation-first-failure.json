@@ -1,0 +1,335 @@
+{
+  "zones": {
+    "AvailabilityZones": [
+      {
+        "OptInStatus": "opt-in-not-required",
+        "Messages": [],
+        "RegionName": "ap-northeast-2",
+        "ZoneName": "ap-northeast-2a",
+        "ZoneId": "apne2-az1",
+        "GroupName": "ap-northeast-2-zg-1",
+        "NetworkBorderGroup": "ap-northeast-2",
+        "ZoneType": "availability-zone",
+        "GroupLongName": "Asia Pacific (Seoul) 1",
+        "Geography": [
+          {
+            "Name": "South Korea"
+          }
+        ],
+        "SubGeography": [],
+        "State": "available"
+      },
+      {
+        "OptInStatus": "opt-in-not-required",
+        "Messages": [],
+        "RegionName": "ap-northeast-2",
+        "ZoneName": "ap-northeast-2b",
+        "ZoneId": "apne2-az2",
+        "GroupName": "ap-northeast-2-zg-1",
+        "NetworkBorderGroup": "ap-northeast-2",
+        "ZoneType": "availability-zone",
+        "GroupLongName": "Asia Pacific (Seoul) 1",
+        "Geography": [
+          {
+            "Name": "South Korea"
+          }
+        ],
+        "SubGeography": [],
+        "State": "available"
+      },
+      {
+        "OptInStatus": "opt-in-not-required",
+        "Messages": [],
+        "RegionName": "ap-northeast-2",
+        "ZoneName": "ap-northeast-2c",
+        "ZoneId": "apne2-az3",
+        "GroupName": "ap-northeast-2-zg-1",
+        "NetworkBorderGroup": "ap-northeast-2",
+        "ZoneType": "availability-zone",
+        "GroupLongName": "Asia Pacific (Seoul) 1",
+        "Geography": [
+          {
+            "Name": "South Korea"
+          }
+        ],
+        "SubGeography": [],
+        "State": "available"
+      },
+      {
+        "OptInStatus": "opt-in-not-required",
+        "Messages": [],
+        "RegionName": "ap-northeast-2",
+        "ZoneName": "ap-northeast-2d",
+        "ZoneId": "apne2-az4",
+        "GroupName": "ap-northeast-2-zg-1",
+        "NetworkBorderGroup": "ap-northeast-2",
+        "ZoneType": "availability-zone",
+        "GroupLongName": "Asia Pacific (Seoul) 1",
+        "Geography": [
+          {
+            "Name": "South Korea"
+          }
+        ],
+        "SubGeography": [],
+        "State": "available"
+      }
+    ]
+  },
+  "stack": {
+    "Stacks": [
+      {
+        "StackId": "arn:aws:cloudformation:ap-northeast-2:004376454721:stack/StudyFoundationStack/6a300840-c3ac-11f1-b4f5-06f8d539b001",
+        "StackName": "StudyFoundationStack",
+        "Parameters": [
+          {
+            "ParameterKey": "PostgresVersion",
+            "ParameterValue": "17.11"
+          },
+          {
+            "ParameterKey": "CloudFrontPrefixListId",
+            "ParameterValue": "pl-22a6434b"
+          },
+          {
+            "ParameterKey": "BootstrapVersion",
+            "ParameterValue": "/cdk-bootstrap/hnb659fds/version",
+            "ResolvedValue": "32"
+          }
+        ],
+        "CreationTime": "2026-10-09T06:41:11.122000+00:00",
+        "DeletionTime": "2026-10-09T06:41:42.088000+00:00",
+        "LastUpdatedTime": "2026-10-09T06:41:22.515000+00:00",
+        "RollbackConfiguration": {},
+        "StackStatus": "ROLLBACK_COMPLETE",
+        "DisableRollback": false,
+        "DeploymentConfig": {
+          "Mode": "STANDARD",
+          "DisableRollback": false
+        },
+        "NotificationARNs": [],
+        "Capabilities": [
+          "CAPABILITY_IAM",
+          "CAPABILITY_NAMED_IAM",
+          "CAPABILITY_AUTO_EXPAND"
+        ],
+        "RoleARN": "arn:aws:iam::004376454721:role/cdk-hnb659fds-cfn-exec-role-004376454721-ap-northeast-2",
+        "Tags": [],
+        "EnableTerminationProtection": true,
+        "DriftInformation": {
+          "StackDriftStatus": "NOT_CHECKED"
+        },
+        "LastOperations": [
+          {
+            "OperationType": "ROLLBACK",
+            "OperationId": "92e77fb7-b5b3-40b6-ac02-891051224abd"
+          },
+          {
+            "OperationType": "CREATE_STACK",
+            "OperationId": "e878e9ab-5885-4ab1-939e-f98640d84868"
+          }
+        ]
+      }
+    ]
+  },
+  "resources": {
+    "StackResourceSummaries": [
+      {
+        "LogicalResourceId": "AlbSecurityGroup86A59E99",
+        "PhysicalResourceId": "sg-0c0a38d0dc3d9b722",
+        "ResourceType": "AWS::EC2::SecurityGroup",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.478000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "CDKMetadata",
+        "PhysicalResourceId": "6a300840-c3ac-11f1-b4f5-06f8d539b001",
+        "ResourceType": "AWS::CDK::Metadata",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.084000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+        "PhysicalResourceId": "StudyFoundationStack-CustomVpcRestrictDefaultSGCust-68rzkuJ2cbPa",
+        "ResourceType": "AWS::IAM::Role",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.917000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "DatabaseSecret86DBB7B3",
+        "PhysicalResourceId": "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:DatabaseSecret86DBB7B3-DoQ3wy8XoQ5Z-sbrKN6",
+        "ResourceType": "AWS::SecretsManager::Secret",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:44.334000+00:00",
+        "ResourceStatus": "DELETE_SKIPPED",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "DatabaseSecurityGroup7319C0F6",
+        "PhysicalResourceId": "sg-0cfb32532c6820b4f",
+        "ResourceType": "AWS::EC2::SecurityGroup",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.801000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "MediaBucketBCBB02BA",
+        "PhysicalResourceId": "studyfoundationstack-mediabucketbcbb02ba-zxz1rsdicjia",
+        "ResourceType": "AWS::S3::Bucket",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:44.956000+00:00",
+        "ResourceStatus": "DELETE_SKIPPED",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "OpenAiSecret",
+        "PhysicalResourceId": "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:OpenAiSecret-bHqEZPoQ7ZMt-9SmqBm",
+        "ResourceType": "AWS::SecretsManager::Secret",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:44.381000+00:00",
+        "ResourceStatus": "DELETE_SKIPPED",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "TaskSecurityGroup2D2EA438",
+        "PhysicalResourceId": "sg-0cf9ec7d74e3d9a5a",
+        "ResourceType": "AWS::EC2::SecurityGroup",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.407000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "Vpc8378EB38",
+        "PhysicalResourceId": "vpc-0bc8ab9089a2d7bd7",
+        "ResourceType": "AWS::EC2::VPC",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:49.006000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcIGWD7BA715C",
+        "PhysicalResourceId": "igw-03f3f4d98013f9d7f",
+        "ResourceType": "AWS::EC2::InternetGateway",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.610000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPrivateSubnet1RouteTableB2C5B500",
+        "PhysicalResourceId": "rtb-03c51671436cc8e12",
+        "ResourceType": "AWS::EC2::RouteTable",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.509000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPrivateSubnet1Subnet536B997A",
+        "PhysicalResourceId": "subnet-09b1017e7fc9569d8",
+        "ResourceType": "AWS::EC2::Subnet",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.659000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPrivateSubnet2RouteTableA678073B",
+        "PhysicalResourceId": "rtb-0d576622bbf82203a",
+        "ResourceType": "AWS::EC2::RouteTable",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.312000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPrivateSubnet2Subnet3788AAA1",
+        "ResourceType": "AWS::EC2::Subnet",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:44.170000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPublicSubnet1RouteTable6C95E38E",
+        "PhysicalResourceId": "rtb-0b42affa5614b359d",
+        "ResourceType": "AWS::EC2::RouteTable",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.297000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPublicSubnet1Subnet5C2D37C4",
+        "PhysicalResourceId": "subnet-06f302b841b9cf29f",
+        "ResourceType": "AWS::EC2::Subnet",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.605000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPublicSubnet2RouteTable94F7E489",
+        "PhysicalResourceId": "rtb-0e5960b4a081088ca",
+        "ResourceType": "AWS::EC2::RouteTable",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:46.485000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcPublicSubnet2Subnet691E08A3",
+        "ResourceType": "AWS::EC2::Subnet",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:44.140000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "VpcVPCGWBF912B6E",
+        "PhysicalResourceId": "IGW|vpc-0bc8ab9089a2d7bd7",
+        "ResourceType": "AWS::EC2::VPCGatewayAttachment",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.114000+00:00",
+        "ResourceStatus": "DELETE_COMPLETE",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      },
+      {
+        "LogicalResourceId": "WebBucket12880F5B",
+        "PhysicalResourceId": "studyfoundationstack-webbucket12880f5b-fs65bjdxmg0k",
+        "ResourceType": "AWS::S3::Bucket",
+        "LastUpdatedTimestamp": "2026-10-09T06:41:45.019000+00:00",
+        "ResourceStatus": "DELETE_SKIPPED",
+        "DriftInformation": {
+          "StackResourceDriftStatus": "NOT_CHECKED"
+        }
+      }
+    ]
+  }
+}

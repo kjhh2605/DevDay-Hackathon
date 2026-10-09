@@ -1,6 +1,6 @@
 # MVP 구현 작업 계획
 
-이 문서는 구현 세션의 실행 계획이다. 기준은 [PRD](../prd.md), [선정 아키텍처](../architecture/mvp-architecture.md), [공유 계약](shared-contracts.md)이다. 2026-10-09부터 이 계획에 따라 구현하고 있으며, 실제 실행 결과와 미실행 항목은 [로컬 검증 기록](evidence/local-validation.md)에 남긴다. 현재 두 물리 노트북·실마이크 인수가 남아 있으므로 G3는 미통과다.
+이 문서는 구현 세션의 실행 계획이다. 기준은 [PRD](../prd.md), [선정 아키텍처](../architecture/mvp-architecture.md), [공유 계약](shared-contracts.md)이다. 2026-10-09부터 이 계획에 따라 구현하고 있으며, 실제 실행 결과와 미실행 항목은 [로컬 검증 기록](evidence/local-validation.md)에 남긴다. 2026-10-09 G4 세션에서 사용자가 현재 코드의 G3 실기기 검증 완료를 확인했다. 해당 확인의 출처와 추가 자동 검사 결과는 로컬 검증 기록에, AWS 배포 진행은 [릴리스 기록](evidence/release.md)에 남긴다.
 
 ## 1. 작업 구조와 시작 순서
 
@@ -143,6 +143,8 @@ UI 반복 수정은 S3가 앱 셸·공통 디자인을, S4가 경험/기록 화�
 S0/S5는 검증한 commit과 자동/수동 검사 결과를 `docs/implementation/evidence/local-validation.md`에 기록한다. 필수 로컬 항목의 실패·미실행이 남아 있으면 G3는 미통과이며 배포를 시작하지 않는다. CDK 작성·synth, Docker 빌드는 미리 할 수 있지만 bootstrap·stack deploy·ECR 게시·웹 업로드는 이 조건을 통과한 뒤 수행한다.
 
 ## 8. G4: AWS 완료 기준
+
+2026-10-09 현재 AWS 배포·자동 연결 검증·ECS 교체 후 영속성 검증을 완료했다. [현재 인프라 다이어그램](../architecture/aws-deployed-architecture.md)과 [릴리스 증거](evidence/release.md)를 참고한다. **AWS URL에서 두 물리 노트북·실마이크로 수행하는 인수 결과는 미확인으로, T14/G4 전체는 아직 완료가 아니다.**
 
 [G3 로컬 검증 기록](local-validation.md)을 확인한 뒤 [AWS 실행서](aws-deployment.md)에 따라 검증한 버전을 배포한다. CloudFront/ALB의 HTTPS·WSS·쿠키·캐시, IAM/Secrets, RDS, S3 등 배포 환경 차이를 확인하고 두 물리 노트북에서 [실기기 인수](acceptance.md)를 수행한다. 저장된 기록은 앱 프로세스 재시작 후에도 조회한다. 진행 중 세션 복구를 성공 조건에 넣지는 않는다.
 

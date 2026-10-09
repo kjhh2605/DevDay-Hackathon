@@ -1,0 +1,9 @@
+{
+  "origin": "https://d31qyxseqz8321.cloudfront.net",
+  "startedAt": "2026-10-09T07:22:05.605Z",
+  "physicalMicrophones": "not_run",
+  "restartPersistence": "pass",
+  "imageSha256": "22fda0cb619b6fd54451bc214d7afc5d34b4114922cf833cfc7a86a6a87c5a45",
+  "result": "pass",
+  "finishedAt": "2026-10-09T07:22:06.499Z"
+}

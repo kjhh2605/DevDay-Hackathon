@@ -23,8 +23,17 @@ import {
 } from 'aws-cdk-lib';
 import type { Construct } from 'constructs';
 import { spaRewriteCode } from './spa-rewrite.js';
+import { studyAvailabilityZones } from './region.js';
 
-export class StudyFoundationStack extends Stack {
+// A concrete deployment account must be as lookup-free as an offline synth.
+// CDK resources also read Stack.availabilityZones, even when Vpc has explicit AZs.
+class StudyStack extends Stack {
+  override get availabilityZones(): string[] {
+    return [...studyAvailabilityZones];
+  }
+}
+
+export class StudyFoundationStack extends StudyStack {
   readonly vpc: ec2.Vpc;
   readonly albSecurityGroup: ec2.SecurityGroup;
   readonly taskSecurityGroup: ec2.SecurityGroup;
@@ -37,7 +46,7 @@ export class StudyFoundationStack extends Stack {
     super(scope, id, { ...props, terminationProtection: true });
     this.vpc = new ec2.Vpc(this, 'Vpc', {
       ipAddresses: ec2.IpAddresses.cidr('10.24.0.0/16'),
-      availabilityZones: [Fn.select(0, Fn.getAzs()), Fn.select(1, Fn.getAzs())],
+      availabilityZones: this.availabilityZones,
       natGateways: 0,
       subnetConfiguration: [
         { name: 'Public', subnetType: ec2.SubnetType.PUBLIC, cidrMask: 24 },
@@ -159,7 +168,7 @@ interface ApiStackProps extends StackProps {
   foundation: StudyFoundationStack;
 }
 
-export class StudyApiStack extends Stack {
+export class StudyApiStack extends StudyStack {
   readonly alb: elbv2.ApplicationLoadBalancer;
   readonly listener: elbv2.ApplicationListener;
   readonly cluster: ecs.Cluster;
@@ -187,6 +196,13 @@ export class StudyApiStack extends Stack {
     const liveTranscribeModel = model('OpenAiLiveTranscribeModel', 'gpt-live-transcribe');
     const correctionModel = model('OpenAiCorrectionModel', 'gpt-transcribe');
     const imageModel = model('OpenAiImageModel', 'gpt-image-2.5-flare-2026-09-08');
+    const decisionModel = model('OpenAiDecisionModel', 'gpt-6-luna');
+    const numericSetting = (id: string, defaultValue: number, minValue: number, maxValue: number) =>
+      new CfnParameter(this, id, { type: 'Number', default: defaultValue, minValue, maxValue })
+        .valueAsString;
+    const speechTimeout = numericSetting('SpeechDecisionTimeoutMs', 2000, 1, 10000);
+    const chatTimeout = numericSetting('ChatDecisionTimeoutMs', 10000, 1, 60000);
+    const confidence = numericSetting('SpeechDecisionConfidence', 0.85, 0, 1);
     this.cluster = new ecs.Cluster(this, 'Cluster', { vpc: foundation.vpc });
     this.task = new ecs.FargateTaskDefinition(this, 'Task', {
       cpu: 512,
@@ -207,6 +223,18 @@ export class StudyApiStack extends Stack {
       }),
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'api', logGroup }),
       portMappings: [{ containerPort: 3000 }],
+      healthCheck: {
+        command: [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ],
+        interval: Duration.seconds(30),
+        timeout: Duration.seconds(5),
+        startPeriod: Duration.seconds(30),
+        retries: 3,
+      },
       environment: {
         NODE_ENV: 'production',
         APP_ENV: 'aws',
@@ -226,6 +254,10 @@ export class StudyApiStack extends Stack {
         OPENAI_LIVE_TRANSCRIBE_MODEL: liveTranscribeModel,
         OPENAI_CORRECTION_MODEL: correctionModel,
         OPENAI_IMAGE_MODEL: imageModel,
+        OPENAI_DECISION_MODEL: decisionModel,
+        SPEECH_DECISION_TIMEOUT_MS: speechTimeout,
+        CHAT_DECISION_TIMEOUT_MS: chatTimeout,
+        SPEECH_DECISION_CONFIDENCE: confidence,
       },
       secrets: {
         DB_USER: ecs.Secret.fromSecretsManager(foundation.database.secret!, 'username'),
@@ -277,6 +309,7 @@ export class StudyApiStack extends Stack {
     new CfnOutput(this, 'ServiceArn', { value: this.service.serviceArn });
     new CfnOutput(this, 'TaskDefinitionArn', { value: this.task.taskDefinitionArn });
     new CfnOutput(this, 'AlbArn', { value: this.alb.loadBalancerArn });
+    new CfnOutput(this, 'TargetGroupArn', { value: targets.targetGroupArn });
     new CfnOutput(this, 'LogGroupName', { value: logGroup.logGroupName });
   }
 }
@@ -286,7 +319,7 @@ interface EdgeStackProps extends StackProps {
   api: StudyApiStack;
 }
 
-export class StudyEdgeStack extends Stack {
+export class StudyEdgeStack extends StudyStack {
   readonly distribution: cloudfront.Distribution;
 
   constructor(scope: Construct, id: string, props: EdgeStackProps) {

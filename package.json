@@ -31,7 +31,18 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:audio-browser": "pnpm --filter @devday/audio-client test:browser",
-    "test:live": "tsx scripts/validation/live-flow.ts"
+    "test:live": "tsx scripts/validation/live-flow.ts",
+    "infra:bootstrap": "tsx scripts/deploy/cli.ts bootstrap",
+    "infra:diff": "tsx scripts/deploy/cli.ts diff",
+    "deploy:foundation": "tsx scripts/deploy/cli.ts foundation",
+    "deploy:api:stage": "tsx scripts/deploy/cli.ts api-stage",
+    "db:migrate:aws": "tsx scripts/deploy/cli.ts migrate",
+    "deploy:api:start": "tsx scripts/deploy/cli.ts api-start",
+    "deploy:edge": "tsx scripts/deploy/cli.ts edge",
+    "deploy:secret": "tsx scripts/deploy/cli.ts secret",
+    "deploy:web": "tsx scripts/deploy/cli.ts web",
+    "deploy:status": "tsx scripts/deploy/cli.ts status",
+    "deploy:verify": "tsx scripts/deploy/verify.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",

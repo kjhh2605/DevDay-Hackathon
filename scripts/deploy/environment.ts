@@ -10,6 +10,26 @@ export interface DeployEnvironment {
   account: string;
   region: string;
 }
+// A named profile must not be overridden by credentials inherited from a shell.
+export function deploymentProcessEnvironment(config: DeployEnvironment): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of [
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'AWS_SESSION_TOKEN',
+    'AWS_SECURITY_TOKEN',
+    'AWS_DEFAULT_PROFILE',
+  ])
+    delete env[key];
+  return {
+    ...env,
+    AWS_PROFILE: config.profile,
+    AWS_REGION: config.region,
+    AWS_DEFAULT_REGION: config.region,
+    STUDY_AWS_ACCOUNT_ID: config.account,
+    AWS_PAGER: '',
+  };
+}
 export function loadDeployEnvironment(): DeployEnvironment {
   requireG3();
   let file: Record<string, string>;
@@ -31,7 +51,7 @@ export function loadDeployEnvironment(): DeployEnvironment {
     throw new Error('The selected architecture requires AWS_REGION=ap-northeast-2.');
   return { profile, account, region };
 }
-export function aws(config: DeployEnvironment, args: string[]): unknown {
+export function aws(config: DeployEnvironment, args: string[], input?: string): unknown {
   const result = spawnSync(
     'aws',
     [
@@ -44,7 +64,12 @@ export function aws(config: DeployEnvironment, args: string[]): unknown {
       'json',
       '--no-cli-pager',
     ],
-    { encoding: 'utf8', timeout: 60_000 },
+    {
+      encoding: 'utf8',
+      timeout: 60_000,
+      env: deploymentProcessEnvironment(config),
+      ...(input === undefined ? {} : { input }),
+    },
   );
   if (result.status !== 0)
     throw new Error(

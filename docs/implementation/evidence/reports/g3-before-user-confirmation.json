@@ -1,25 +1,20 @@
 {
-  "gate": "pass",
-  "verifiedAt": "2026-10-09T06:52:20.231Z",
-  "targetCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
-  "lockfileSha256": "23c68c2eeae53f9dc0f4fd19734af0fe884b34227b21a73f3102e6bd403283c6",
-  "sourceSha256": "51709040ccfc119051381927ced0b145aa4c111cbb1f74769f05eefd6c228c2d",
+  "gate": "pending",
+  "verifiedAt": "2026-10-09T04:47:23.418000Z",
+  "targetCommit": "a0c255627cc1320f11645dd495cb817c6836729c",
+  "lockfileSha256": "e8d49ab375ecb96da7c3fa9da86b871f054ea7bc06d76aa070be685d47def67e",
+  "sourceSha256": "62d7e0e08dcb9568f5a32ac8da7f6814b6cf509d08e64bb79a80847980ef02a4",
   "aiMode": "live",
   "models": {
     "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
     "OPENAI_IMAGE_MODEL": "gpt-image-2.5-flare-2026-09-08",
     "OPENAI_LIVE_TRANSCRIBE_MODEL": "gpt-live-transcribe",
-    "OPENAI_TEXT_MODEL": "gpt-6-luna",
-    "OPENAI_DECISION_MODEL": "gpt-6-luna"
+    "OPENAI_TEXT_MODEL": "gpt-6-luna"
   },
   "physicalDevices": [
     {
-      "device": "Laptop A",
-      "status": "user-confirmed G3 completion; device/browser details not supplied"
-    },
-    {
-      "device": "Laptop B",
-      "status": "user-confirmed G3 completion; device/browser details not supplied"
+      "device": "Development MacBook",
+      "status": "available; physical microphone acceptance not yet run"
     }
   ],
   "checks": {
@@ -32,49 +27,53 @@
     "infraSynth": "pass",
     "apiImage": "pass",
     "imageRestartPersistence": "pass",
-    "liveOpenAi": "pass",
-    "twoPhysicalLaptops": "pass",
-    "trustedHttps": "pass",
-    "realMicrophones": "pass"
+    "liveOpenAi": "partial",
+    "twoPhysicalLaptops": "pending",
+    "trustedHttps": "pending",
+    "realMicrophones": "pending"
   },
   "acceptance": {
-    "A01": "pass",
-    "A02": "pass",
-    "A03": "pass",
-    "A04": "pass",
-    "A05": "pass",
-    "A06": "pass",
-    "A07": "pass",
-    "A08": "pass",
-    "A09": "pass",
-    "A10": "pass",
-    "A11": "pass",
-    "A12": "pass",
-    "A13": "pass",
-    "A14": "pass",
-    "A15": "pass",
-    "A16": "pass",
-    "A17": "pass",
-    "A18": "pass",
-    "A19": "pass",
-    "A20": "pass",
-    "A21": "pass",
-    "A22": "pass",
-    "A23": "pass",
-    "A24": "pass",
-    "A25": "pass",
-    "A26": "pass",
+    "A01": "pending",
+    "A02": "pending",
+    "A03": "pending",
+    "A04": "pending",
+    "A05": "pending",
+    "A06": "pending",
+    "A07": "pending",
+    "A08": "pending",
+    "A09": "pending",
+    "A10": "pending",
+    "A11": "pending",
+    "A12": "pending",
+    "A13": "pending",
+    "A14": "pending",
+    "A15": "pending",
+    "A16": "pending",
+    "A17": "pending",
+    "A18": "pending",
+    "A19": "pending",
+    "A20": "pending",
+    "A21": "pending",
+    "A22": "pending",
+    "A23": "pending",
+    "A24": "pending",
+    "A25": "pending",
+    "A26": "pending",
     "A27": "pass",
-    "E01": "pass",
-    "E02": "pass",
-    "E03": "pass",
-    "E04": "pass",
-    "E05": "pass",
-    "E06": "pass",
-    "E07": "pass",
-    "E08": "pass"
+    "E01": "pending",
+    "E02": "pending",
+    "E03": "pending",
+    "E04": "pending",
+    "E05": "pending",
+    "E06": "pending",
+    "E07": "pending",
+    "E08": "pending"
   },
-  "blockers": [],
+  "blockers": [
+    "Only one physical laptop is currently available.",
+    "mkcert local CA system trust needs the user to run mkcert -install in a terminal.",
+    "Final audited synthetic OpenAI smoke retained a terminal-word quality failure; a separate English-context run passed. Real-microphone quality remains unverified."
+  ],
   "report": "docs/implementation/evidence/local-validation.md",
   "artifacts": {
     "image": "docs/implementation/evidence/reports/image-validation.json",
@@ -136,35 +135,5 @@
     "providerFailureExplicitRetry": "pass",
     "smokeAuditHelpers": "pass",
     "ciExecution": "not_run"
-  },
-  "runtime": {
-    "SPEECH_DECISION_TIMEOUT_MS": "2000",
-    "CHAT_DECISION_TIMEOUT_MS": "10000",
-    "SPEECH_DECISION_CONFIDENCE": "0.85"
-  },
-  "manualEvidence": {
-    "source": "user confirmation in G4 session on 2026-10-09",
-    "statements": [
-      "검증 완료 — 결과 전달",
-      "현재 코드로 배포 진행"
-    ],
-    "scope": "User reported completion of the outstanding G3 two-laptop/real-microphone checks on the current application code. This is user-attested acceptance, not an agent-observed physical-device test; device/browser details and recordings were not supplied."
-  },
-  "g4Preparation": {
-    "unitTests": 306,
-    "integrationTests": 17,
-    "e2eTests": 4,
-    "e2eDurationSeconds": 50.8,
-    "contracts": 39,
-    "typecheck": "pass",
-    "build": "pass",
-    "infraSynth": "pass",
-    "apiImage": "pass",
-    "imageRestartPersistence": "pass",
-    "changes": "Deployment scripts, CDK Decisions settings/readiness and documentation; application runtime source unchanged in this session.",
-    "baseCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
-    "workingTree": "Uncommitted G4 deployment additions identified by sourceSha256; unrelated prompts/project-presentation.md preserved."
-  },
-  "releaseWorkspace": "/Users/gnar/orca/projects/DevDay-Hackathon-g4-release",
-  "concurrentWork": "During API deployment another session changed app/E2E/landing files. Release worktree was reconstructed from the staged CDK Docker context; its complete source fingerprint exactly matches this validation record. The main workspace now has separate unvalidated changes; this record does not attest them."
+  }
 }

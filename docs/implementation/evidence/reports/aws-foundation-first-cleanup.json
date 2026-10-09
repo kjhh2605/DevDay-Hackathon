@@ -1,0 +1,17 @@
+{
+  "cleanup": {
+    "studyfoundationstack-mediabucketbcbb02ba-zxz1rsdicjia": {},
+    "studyfoundationstack-webbucket12880f5b-fs65bjdxmg0k": {},
+    "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:DatabaseSecret86DBB7B3-DoQ3wy8XoQ5Z-sbrKN6": {
+      "ARN": "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:DatabaseSecret86DBB7B3-DoQ3wy8XoQ5Z-sbrKN6",
+      "Name": "DatabaseSecret86DBB7B3-DoQ3wy8XoQ5Z",
+      "DeletionDate": "2026-10-16T06:45:07.362000+00:00"
+    },
+    "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:OpenAiSecret-bHqEZPoQ7ZMt-9SmqBm": {
+      "ARN": "arn:aws:secretsmanager:ap-northeast-2:004376454721:secret:OpenAiSecret-bHqEZPoQ7ZMt-9SmqBm",
+      "Name": "OpenAiSecret-bHqEZPoQ7ZMt",
+      "DeletionDate": "2026-10-16T06:45:08.519000+00:00"
+    }
+  },
+  "scope": "Only unused artifacts from failed stack 6a300840-c3ac-11f1-b4f5-06f8d539b001. Buckets verified empty; secrets recoverable for seven days."
+}

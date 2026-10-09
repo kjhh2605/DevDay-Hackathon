@@ -1,6 +1,6 @@
 # AWS 배포 실행서
 
-대상: 후속 S5 배포 세션. **이번 문서 작성 작업에서는 아래 명령이나 AWS 변경을 실행하지 않았다.** 실제 제품 코드와 검증 결과가 준비된 후 사용한다.
+대상: S5 배포 세션. 실제 실행 결과와 배포 URL은 [릴리스 기록](evidence/release.md)에 남긴다.
 
 **첫 AWS 리소스 생성·배포는 G3 로컬 전체 검증 통과 후에 시작한다.** `docs/implementation/evidence/local-validation.md`의 검증 대상과 결과를 확인한다. 그 전에는 Docker 빌드·CDK 코드 작성·리소스를 만들지 않는 synth까지 준비한다. G1의 음성/연결 검증을 위해 조기 배포하지 않는다. [로컬 실행서](local-validation.md)
 
@@ -74,6 +74,8 @@ S5는 CDK stack을 다음처럼 나눈다.
 | `OPENAI_LIVE_TRANSCRIBE_MODEL` | `gpt-live-transcribe` |
 | `OPENAI_CORRECTION_MODEL` | `gpt-transcribe` |
 | `OPENAI_IMAGE_MODEL` | `gpt-image-2.5-flare-2026-09-08` |
+| `OPENAI_DECISION_MODEL` | `gpt-6-luna`, G3 `models`에서 전달 |
+| `SPEECH_DECISION_TIMEOUT_MS`, `CHAT_DECISION_TIMEOUT_MS`, `SPEECH_DECISION_CONFIDENCE` | G3 `runtime`에서 전달; 기본 검증값 2000 / 10000 / 0.85 |
 | `AI_MODE=live` | 배포는 live 강제. mock이면 기동 실패 |
 | `SESSION_COOKIE_SECURE=true` | CloudFront HTTPS 세션 쿠키. AWS에서 false는 기동 실패 |
 | `VITE_API_BASE=/api/v1` | FE의 공개 경로. 비밀 키 없음 |
@@ -99,7 +101,7 @@ task execution role은 ECR pull, 로그 기록, 지정 secret 읽기를 가진�
 
 ## 6. 실행 순서와 예정 명령
 
-아래 pnpm script들은 S0/S5가 구현해야 할 인터페이스다. 현재 실행 가능한 명령이 있다고 가정하지 않는다. S5 wrapper는 root `.env.deploy.local`의 profile/account/region을 읽어 AWS CLI/CDK에 명시적으로 전달한다. `infra:synth`는 파일·자격증명 없이도 리소스 생성과 계정 lookup 없이 실행 가능해야 한다. `infra:diff`는 G3 이후 실행하며 첫 계정에서는 필요한 bootstrap을 먼저 완료한다.
+아래 pnpm script들은 `scripts/deploy/`에 구현되어 있다. 각 AWS 명령은 G3 기록과 현재 소스 지문, 명시한 profile의 STS 계정을 검사한다. S5 wrapper는 root `.env.deploy.local`의 profile/account/region을 읽어 AWS CLI/CDK에 명시적으로 전달한다. `infra:synth`는 파일·자격증명 없이도 리소스 생성과 계정 lookup 없이 실행 가능해야 한다. `infra:diff`는 G3 이후 실행하며 첫 계정에서는 필요한 bootstrap을 먼저 완료한다.
 
 ```sh
 pnpm preflight --target=aws
@@ -130,3 +132,28 @@ API 변경은 로컬 DB 통합·관련 기능 검증과 image build를 먼저 �
 문제가 발생하면 실패한 단계와 requestId/jobId, CloudWatch 로그를 확인한다. task가 뜨지 않으면 image architecture, secret 읽기, ECR/인터넷 경로를 확인한다. WS가 실패하면 `/ws/*` behavior와 AllViewer/CachingDisabled, ALB target/timeout, Origin 검사 순으로 확인한다. 첫 페이지가 열리는 것만으로 배포 완료로 처리하지 않는다.
 
 실제 키·개인 경험·전사 전체를 검증 보고서에 복사하지 않는다. 이 문서는 자동 리소스 삭제 절차를 포함하지 않는다. 비용 정리가 필요할 때 데이터 보존 의도를 확인한 뒤 별도 작업으로 수행한다.
+
+## 8. 구현된 실행 명령
+
+```sh
+pnpm preflight --target=aws
+pnpm infra:synth
+# bootstrap이 없는 계정에서만: pnpm infra:bootstrap
+pnpm infra:diff
+pnpm deploy:foundation --postgres-version=17.11
+# OpenAI 키를 표준 입력으로 pnpm deploy:secret에 전달한다.
+pnpm deploy:api:stage
+pnpm db:migrate:aws
+pnpm deploy:api:start
+pnpm deploy:edge
+pnpm deploy:web
+pnpm deploy:verify
+# 진행 중 스터디가 없는 상태에서 ECS 앱을 교체한 뒤:
+pnpm deploy:verify --after-restart
+```
+
+`17.11`은 이번 계정에서 조회한 값이며 다른 세션은 preflight 결과를 따른다. `api:stage`는 앱을 0개로 내려 migration image를 배포한다. migration 성공 영수증은 task definition ARN·소스 지문·모델 설정과 연결되어 `.local/deploy/<account>-<region>/`에 저장된다. `api:start`는 일치하는 성공 기록이 있어야 진행한다. 서비스 컨테이너 health check는 `/readyz`로 DB 준비를 검사하고 ALB는 `/healthz`를 사용한다.
+
+웹 업로드는 hashed assets → 기타 정적 파일 → index 순서다. 이전 assets는 유지하며 SPA 경로만 invalidation한다. `deploy:verify`는 실제 OpenAI 경험·이미지·단어 학습을 호출하고 테스트 사용자 두 명을 생성하므로 소량의 사용료가 발생한다. HTTPS·쿠키·API 캐시·WS·RDS·S3와 재시작 후 기록 조회를 검사하며 두 물리 기기의 실마이크 인수를 대체하지 않는다. 검증 세션 쿠키는 git 제외된 0600 파일에만 저장한다.
+
+CDK template diff는 리소스를 생성하지 않는 `--method template`을 사용하며 각 deploy 직전 다시 표시한다. 정확한 parameter 값은 따로 출력한다. bootstrap과 stack 생성은 사용자가 배포를 지시한 뒤 실행한다.

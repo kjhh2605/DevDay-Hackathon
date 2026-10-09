@@ -31,7 +31,13 @@ export function sourceFingerprint(): string {
   )
     .toString()
     .split('\0')
-    .filter((path) => path && !path.startsWith('docs/implementation/evidence/'))
+    .filter(
+      (path) =>
+        path &&
+        !['docs/implementation/evidence/', 'docs/presentation/', 'prompts/'].some((prefix) =>
+          path.startsWith(prefix),
+        ),
+    )
     .sort();
   const hash = createHash('sha256');
   for (const path of paths) {
@@ -108,6 +114,8 @@ export function requireG3() {
         '--',
         '.',
         ':(exclude)docs/implementation/evidence',
+        ':(exclude)docs/presentation',
+        ':(exclude)prompts',
       ],
       { cwd: workspaceRoot },
     ).status !== 0

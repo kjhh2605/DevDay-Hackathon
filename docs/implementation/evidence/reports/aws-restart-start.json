@@ -1,0 +1,83 @@
+{
+  "serviceArn": "arn:aws:ecs:ap-northeast-2:004376454721:service/StudyApiStack-ClusterEB0386A7-5DDeWJbIf145/StudyApiStack-ServiceD69D759B-DpxYtWISPJmI",
+  "taskDefinition": "arn:aws:ecs:ap-northeast-2:004376454721:task-definition/StudyApiStackTask96185A21:1",
+  "desiredCount": 1,
+  "deploymentConfiguration": {
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": false,
+      "resetOnHealthyTask": true,
+      "thresholdConfiguration": {
+        "type": "BOUNDED_PERCENT",
+        "value": 50
+      }
+    },
+    "maximumPercent": 100,
+    "minimumHealthyPercent": 0,
+    "alarms": {
+      "alarmNames": [],
+      "rollback": false,
+      "enable": false
+    },
+    "strategy": "ROLLING",
+    "bakeTimeInMinutes": 0
+  },
+  "deployments": [
+    {
+      "id": "ecs-svc/7764466933402283584",
+      "status": "PRIMARY",
+      "taskDefinition": "arn:aws:ecs:ap-northeast-2:004376454721:task-definition/StudyApiStackTask96185A21:1",
+      "desiredCount": 0,
+      "pendingCount": 0,
+      "runningCount": 0,
+      "failedTasks": 0,
+      "createdAt": "2026-10-09T07:18:24.153000+00:00",
+      "updatedAt": "2026-10-09T07:18:24.153000+00:00",
+      "launchType": "FARGATE",
+      "platformVersion": "1.4.0",
+      "platformFamily": "Linux",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-0dda1bd8f9a82469a",
+            "subnet-065afc34f9e7fb716"
+          ],
+          "securityGroups": [
+            "sg-05386216ada5d2213"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      },
+      "rolloutState": "IN_PROGRESS",
+      "rolloutStateReason": "ECS deployment ecs-svc/7764466933402283584 in progress."
+    },
+    {
+      "id": "ecs-svc/6997394050728775031",
+      "status": "ACTIVE",
+      "taskDefinition": "arn:aws:ecs:ap-northeast-2:004376454721:task-definition/StudyApiStackTask96185A21:1",
+      "desiredCount": 1,
+      "pendingCount": 0,
+      "runningCount": 1,
+      "failedTasks": 0,
+      "createdAt": "2026-10-09T06:55:53.739000+00:00",
+      "updatedAt": "2026-10-09T07:18:24.153000+00:00",
+      "launchType": "FARGATE",
+      "platformVersion": "1.4.0",
+      "platformFamily": "Linux",
+      "networkConfiguration": {
+        "awsvpcConfiguration": {
+          "subnets": [
+            "subnet-0dda1bd8f9a82469a",
+            "subnet-065afc34f9e7fb716"
+          ],
+          "securityGroups": [
+            "sg-05386216ada5d2213"
+          ],
+          "assignPublicIp": "ENABLED"
+        }
+      },
+      "rolloutState": "COMPLETED",
+      "rolloutStateReason": "ECS deployment ecs-svc/6997394050728775031 completed."
+    }
+  ]
+}

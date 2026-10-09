@@ -1,0 +1,37 @@
+{
+  "tasks": [
+    {
+      "arn": "arn:aws:ecs:ap-northeast-2:004376454721:task/StudyApiStack-ClusterEB0386A7-5DDeWJbIf145/777282f35c3f4cdfb13e1a08ada9e44a",
+      "taskDefinition": "arn:aws:ecs:ap-northeast-2:004376454721:task-definition/StudyApiStackTask96185A21:1",
+      "lastStatus": "STOPPED",
+      "healthStatus": "UNKNOWN",
+      "startedAt": "2026-10-09T06:59:55.550000+00:00",
+      "stoppedAt": "2026-10-09T07:00:26.029000+00:00",
+      "containers": [
+        {
+          "name": "api",
+          "imageDigest": "sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1",
+          "lastStatus": "STOPPED",
+          "exitCode": 0,
+          "healthStatus": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "arn": "arn:aws:ecs:ap-northeast-2:004376454721:task/StudyApiStack-ClusterEB0386A7-5DDeWJbIf145/1530b3c7ea3f4f76acc53eb01169e197",
+      "taskDefinition": "arn:aws:ecs:ap-northeast-2:004376454721:task-definition/StudyApiStackTask96185A21:1",
+      "lastStatus": "RUNNING",
+      "healthStatus": "HEALTHY",
+      "startedAt": "2026-10-09T07:02:01.566000+00:00",
+      "containers": [
+        {
+          "name": "api",
+          "imageDigest": "sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1",
+          "lastStatus": "RUNNING",
+          "healthStatus": "HEALTHY"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

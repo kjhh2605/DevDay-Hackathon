@@ -25,7 +25,7 @@ describe('the selected three-stack AWS architecture (offline synth)', () => {
   let edge: Template;
 
   beforeAll(() => {
-    stacks = createStudyStacks(app, { env: { region: 'ap-northeast-2' } });
+    stacks = createStudyStacks(app, { env: { account: '123456789012', region: 'ap-northeast-2' } });
     const assembly = app.synth();
     expect(assembly.manifest.missing ?? []).toEqual([]);
     foundation = Template.fromStack(stacks.foundation);
@@ -41,6 +41,10 @@ describe('the selected three-stack AWS architecture (offline synth)', () => {
     foundation.resourceCountIs('AWS::EC2::NatGateway', 0);
     foundation.resourceCountIs('AWS::EC2::Route', 2);
     const subnets = Object.values(foundation.findResources('AWS::EC2::Subnet'));
+    expect(new Set(subnets.map((subnet) => subnet.Properties.AvailabilityZone))).toEqual(
+      new Set(['ap-northeast-2a', 'ap-northeast-2c']),
+    );
+    expect(JSON.stringify(foundation.toJSON())).not.toContain('Fn::GetAZs');
     expect(subnets.filter((subnet) => subnet.Properties.MapPublicIpOnLaunch === true)).toHaveLength(
       2,
     );
@@ -170,12 +174,18 @@ describe('the selected three-stack AWS architecture (offline synth)', () => {
         { Name: 'OPENAI_LIVE_TRANSCRIBE_MODEL', Value: { Ref: 'OpenAiLiveTranscribeModel' } },
         { Name: 'OPENAI_CORRECTION_MODEL', Value: { Ref: 'OpenAiCorrectionModel' } },
         { Name: 'OPENAI_IMAGE_MODEL', Value: { Ref: 'OpenAiImageModel' } },
+        { Name: 'OPENAI_DECISION_MODEL', Value: { Ref: 'OpenAiDecisionModel' } },
+        { Name: 'SPEECH_DECISION_TIMEOUT_MS', Value: { Ref: 'SpeechDecisionTimeoutMs' } },
+        { Name: 'CHAT_DECISION_TIMEOUT_MS', Value: { Ref: 'ChatDecisionTimeoutMs' } },
+        { Name: 'SPEECH_DECISION_CONFIDENCE', Value: { Ref: 'SpeechDecisionConfidence' } },
       ]),
     );
     api.hasParameter('OpenAiTextModel', { Default: 'gpt-6-luna' });
     api.hasParameter('OpenAiLiveTranscribeModel', { Default: 'gpt-live-transcribe' });
     api.hasParameter('OpenAiCorrectionModel', { Default: 'gpt-transcribe' });
     api.hasParameter('OpenAiImageModel', { Default: 'gpt-image-2.5-flare-2026-09-08' });
+    api.hasParameter('OpenAiDecisionModel', { Default: 'gpt-6-luna' });
+    expect(container.HealthCheck.Command.join(' ')).toContain('/readyz');
     expect(container.Secrets.map((secret: { Name: string }) => secret.Name).sort()).toEqual([
       'DB_PASSWORD',
       'DB_USER',
