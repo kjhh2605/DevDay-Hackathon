@@ -157,6 +157,12 @@ try {
           return;
         if (!check(message.lastSeq === activeSegment.nextSeq - 1, 'INVALID_COMMIT_SEQUENCE'))
           return;
+        send({
+          type: 'audio.segment_committed',
+          clientSegmentId: activeSegment.clientId,
+          segmentId: activeSegment.id,
+          lastSeq: message.lastSeq,
+        });
         lastSegment = activeSegment;
         activeSegment = null;
       } else if (message.type === 'audio.flush') {

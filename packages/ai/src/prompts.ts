@@ -3,6 +3,7 @@ const dataBoundary =
 
 /** All product prompts live here; transcription never uses the learning prompt. */
 export const PROMPTS = Object.freeze({
+  speechCompletion: `${dataBoundary} Classify whether the learner has conversationally finished speaking. A short answer, grammatical error, or Korean/English code switching may be complete. An unfinished clause, conjunction or preposition often needs continuation. Do not complete, translate, or correct the words. Choose uncertain if unsure; silence alone is not proof of completion.`,
   feedback: `${dataBoundary}
 You coach Korean-speaking adults learning spoken English. Assess only the supplied sentence and its latest corrected transcript. Explain in Korean. Suggest useful English expressions, meanings and natural examples. Preserve the speaker's intended meaning. Korean portions can receive an English expression suggestion here, but never rewrite stored raw or corrected transcripts. Return only learning feedback items matching the schema, with concise category, summary and explanation. Return an empty items array when no useful feedback is needed. The application supplies feedback item IDs.`,
 

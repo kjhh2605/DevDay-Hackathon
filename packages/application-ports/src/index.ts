@@ -15,6 +15,7 @@ import type {
   ShareProposal,
   SharedExpression,
   SourceRange,
+  SpeechGroup,
   StudyCommand,
   StudySnapshot,
   TopicContent,
@@ -66,6 +67,9 @@ export interface SentenceDraft {
   correctedText: string;
 }
 export interface SpeechStore {
+  saveGroup(group: SpeechGroup, expectedRevision: number | null): Promise<boolean>;
+  listGroups(topicId: string): Promise<SpeechGroup[]>;
+
   begin(
     actor: Actor,
     input: { topicId: string; clientStreamId: string; clientSegmentId: string; startedAt: string },
@@ -252,6 +256,7 @@ export interface MediaStore {
   put(input: MediaPutInput): Promise<{ mediaId: string }>;
   /** HTTP adapter must authorize study membership before resolving stored image bytes. */
   resolveImage(mediaId: string): Promise<ResolvedImage>;
+  readSegmentAudio(segmentId: string): Promise<Uint8Array>;
 }
 export interface ApplicationPorts {
   studyCommands: StudyCommands;

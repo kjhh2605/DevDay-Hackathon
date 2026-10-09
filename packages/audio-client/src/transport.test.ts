@@ -15,11 +15,22 @@ class Socket implements AudioSocket {
   onerror: AudioSocket['onerror'] = null;
   onclose: AudioSocket['onclose'] = null;
   sent: Record<string, unknown>[] = [];
+  autoAck = true;
+  serverIds = new Map<string, string>();
   inspect: ((message: Record<string, unknown>) => void) | null = null;
   send(value: string) {
     const message = JSON.parse(value);
     this.inspect?.(message);
     this.sent.push(message);
+    if (this.autoAck && message.type === 'audio.segment_commit')
+      queueMicrotask(() =>
+        this.receive({
+          type: 'audio.segment_committed',
+          clientSegmentId: message.clientSegmentId,
+          segmentId: this.serverIds.get(message.clientSegmentId),
+          lastSeq: message.lastSeq,
+        }),
+      );
   }
   close() {
     this.readyState = 3;
@@ -30,6 +41,9 @@ class Socket implements AudioSocket {
     this.onopen?.({});
   }
   receive(value: unknown) {
+    const msg = value as Record<string, string>;
+    if (msg.type === 'audio.segment_ready')
+      this.serverIds.set(msg.clientSegmentId!, msg.segmentId!);
     this.onmessage?.({ data: JSON.stringify(value) });
   }
 }
@@ -273,7 +287,7 @@ describe('audio transport', () => {
     await vi.advanceTimersByTimeAsync(20_000);
     expect(socket.sent.at(-1)).toEqual({ type: 'heartbeat.ping' });
     socket.receive({ type: 'heartbeat.pong' });
-    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.advanceTimersByTimeAsync(74_000);
     expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ code: 'connection_failed' }));
   });
 
@@ -295,5 +309,64 @@ describe('audio transport', () => {
     expect(Array.from(binary, (item) => item.charCodeAt(0))).toEqual([
       0, 0, 255, 127, 0, 128, 255, 255,
     ]);
+  });
+});
+
+describe('recoverable audio input', () => {
+  it('keeps capture alive for processing failures', async () => {
+    const { socket, transport, onFailure } = await connected();
+    socket.receive({
+      type: 'audio.processing_error',
+      groupId: null,
+      segmentId: null,
+      error: { code: 'AI_FAILED', message: 'retry this group', details: null },
+    });
+    expect(onFailure).not.toHaveBeenCalled();
+    expect(socket.readyState).toBe(1);
+    transport.close();
+  });
+  it('resumes the same stream and replays unacknowledged PCM with the same segment identity', async () => {
+    vi.useFakeTimers();
+    const sockets: Socket[] = [];
+    const onFailure = vi.fn();
+    const transport = new AudioTransport({
+      url: 'ws://localhost',
+      onFailure,
+      socketFactory: () => {
+        const s = new Socket();
+        s.autoAck = false;
+        sockets.push(s);
+        return s;
+      },
+    });
+    const ready = transport.connect(topicId),
+      first = sockets[0]!;
+    first.open();
+    first.receive({ type: 'audio.ready', streamId, topicId });
+    await ready;
+    transport.beginSegment();
+    const clientSegmentId = first.sent.at(-1)!.clientSegmentId;
+    first.receive({ type: 'audio.segment_ready', clientSegmentId, segmentId, startOrder: 0 });
+    transport.append(new Int16Array([5, 6, 7]));
+    transport.commit(3);
+    first.close();
+    await vi.advanceTimersByTimeAsync(1000);
+    const second = sockets[1]!;
+    second.open();
+    expect(second.sent[0]).toMatchObject({
+      resumeStreamId: streamId,
+      clientStreamId: first.sent[0]!.clientStreamId,
+    });
+    second.receive({ type: 'audio.ready', streamId, topicId });
+    second.receive({ type: 'audio.segment_ready', clientSegmentId, segmentId, startOrder: 0 });
+    expect(second.sent.filter((m) => m.type === 'audio.chunk')).toEqual(
+      first.sent.filter((m) => m.type === 'audio.chunk'),
+    );
+    second.receive({ type: 'audio.segment_committed', clientSegmentId, segmentId, lastSeq: 0 });
+    await transport.drain();
+    expect(onFailure).not.toHaveBeenCalled();
+    transport.close();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(sockets).toHaveLength(2);
   });
 });

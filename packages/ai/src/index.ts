@@ -10,6 +10,7 @@ export type {
 } from './provider.js';
 export { loadAiConfig } from './config.js';
 export type { AiConfig } from './config.js';
+export type { SpeechServiceOptions } from './speech.js';
 export { SpeechService } from './speech.js';
 export { mapSentenceRanges } from './sentences.js';
 export { RealtimeSegmentMap } from './realtime-mapping.js';

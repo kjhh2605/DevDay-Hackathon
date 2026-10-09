@@ -64,8 +64,23 @@ test('synthetic PCM: live rows, peer correction, feedback revision, concurrent n
     const before = await snapshot(a, studyId);
     const utteranceA = before.utterances.find((item) => item.speakerUserId === aUser.id)!;
     const utteranceB = before.utterances.find((item) => item.speakerUserId === bUser.id)!;
-    expect(utteranceA.sourceRanges.map((range) => range.segmentId)).toEqual([aSegmentId]);
-    expect(utteranceB.sourceRanges.map((range) => range.segmentId)).toEqual([bSegmentId]);
+    expect(
+      utteranceA.sourceRanges.flatMap((range) =>
+        'version' in range ? range.audioSegmentIds : [range.segmentId],
+      ),
+    ).toEqual([aSegmentId]);
+    expect(
+      utteranceB.sourceRanges.flatMap((range) =>
+        'version' in range ? range.audioSegmentIds : [range.segmentId],
+      ),
+    ).toEqual([bSegmentId]);
+    expect(before.speechGroups).toHaveLength(2);
+    expect(before.segments.every((segment) => segment.correctedText === null)).toBe(true);
+    expect(utteranceA.sourceRanges[0]).toMatchObject({ version: 2 });
+    const playback = await a.request.get(`/api/v1/audio/${aSegmentId}`);
+    expect(playback.status()).toBe(200);
+    expect(playback.headers()['content-type']).toContain('audio/wav');
+    expect((await playback.body()).subarray(0, 4).toString()).toBe('RIFF');
     const originalOtherFeedback = before.feedback.find(
       (item) => item.utteranceId === utteranceB.id,
     )!;

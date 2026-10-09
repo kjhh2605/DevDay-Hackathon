@@ -1,3 +1,4 @@
+import { api } from '../../shared/api';
 import { useState } from 'react';
 import type { Feedback, StudySnapshot, Utterance } from '@devday/contracts';
 import { useSentenceActions } from './useStudy';
@@ -86,6 +87,24 @@ function SentenceReview({
           )}
         </div>
       )}
+      <details>
+        <summary>원본 음성 듣기</summary>
+        {[
+          ...new Set(
+            utterance.sourceRanges.flatMap((range) =>
+              'version' in range ? range.audioSegmentIds : [range.segmentId],
+            ),
+          ),
+        ].map((id, index) => (
+          <audio
+            key={id}
+            controls
+            preload="none"
+            aria-label={`원본 음성 ${index + 1}`}
+            src={api.audioUrl(id)}
+          />
+        ))}
+      </details>
       <ErrorMessage error={correction.error || request.error} />
       <div className={s.feedback}>
         <div className={s.feedbackHeader}>

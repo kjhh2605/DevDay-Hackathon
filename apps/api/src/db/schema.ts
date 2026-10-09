@@ -197,3 +197,28 @@ export const media = pgTable('media', {
   storageKey: text('storage_key').notNull(),
   contentType: text('content_type').notNull(),
 });
+
+export const speechGroups = pgTable(
+  'speech_groups',
+  {
+    id: uuid().primaryKey(),
+    studyId: uuid('study_id')
+      .references(() => studies.id)
+      .notNull(),
+    topicId: uuid('topic_id')
+      .references(() => topics.id)
+      .notNull(),
+    speakerUserId: uuid('speaker_user_id')
+      .references(() => users.id)
+      .notNull(),
+    startOrder: integer('start_order').notNull(),
+    data: dto(),
+  },
+  (t) => [
+    uniqueIndex('speech_groups_open_speaker')
+      .on(t.topicId, t.speakerUserId)
+      .where(
+        sql`${t.data}->>'state' IN ('collecting','deciding') AND ${t.data}->>'closeReason' IS NULL`,
+      ),
+  ],
+);

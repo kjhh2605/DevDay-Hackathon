@@ -138,12 +138,14 @@ export class PcmFramer {
 export type VadEvent =
   | { type: 'start'; sampleOffset: number }
   | { type: 'frame'; pcm: Int16Array }
-  | { type: 'commit' };
+  | { type: 'commit'; lastVoicedSample: number };
 
 export interface EnergyVadOptions {
   sampleRate?: number;
   /** Normalized root-mean-square amplitude required to begin/continue speech. */
   threshold?: number;
+  sustainThreshold?: number;
+  minSpeechMs?: number;
   preRollMs?: number;
   silenceMs?: number;
   maxSegmentMs?: number;
@@ -151,6 +153,10 @@ export interface EnergyVadOptions {
 
 export class EnergyVad {
   private readonly threshold: number;
+  private readonly sustainThreshold: number;
+  private readonly minSpeechSamples: number;
+  private candidateSamples = 0;
+  private lastVoicedSample = 0;
   private readonly preRollSamples: number;
   private readonly silenceSamples: number;
   private readonly maxSegmentSamples: number;
@@ -164,6 +170,8 @@ export class EnergyVad {
   constructor(options: EnergyVadOptions = {}) {
     const sampleRate = options.sampleRate ?? 24_000;
     this.threshold = options.threshold ?? 0.015;
+    this.sustainThreshold = options.sustainThreshold ?? this.threshold * 0.65;
+    this.minSpeechSamples = Math.round((sampleRate * (options.minSpeechMs ?? 60)) / 1000);
     const preRollMs = options.preRollMs ?? 200;
     const silenceMs = options.silenceMs ?? 700;
     const maxSegmentMs = options.maxSegmentMs ?? 20_000;
@@ -173,6 +181,11 @@ export class EnergyVad {
       !Number.isFinite(this.threshold) ||
       this.threshold < 0 ||
       this.threshold > 1 ||
+      !Number.isFinite(this.sustainThreshold) ||
+      this.sustainThreshold < 0 ||
+      this.sustainThreshold > this.threshold ||
+      !Number.isFinite(this.minSpeechSamples) ||
+      this.minSpeechSamples < 0 ||
       !Number.isFinite(preRollMs) ||
       preRollMs < 0 ||
       !Number.isFinite(silenceMs) ||
@@ -196,8 +209,16 @@ export class EnergyVad {
     this.processedSamples += frame.length;
     let energy = 0;
     for (const sample of frame) energy += (sample / 32_768) ** 2;
-    const speech = Math.sqrt(energy / frame.length) > this.threshold;
+    const speech =
+      Math.sqrt(energy / frame.length) > (this.active ? this.sustainThreshold : this.threshold);
     const events: VadEvent[] = [];
+    if (!this.active) {
+      this.candidateSamples = speech ? this.candidateSamples + frame.length : 0;
+      if (speech && this.candidateSamples < this.minSpeechSamples) {
+        this.remember(frame);
+        return [];
+      }
+    }
     let offset = 0;
     while (offset < frame.length) {
       if (!this.active) {
@@ -208,6 +229,8 @@ export class EnergyVad {
         this.active = true;
         this.segmentLength = this.preRollLength;
         this.silentLength = 0;
+        this.lastVoicedSample = 0;
+        this.candidateSamples = 0;
         events.push({ type: 'start', sampleOffset: frameStart + offset - this.preRollLength });
         for (const pcm of this.preRoll) events.push({ type: 'frame', pcm });
         this.preRoll = [];
@@ -222,12 +245,13 @@ export class EnergyVad {
       events.push({ type: 'frame', pcm: frame.slice(offset, offset + take) });
       offset += take;
       this.segmentLength += take;
+      if (speech) this.lastVoicedSample = this.segmentLength;
       if (!speech) this.silentLength += take;
       if (
         this.segmentLength >= this.maxSegmentSamples ||
         this.silentLength >= this.silenceSamples
       ) {
-        events.push({ type: 'commit' });
+        events.push({ type: 'commit', lastVoicedSample: this.lastVoicedSample });
         this.active = false;
         this.segmentLength = 0;
         this.silentLength = 0;
@@ -238,7 +262,9 @@ export class EnergyVad {
 
   /** Ends the last utterance even when the microphone stops before trailing silence. */
   flush(): VadEvent[] {
-    const events: VadEvent[] = this.active ? [{ type: 'commit' }] : [];
+    const events: VadEvent[] = this.active
+      ? [{ type: 'commit', lastVoicedSample: this.lastVoicedSample }]
+      : [];
     this.reset();
     return events;
   }
@@ -250,6 +276,8 @@ export class EnergyVad {
     this.segmentLength = 0;
     this.silentLength = 0;
     this.processedSamples = 0;
+    this.candidateSamples = 0;
+    this.lastVoicedSample = 0;
   }
 
   private remember(frame: Int16Array): void {

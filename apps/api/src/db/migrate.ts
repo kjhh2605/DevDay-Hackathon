@@ -1,20 +1,23 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { loadConfig } from '../config.js';
 import { createDatabase, type Database } from './client.js';
 export async function migrate(db: Database) {
-  const sql = await readFile(new URL('./migrations/0001_initial.sql', import.meta.url), 'utf8');
+  const directory = new URL('./migrations/', import.meta.url);
+  const files = (await readdir(directory)).filter((name) => /^\d+_.+\.sql$/.test(name)).sort();
   await db.transaction(async (tx) => {
     await tx.query('SELECT pg_advisory_xact_lock(17834031)');
     await tx.query(
       'CREATE TABLE IF NOT EXISTS app_migrations (version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
     );
-    const existing = await tx.query(
-      "SELECT version FROM app_migrations WHERE version='0001_initial'",
-    );
-    if (!existing.rowCount) {
-      await tx.query(sql);
-      await tx.query("INSERT INTO app_migrations(version) VALUES ('0001_initial')");
+    for (const file of files) {
+      const version = file.slice(0, -4);
+      if (
+        (await tx.query('SELECT version FROM app_migrations WHERE version=$1', [version])).rowCount
+      )
+        continue;
+      await tx.query(await readFile(new URL(file, directory), 'utf8'));
+      await tx.query('INSERT INTO app_migrations(version) VALUES ($1)', [version]);
     }
   });
 }

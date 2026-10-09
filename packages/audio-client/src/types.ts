@@ -24,6 +24,7 @@ export type CaptureStatus =
   | 'idle'
   | 'requesting_permission'
   | 'connecting'
+  | 'reconnecting'
   | 'capturing'
   | 'flushing'
   | 'stopped'
@@ -45,6 +46,7 @@ export interface CaptureController {
 export interface CaptureControllerOptions {
   onState?: (state: CaptureState) => void;
   onError?: (error: CaptureError) => void;
+  onProcessingError?: (message: string) => void;
   /** Defaults to /ws/audio on the current origin. Session cookies authenticate it. */
   url?: string;
   /** A readiness/segment acknowledgement timeout, not a conversation duration limit. */

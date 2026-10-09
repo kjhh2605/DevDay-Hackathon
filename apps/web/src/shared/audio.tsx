@@ -32,7 +32,6 @@ export function MicrophoneProvider({
     const capture = createCaptureController({
       onState: (value) => {
         setState(value);
-        if (value.status === 'error') setEnabled(false);
       },
     });
     controller.current = capture;
@@ -44,11 +43,11 @@ export function MicrophoneProvider({
   const enable = useCallback(async () => {
     if (!snapshot?.topic || snapshot.topic.state !== 'talking') return;
     lastTopic.current = snapshot.topic.id;
+    setEnabled(true);
     try {
       await controller.current?.startCapture(snapshot.topic.id);
-      setEnabled(true);
     } catch {
-      setEnabled(false);
+      /* capture state exposes the failure; user intent is retained */
     }
   }, [snapshot?.topic]);
   const disable = useCallback(async () => {
@@ -64,13 +63,13 @@ export function MicrophoneProvider({
     const topic = snapshot?.topic;
     if (enabled && topic?.state === 'talking' && topic.id !== lastTopic.current) {
       lastTopic.current = topic.id;
-      void controller.current?.startCapture(topic.id).catch(() => setEnabled(false));
+      void controller.current?.startCapture(topic.id).catch(() => undefined);
     }
     if (snapshot?.study.status === 'ended') void disable();
   }, [enabled, snapshot?.topic?.id, snapshot?.topic?.state, snapshot?.study.status, disable]);
   useUserEvent((event) => {
     if (event.type === 'audio.flush_requested' && event.payload.topicId === lastTopic.current) {
-      void controller.current?.flush(event.payload.closeId).catch(() => setEnabled(false));
+      void controller.current?.flush(event.payload.closeId).catch(() => undefined);
     }
   });
   return (

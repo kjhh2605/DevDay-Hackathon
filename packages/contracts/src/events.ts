@@ -15,6 +15,7 @@ import {
   TimestampSchema,
   TopicSchema,
   TranscriptSegmentSchema,
+  SpeechGroupSchema,
   UtteranceSchema,
 } from './dto.js';
 const envelope = {
@@ -54,6 +55,7 @@ export const eventSchemas = {
     }),
   ),
   'transcript.segment.updated': studyEvent('transcript.segment.updated', TranscriptSegmentSchema),
+  'speech.group.updated': studyEvent('speech.group.updated', SpeechGroupSchema),
   'utterance.updated': studyEvent('utterance.updated', UtteranceSchema),
   'feedback.updated': studyEvent('feedback.updated', FeedbackSchema),
   'audio.flush_requested': userEvent(
@@ -81,6 +83,7 @@ export const EventSchema = z
     eventSchemas['study.changed'],
     eventSchemas['transcript.partial'],
     eventSchemas['transcript.segment.updated'],
+    eventSchemas['speech.group.updated'],
     eventSchemas['utterance.updated'],
     eventSchemas['feedback.updated'],
     eventSchemas['audio.flush_requested'],

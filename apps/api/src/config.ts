@@ -24,6 +24,9 @@ export interface ApiConfig {
   openai: {
     apiKey?: string;
     textModel: string;
+    decisionModel: string;
+    decisionTimeoutMs: string;
+    decisionConfidence: string;
     liveTranscribeModel: string;
     correctionModel: string;
     imageModel: string;
@@ -164,6 +167,9 @@ export function parseConfig(env: Environment, options: { workspaceRoot?: string 
     openai: {
       ...(apiKey ? { apiKey } : {}),
       textModel: required('OPENAI_TEXT_MODEL', 'gpt-6-luna'),
+      decisionModel: required('OPENAI_DECISION_MODEL', 'gpt-6-luna'),
+      decisionTimeoutMs: required('SPEECH_DECISION_TIMEOUT_MS', '2000'),
+      decisionConfidence: required('SPEECH_DECISION_CONFIDENCE', '0.85'),
       liveTranscribeModel: required('OPENAI_LIVE_TRANSCRIBE_MODEL', 'gpt-live-transcribe'),
       correctionModel: required('OPENAI_CORRECTION_MODEL', 'gpt-transcribe'),
       imageModel: required('OPENAI_IMAGE_MODEL', 'gpt-image-2.5-flare-2026-09-08'),
@@ -176,6 +182,12 @@ export function parseConfig(env: Environment, options: { workspaceRoot?: string 
     },
     tls: { ...(certPath ? { certPath } : {}), ...(keyPath ? { keyPath } : {}) },
   };
+  for (const [key, text, min, max] of [
+    ['SPEECH_DECISION_TIMEOUT_MS', config.openai.decisionTimeoutMs, 1, 10000],
+    ['SPEECH_DECISION_CONFIDENCE', config.openai.decisionConfidence, 0, 1],
+  ] as const)
+    if (!Number.isFinite(Number(text)) || Number(text) < min || Number(text) > max)
+      issue(key, `Use a number from ${min} to ${max}.`);
   if (issues.length) throw new ConfigError(issues);
   return config;
 }

@@ -236,7 +236,12 @@ describe('expired close isolation', () => {
         failIfRunning: vi.fn(async () => false),
         succeedIfRunning: vi.fn(async () => false),
       },
-      speech: { listSegments: async () => [source], fail, finalizeSentences: finalize },
+      speech: {
+        listGroups: async () => [],
+        listSegments: async () => [source],
+        fail,
+        finalizeSentences: finalize,
+      },
     } as unknown as ApplicationPorts;
     const provider = new MockAiProvider();
     vi.spyOn(provider, 'structured').mockImplementation(

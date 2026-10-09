@@ -152,9 +152,9 @@ describe('EnergyVad', () => {
   });
 
   it('flushes a last short utterance once and discards idle silence', () => {
-    const vad = new EnergyVad();
+    const vad = new EnergyVad({ minSpeechMs: 0 });
     expect(vad.push(pcm(73)).map((event) => event.type)).toEqual(['start', 'frame']);
-    expect(vad.flush()).toEqual([{ type: 'commit' }]);
+    expect(vad.flush()).toEqual([{ type: 'commit', lastVoicedSample: 73 }]);
     expect(vad.flush()).toEqual([]);
     vad.push(pcm(100, 0));
     expect(vad.flush()).toEqual([]);
@@ -186,6 +186,7 @@ describe('EnergyVad', () => {
   it('uses sample counts for partial pre-roll, silence, and oversized input frames', () => {
     const vad = new EnergyVad({
       sampleRate: 1_000,
+      minSpeechMs: 0,
       preRollMs: 20,
       silenceMs: 30,
       maxSegmentMs: 100,
@@ -200,7 +201,7 @@ describe('EnergyVad', () => {
     expect(first.filter((event) => event.type === 'commit')).toHaveLength(2);
     const silence = vad.push(pcm(40, 0));
     expect(audio(silence).map((frame) => frame.length)).toEqual([30]);
-    expect(silence.at(-1)).toEqual({ type: 'commit' });
+    expect(silence.at(-1)).toEqual({ type: 'commit', lastVoicedSample: 10 });
     const resumed = vad.push(pcm(1));
     expect(audio(resumed).map((frame) => frame.length)).toEqual([10, 1]);
     expect(resumed[0]).toEqual({ type: 'start', sampleOffset: 246 });
@@ -217,4 +218,16 @@ describe('EnergyVad', () => {
     expect(audio(restarted)).toHaveLength(1);
     expect(restarted[0]).toEqual({ type: 'start', sampleOffset: 0 });
   });
+});
+
+it('creates no VAD rows during five minutes of silence and preserves a short answer after a click', () => {
+  const vad = new EnergyVad();
+  for (let i = 0; i < 3000; i++) expect(vad.push(pcm(2400, 0))).toEqual([]);
+  expect(vad.push(pcm(240))).toEqual([]); // 10 ms impulse is too short to start speech.
+  expect(vad.push(pcm(2400, 0))).toEqual([]);
+  const answer = vad.push(pcm(2400)); // A 100 ms yes/no remains valid.
+  expect(answer.some((e) => e.type === 'start')).toBe(true);
+  expect(
+    answer.filter((e) => e.type === 'frame').reduce((n, e) => n + e.pcm.length, 0),
+  ).toBeGreaterThanOrEqual(2400);
 });

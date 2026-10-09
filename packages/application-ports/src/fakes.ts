@@ -268,6 +268,12 @@ export class FakeMediaStore implements MediaStore {
     return { mediaId };
   }
 
+  async readSegmentAudio(segmentId: string): Promise<Uint8Array> {
+    const input = [...this.media.values()].find((value) => value.segmentId === segmentId);
+    if (!input) throw new FakePortError('NOT_FOUND', 'Audio not found');
+    return new Uint8Array(input.bytes);
+  }
+
   async resolveImage(mediaId: string): Promise<ResolvedImage> {
     const input = this.media.get(mediaId);
     if (!input || input.kind !== 'image') throw new FakePortError('NOT_FOUND', 'Image not found');

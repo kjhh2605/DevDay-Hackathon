@@ -169,6 +169,11 @@ export class DomainBase {
       return {
         study,
         topic,
+        speechGroups: await many(
+          tx,
+          'SELECT data FROM speech_groups WHERE topic_id=$1 ORDER BY start_order',
+          [topic?.id ?? null],
+        ),
         segments: await many(
           tx,
           'SELECT data FROM transcript_segments WHERE topic_id=$1 ORDER BY start_order',
@@ -296,6 +301,13 @@ export class DomainBase {
     });
   }
   async interruptJobs() {
+    // Persist an explicit interrupted failure so retained audio can be retried after restart.
+    await this.db.pool.query(`UPDATE speech_groups SET data = data || jsonb_build_object(
+      'state', 'failed', 'revision', (data->>'revision')::int + 1,
+      'closeReason', COALESCE(data->>'closeReason', 'mic_off'),
+      'error', jsonb_build_object('phase','raw','code','PROCESS_INTERRUPTED','message','서버가 재시작되었습니다. 이 발화를 다시 처리해 주세요.'))
+      WHERE data->>'state' IN ('collecting','deciding','correcting')`);
+
     const jobs = await many<Job>(this.db.pool, "SELECT data FROM jobs WHERE status='running'");
     for (const job of jobs)
       await this.failJob(job.id, {

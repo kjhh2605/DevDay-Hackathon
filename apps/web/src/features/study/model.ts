@@ -32,7 +32,7 @@ export function applyStudyEvent(snapshot: StudySnapshot, event: DomainEvent): St
           snapshot.topic.revision > event.payload.topic.revision
             ? snapshot.topic
             : event.payload.topic,
-        ...(changedTopic ? { segments: [], utterances: [], feedback: [] } : {}),
+        ...(changedTopic ? { segments: [], speechGroups: [], utterances: [], feedback: [] } : {}),
       };
     }
     case 'transcript.segment.updated':
@@ -40,6 +40,12 @@ export function applyStudyEvent(snapshot: StudySnapshot, event: DomainEvent): St
       return {
         ...snapshot,
         segments: upsertRevision(snapshot.segments, event.payload, (item) => item.id),
+      };
+    case 'speech.group.updated':
+      if (event.payload.topicId !== snapshot.topic?.id) return snapshot;
+      return {
+        ...snapshot,
+        speechGroups: upsertRevision(snapshot.speechGroups ?? [], event.payload, (item) => item.id),
       };
     case 'utterance.updated':
       if (event.payload.topicId !== snapshot.topic?.id) return snapshot;
@@ -100,6 +106,10 @@ export function mergeSnapshot(
         : incoming.topic,
     sharedExpressions,
     jobs,
+    speechGroups: (current.speechGroups ?? []).reduce(
+      (items, item) => upsertRevision(items, item, (value) => value.id),
+      incoming.speechGroups ?? [],
+    ),
     segments: current.segments.reduce(
       (items, item) => upsertRevision(items, item, (value) => value.id),
       incoming.segments,

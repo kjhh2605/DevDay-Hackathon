@@ -1,3 +1,4 @@
+import { sentenceSources, mapGroupSentenceRanges } from './group-sentences.js';
 import { randomUUID } from 'node:crypto';
 import type { AiJobs, ApplicationPorts } from '@devday/application-ports';
 import { TopicContentSchema, type ApiError, type JobKind, type JobResult } from '@devday/contracts';
@@ -13,7 +14,6 @@ import {
   TopicPlanSchema,
   validateTopicPlan,
 } from './schemas.js';
-import { mapSentenceRanges } from './sentences.js';
 import { runChat } from './chat.js';
 
 export interface AudioCloser {
@@ -171,6 +171,7 @@ export function createAiJobs(
         const { topicId, closeId } = await ports.jobs.readInput(jobId, 'topic.close');
         await audio.flushTopic(topicId, closeId);
         const segments = await ports.speech.listSegments(topicId);
+        const groups = await ports.speech.listGroups(topicId);
         if (
           segments.some(
             (segment) => segment.rawStatus !== 'ready' || segment.correctionStatus !== 'ready',
@@ -179,7 +180,8 @@ export function createAiJobs(
           throw new Error('INCOMPLETE_TRANSCRIPTION');
         let utterances;
         try {
-          const sourceInput = segments.map(
+          const sources = sentenceSources(segments, groups);
+          const sourceInput = sources.map(
             ({ id, speakerUserId, startOrder, rawText, correctedText }) => ({
               id,
               speakerUserId,
@@ -188,7 +190,7 @@ export function createAiJobs(
               correctedText,
             }),
           );
-          const plan = segments.length
+          const plan = sources.length
             ? SentencePlanSchema.parse(
                 await provider.structured(
                   'sentence_ranges',
@@ -198,7 +200,7 @@ export function createAiJobs(
                 ),
               )
             : { sentences: [] };
-          const sentences = mapSentenceRanges(segments, plan);
+          const sentences = mapGroupSentenceRanges(segments, groups, plan);
           if (!(await ports.jobs.isRunning(jobId))) throw new Error('JOB_EXPIRED');
           utterances = await ports.speech.finalizeSentences(topicId, sentences, jobId);
         } catch (error) {

@@ -86,6 +86,10 @@ class Controller implements CaptureController {
           connectionTimeoutMs: this.options.connectionTimeoutMs,
           flushTimeoutMs: this.options.flushTimeoutMs,
           onFailure: (error) => this.fail(error),
+          onProcessingError: (error) => this.options.onProcessingError?.(error),
+          onConnectionState: (status) => {
+            if (epoch === this.epoch) this.setState({ status, topicId });
+          },
         });
         this.transport = transport;
         await transport.connect(topicId);
@@ -166,7 +170,13 @@ class Controller implements CaptureController {
   stopCapture(): Promise<void> {
     if (this.stopping) return this.stopping;
     const operation = async () => {
-      if (this.state.status === 'flushing' && this.flushing) {
+      if (this.state.status === 'reconnecting') {
+        ++this.epoch;
+        this.acceptFrames = false;
+        this.transport?.close();
+        await this.source?.release();
+        this.source = null;
+      } else if (this.state.status === 'flushing' && this.flushing) {
         // Stop using the physical microphone immediately while the server finishes its work.
         await this.sourceDrained?.catch(() => undefined);
         await this.source?.release();
@@ -178,7 +188,11 @@ class Controller implements CaptureController {
           this.transport?.close();
           await this.source?.release();
           await this.starting.catch(() => undefined);
-        } else if (this.source && this.transport && this.state.status === 'capturing') {
+        } else if (
+          this.source &&
+          this.transport &&
+          ['capturing', 'reconnecting'].includes(this.state.status)
+        ) {
           try {
             await this.source.flush();
             this.acceptFrames = false;
@@ -234,7 +248,7 @@ class Controller implements CaptureController {
           new Date(this.captureStartedAtMs + (event.sampleOffset / 24_000) * 1_000).toISOString(),
         );
       } else if (event.type === 'frame') this.transport?.append(event.pcm);
-      else this.transport?.commit();
+      else this.transport?.commit(event.lastVoicedSample);
     }
   }
 

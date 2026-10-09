@@ -34,7 +34,19 @@ export interface RealtimeConnection {
   close(): void;
 }
 
+export interface SpeechDecision {
+  choice: 'complete' | 'continue' | 'uncertain';
+  confidence: number;
+}
+export interface SpeechDecisionInput {
+  text: string;
+  context: string;
+  silenceMs: number;
+  previousContext?: string;
+}
 export interface AiProvider {
+  decideSpeech(input: SpeechDecisionInput, signal?: AbortSignal): Promise<SpeechDecision>;
+
   structured<T>(
     name: string,
     schema: Record<string, unknown>,
@@ -83,7 +95,7 @@ export function pcm16ToWav(pcm: Uint8Array): Uint8Array {
 }
 
 export interface ProviderAudit {
-  capability: 'structured' | 'respond' | 'transcribe' | 'image' | 'realtime';
+  capability: 'structured' | 'respond' | 'transcribe' | 'image' | 'realtime' | 'decision';
   model: string;
   requestId: string | null;
   sessionId?: string;
@@ -91,12 +103,14 @@ export interface ProviderAudit {
 
 export interface ProviderDependencies {
   client?: OpenAI;
+  fetch?: typeof fetch;
   createWebSocket?: (url: string, options: WebSocket.ClientOptions) => WebSocket;
   onAudit?: (audit: ProviderAudit) => void;
 }
 
 export class OpenAIProvider implements AiProvider {
   private readonly client: OpenAI;
+  private readonly fetch: typeof fetch;
   private readonly createWebSocket: NonNullable<ProviderDependencies['createWebSocket']>;
   private readonly onAudit: NonNullable<ProviderDependencies['onAudit']>;
 
@@ -104,6 +118,7 @@ export class OpenAIProvider implements AiProvider {
     private readonly config: AiConfig = loadAiConfig(),
     dependencies: ProviderDependencies = {},
   ) {
+    this.fetch = dependencies.fetch ?? globalThis.fetch;
     this.client =
       dependencies.client ??
       new OpenAI({
@@ -114,6 +129,64 @@ export class OpenAIProvider implements AiProvider {
     this.createWebSocket =
       dependencies.createWebSocket ?? ((url, options) => new WebSocket(url, options));
     this.onAudit = dependencies.onAudit ?? (() => {});
+  }
+
+  async decideSpeech(input: SpeechDecisionInput, signal?: AbortSignal): Promise<SpeechDecision> {
+    const uncertain: SpeechDecision = { choice: 'uncertain', confidence: 0 };
+    try {
+      const response = await this.fetch('https://api.openai.com/v1/decisions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(this.config.decisionTimeoutMs)])
+          : AbortSignal.timeout(this.config.decisionTimeoutMs),
+        body: JSON.stringify({
+          model: this.config.decisionModel,
+          input: JSON.stringify(input),
+          questions: [
+            {
+              type: 'choice',
+              name: 'speech_completion',
+              instructions: PROMPTS.speechCompletion,
+              choices: [
+                {
+                  value: 'complete',
+                  description: 'Conversationally finished, including short answers.',
+                },
+                { value: 'continue', description: 'An unfinished thought that needs more speech.' },
+                { value: 'uncertain', description: 'Insufficient evidence to end the turn.' },
+              ],
+            },
+          ],
+        }),
+      });
+      this.onAudit({
+        capability: 'decision',
+        model: this.config.decisionModel,
+        requestId: response.headers.get('x-request-id'),
+      });
+      if (!response.ok) return uncertain;
+      const body = (await response.json()) as { answers?: unknown[] };
+      if (!Array.isArray(body.answers) || body.answers.length !== 1) return uncertain;
+      const answer = body.answers[0] as Record<string, unknown> | null;
+      if (
+        !answer ||
+        answer.type !== 'choice' ||
+        answer.name !== 'speech_completion' ||
+        !['complete', 'continue', 'uncertain'].includes(String(answer.choice)) ||
+        typeof answer.confidence !== 'number' ||
+        !Number.isFinite(answer.confidence) ||
+        answer.confidence < 0 ||
+        answer.confidence > 1
+      )
+        return uncertain;
+      return { choice: answer.choice as SpeechDecision['choice'], confidence: answer.confidence };
+    } catch {
+      return uncertain;
+    }
   }
 
   async structured<T>(

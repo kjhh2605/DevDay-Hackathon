@@ -57,15 +57,20 @@ interface Segment {
   startSent: boolean;
   serverId: string | null;
   ready: Pending<void>;
+  acknowledged: Pending<void>;
+  sentSeq: number;
   frames: { seq: number; pcmBase64: string }[];
   nextSeq: number;
   committed: boolean;
   commitSent: boolean;
+  lastVoicedSample?: number;
 }
 
 export interface AudioTransportOptions {
   url: string;
   onFailure: (error: CaptureError) => void;
+  onProcessingError?: (message: string) => void;
+  onConnectionState?: (state: 'reconnecting' | 'capturing') => void;
   connectionTimeoutMs?: number;
   flushTimeoutMs?: number;
   socketFactory?: (url: string) => AudioSocket;
@@ -81,7 +86,7 @@ export function pcm16ToBase64(pcm: Int16Array): string {
   return btoa(binary);
 }
 
-/** Ordered, bounded audio transmission. There is intentionally no reconnect or retry. */
+/** Ordered PCM replay is retained until the server confirms durable segment storage. */
 export class AudioTransport {
   private socket: AudioSocket | null = null;
   private streamId: string | null = null;
@@ -96,14 +101,25 @@ export class AudioTransport {
   private error: CaptureError | null = null;
   private closed = false;
   private queuedChars = 0;
+  private clientStreamId = '';
+  private retryCount = 0;
+  private reconnecting = false;
+  private retryTimer?: ReturnType<typeof setTimeout>;
+  private lastCommitted: { serverId: string; lastSeq: number } | null = null;
 
   constructor(private readonly options: AudioTransportOptions) {}
 
   async connect(topicId: string): Promise<void> {
     this.topicId = topicId;
+    this.clientStreamId = this.uuid();
     this.ready = new Pending<void>(this.options.connectionTimeoutMs ?? 15_000, (error) =>
       this.fail(error),
     );
+    this.openSocket();
+    return this.ready.promise;
+  }
+
+  private openSocket(): void {
     try {
       this.socket = (
         this.options.socketFactory ?? ((url) => new WebSocket(url) as unknown as AudioSocket)
@@ -112,23 +128,21 @@ export class AudioTransport {
       this.fail(
         new CaptureError('connection_failed', '음성 서버에 연결하지 못했습니다.', { cause }),
       );
-      return this.ready.promise;
+      return;
     }
     this.socket.onopen = () => {
       this.send({
         type: 'audio.start',
-        topicId,
-        clientStreamId: this.uuid(),
+        topicId: this.topicId!,
+        clientStreamId: this.clientStreamId,
+        ...(this.streamId ? { resumeStreamId: this.streamId } : {}),
         format: 'pcm16',
         sampleRate: 24000,
         channels: 1,
       });
       this.lastHeartbeatAt = Date.now();
       this.heartbeat = setInterval(() => {
-        if (Date.now() - this.lastHeartbeatAt > 45_000)
-          return this.fail(
-            new CaptureError('connection_failed', '음성 서버 연결이 응답하지 않습니다.'),
-          );
+        if (Date.now() - this.lastHeartbeatAt > 45_000) return this.reconnect();
         this.send({ type: 'heartbeat.ping' });
       }, 20_000);
     };
@@ -148,13 +162,10 @@ export class AudioTransport {
         );
       }
     };
-    this.socket.onerror = () =>
-      this.fail(new CaptureError('connection_failed', '음성 서버 연결에 실패했습니다.'));
+    this.socket.onerror = () => this.reconnect();
     this.socket.onclose = () => {
-      if (!this.closed)
-        this.fail(new CaptureError('connection_failed', '음성 서버 연결이 끊겼습니다.'));
+      if (!this.closed) this.reconnect();
     };
-    return this.ready.promise;
   }
 
   beginSegment(startedAt?: string): void {
@@ -167,6 +178,8 @@ export class AudioTransport {
       startSent: false,
       serverId: null,
       ready: new Pending<void>(),
+      acknowledged: new Pending<void>(),
+      sentSeq: 0,
       frames: [],
       nextSeq: 0,
       committed: false,
@@ -192,18 +205,19 @@ export class AudioTransport {
     this.pumpSegments();
   }
 
-  commit(): void {
+  commit(lastVoicedSample?: number): void {
     this.assertReady();
     if (!this.active) return;
     if (!this.active.nextSeq)
       throw new CaptureError('protocol_error', '빈 음성 구간은 확정할 수 없습니다.');
+    this.active.lastVoicedSample = lastVoicedSample;
     this.active.committed = true;
     this.active = null;
     this.pumpSegments();
   }
 
   async drain(): Promise<void> {
-    await Promise.all(this.segments.map((segment) => segment.ready.promise));
+    await Promise.all(this.segments.map((segment) => segment.acknowledged.promise));
     this.assertReady();
     if (this.active)
       throw new CaptureError('protocol_error', '마지막 음성 구간이 확정되지 않았습니다.');
@@ -222,13 +236,13 @@ export class AudioTransport {
     this.flushing = { closeId, pending };
     try {
       await this.drain();
-      const last = this.segments.at(-1);
+      const last = this.lastCommitted;
       this.send({
         type: 'audio.flush',
         streamId: this.streamId!,
         closeId,
         lastSegmentId: last?.serverId ?? null,
-        lastSeq: last ? last.nextSeq - 1 : null,
+        lastSeq: last?.lastSeq ?? null,
       });
     } catch (cause) {
       this.fail(
@@ -248,6 +262,7 @@ export class AudioTransport {
 
   close(): void {
     this.closed = true;
+    clearTimeout(this.retryTimer);
     if (this.heartbeat) clearInterval(this.heartbeat);
     this.heartbeat = null;
     if (this.socket) {
@@ -261,7 +276,10 @@ export class AudioTransport {
     const cancellation =
       this.error ?? new CaptureError('connection_failed', '음성 입력 연결이 종료되었습니다.');
     this.ready?.reject(cancellation);
-    for (const segment of this.segments) segment.ready.reject(cancellation);
+    for (const segment of this.segments) {
+      segment.ready.reject(cancellation);
+      segment.acknowledged.reject(cancellation);
+    }
     this.flushing?.pending.reject(cancellation);
   }
 
@@ -296,7 +314,12 @@ export class AudioTransport {
     // Capture may advance while the server prepares a segment. Keep its PCM and
     // capture timestamp queued, but only open the next server segment after the
     // preceding segment's chunks and commit have been sent in order.
-    while (this.transmitIndex < this.segments.length && !this.error && !this.closed) {
+    while (
+      this.transmitIndex < this.segments.length &&
+      !this.error &&
+      !this.closed &&
+      !this.reconnecting
+    ) {
       const segment = this.segments[this.transmitIndex]!;
       if (!segment.startSent) {
         segment.startSent = true;
@@ -311,8 +334,7 @@ export class AudioTransport {
         });
       }
       if (!segment.serverId || this.error || this.closed) return;
-      const frames = segment.frames;
-      segment.frames = [];
+      const frames = segment.frames.slice(segment.sentSeq);
       for (const frame of frames) {
         this.send({
           type: 'audio.chunk',
@@ -320,17 +342,23 @@ export class AudioTransport {
           clientSegmentId: segment.clientId,
           ...frame,
         });
-        this.queuedChars -= frame.pcmBase64.length;
+        segment.sentSeq++;
         if (this.error || this.closed) return;
       }
       if (!segment.committed) return;
       if (!segment.commitSent) {
         segment.commitSent = true;
+        segment.acknowledged.startTimeout(this.options.connectionTimeoutMs ?? 15_000, (error) =>
+          this.fail(error),
+        );
         this.send({
           type: 'audio.segment_commit',
           streamId: this.streamId!,
           clientSegmentId: segment.clientId,
           lastSeq: segment.nextSeq - 1,
+          ...(segment.lastVoicedSample !== undefined
+            ? { lastVoicedSample: segment.lastVoicedSample }
+            : {}),
         });
       }
       this.transmitIndex++;
@@ -344,6 +372,9 @@ export class AudioTransport {
         this.send({ type: 'heartbeat.pong' });
         return;
       case 'heartbeat.pong':
+        return;
+      case 'audio.processing_error':
+        this.options.onProcessingError?.(message.error.message);
         return;
       case 'audio.error': {
         const code = /OPENAI|PROVIDER|TRANSCRI|MODEL|AI_|AUDIO_FAILED/.test(message.error.code)
@@ -360,6 +391,13 @@ export class AudioTransport {
           throw new CaptureError('protocol_error', '음성 연결의 주제가 일치하지 않습니다.');
         this.streamId = message.streamId;
         this.ready!.resolve();
+        if (this.reconnecting) {
+          clearTimeout(this.retryTimer);
+          this.reconnecting = false;
+          this.retryCount = 0;
+          this.options.onConnectionState?.('capturing');
+          this.pumpSegments();
+        }
         return;
       case 'audio.segment_ready': {
         const segment = this.segments.find((item) => item.clientId === message.clientSegmentId);
@@ -374,12 +412,73 @@ export class AudioTransport {
         segment.ready.resolve();
         return;
       }
+      case 'audio.segment_committed': {
+        const segment = this.segments.find((s) => s.clientId === message.clientSegmentId);
+        if (!segment) return;
+        if (
+          segment.serverId !== message.segmentId ||
+          message.lastSeq !== segment.nextSeq - 1 ||
+          !segment.committed
+        )
+          throw new CaptureError('protocol_error', '음성 저장 응답이 일치하지 않습니다.');
+        segment.acknowledged.resolve();
+        this.lastCommitted = { serverId: message.segmentId, lastSeq: message.lastSeq };
+        this.queuedChars -= segment.frames.reduce((n, frame) => n + frame.pcmBase64.length, 0);
+        const index = this.segments.indexOf(segment);
+        this.segments.splice(index, 1);
+        if (index < this.transmitIndex) this.transmitIndex--;
+        return;
+      }
       case 'audio.flushed':
         if (message.streamId !== this.streamId || message.closeId !== this.flushing?.closeId)
           throw new CaptureError('protocol_error', '음성 종료 응답이 일치하지 않습니다.');
         this.flushing.pending.resolve();
         this.close();
     }
+  }
+
+  private reconnect(): void {
+    if (this.closed || this.error) return;
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.socket) {
+      this.socket.onopen = this.socket.onmessage = this.socket.onerror = this.socket.onclose = null;
+      this.socket.close();
+      this.socket = null;
+    }
+    clearTimeout(this.retryTimer);
+    if (this.flushing) {
+      this.fail(
+        new CaptureError(
+          'connection_failed',
+          '마지막 음성 연결이 끊겼습니다. 주제 종료를 다시 시도해 주세요.',
+        ),
+      );
+      return;
+    }
+    if (this.retryCount >= 3) {
+      this.fail(
+        new CaptureError(
+          'connection_failed',
+          '음성 연결을 복구하지 못했습니다. 다시 시도해 주세요.',
+        ),
+      );
+      return;
+    }
+    this.reconnecting = true;
+    this.options.onConnectionState?.('reconnecting');
+    this.transmitIndex = 0;
+    for (const segment of this.segments) {
+      segment.startSent = false;
+      segment.serverId = null;
+      segment.sentSeq = 0;
+      segment.commitSent = false;
+    }
+    const delay = [1_000, 2_000, 4_000][this.retryCount++]!;
+    this.retryTimer = setTimeout(() => {
+      if (this.closed) return;
+      this.openSocket();
+      this.retryTimer = setTimeout(() => this.reconnect(), 2_000);
+    }, delay);
   }
 
   private fail(error: CaptureError): void {

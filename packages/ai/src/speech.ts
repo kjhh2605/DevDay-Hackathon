@@ -1,15 +1,17 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import type { Actor, ApplicationPorts } from '@devday/application-ports';
 import {
   AudioClientMessageSchema,
   type AudioClientMessage,
   type AudioServerMessage,
   type TranscriptSegment,
+  type SpeechGroup,
 } from '@devday/contracts';
 import type { AiProvider, ProviderEvent, RealtimeConnection } from './provider.js';
-import { pcm16ToWav } from './provider.js';
+import { pcm16ToWav, AiProviderError } from './provider.js';
 import { RealtimeSegmentMap } from './realtime-mapping.js';
 import { publicAiError, withTimeout } from './jobs.js';
+import { SpeechBoundary, MAX_GROUP_PCM_BYTES } from './speech-boundary.js';
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -35,6 +37,18 @@ interface PendingSegment {
   partialRevision: number;
   raw: ReturnType<typeof deferred<TranscriptSegment>>;
   done: Promise<void> | null;
+  media: Promise<void> | null;
+  group: PendingGroup | null;
+  lastVoicedSample: number;
+  hashes: string[];
+}
+interface PendingGroup {
+  data: SpeechGroup;
+  stream: InputStream;
+  segments: PendingSegment[];
+  boundary: SpeechBoundary;
+  saves: Promise<void>;
+  done: Promise<void> | null;
 }
 interface InputStream {
   id: string;
@@ -43,6 +57,7 @@ interface InputStream {
   topicId: string;
   studyId: string;
   context: string;
+  previousContext: string;
   send: (message: AudioServerMessage) => void;
   provider: RealtimeConnection | null;
   segments: Map<string, PendingSegment>;
@@ -50,6 +65,7 @@ interface InputStream {
   mapping: RealtimeSegmentMap;
   active: PendingSegment | null;
   stopped: boolean;
+  failedStream?: boolean;
   providerClosed: boolean;
   providerGeneration: number;
   providerStartedAt: number;
@@ -58,20 +74,36 @@ interface InputStream {
   providerReady: ReturnType<typeof deferred<void>>;
   lastSegment: PendingSegment | null;
   eventChain: Promise<void>;
+  group: PendingGroup | null;
+  persistence: Promise<void>;
+  work: Set<Promise<void>>;
+  rotation?: ReturnType<typeof setTimeout>;
+  rotating?: Promise<void>;
+  disconnected?: ReturnType<typeof setTimeout>;
+  connectionId: string;
+  receipts: Map<string, { id: string; startOrder: number; nextSeq: number; hashes: string[] }>;
 }
 
 /** One provider stream per authenticated input. Never combines speakers' audio. */
+export interface SpeechServiceOptions {
+  confidence?: number;
+  timeoutMs?: number;
+  onDiagnostic?: (event: Record<string, string | number | null>) => void;
+}
 export class SpeechService {
+  private shuttingDown = false;
   private readonly streams = new Map<string, InputStream>();
   private readonly closingTopics = new Set<string>();
   constructor(
     private readonly ports: ApplicationPorts,
     private readonly provider: AiProvider,
+    private readonly options: SpeechServiceOptions = {},
   ) {}
 
   createConnection(actor: Actor, send: (message: AudioServerMessage) => void) {
     let stream: InputStream | null = null;
     let disconnected = false;
+    const connectionId = randomUUID();
     return {
       receive: async (unknownMessage: unknown): Promise<void> => {
         const message = AudioClientMessageSchema.parse(unknownMessage);
@@ -82,20 +114,32 @@ export class SpeechService {
         if (message.type === 'heartbeat.pong') return;
         if (message.type === 'audio.start') {
           if (stream) throw new Error('STREAM_ALREADY_STARTED');
-          stream = await this.start(actor, message, send);
-          if (disconnected) {
+          stream = await this.start(actor, message, send, connectionId);
+          if (disconnected && stream.connectionId === connectionId) {
             await this.failStream(stream, new Error('Audio client disconnected while connecting'));
             throw new Error('INPUT_CLOSED');
           }
           return;
         }
         if (!stream || message.streamId !== stream.id) throw new Error('INVALID_STREAM');
+        if (stream.connectionId !== connectionId) throw new Error('SUPERSEDED_CONNECTION');
         await this.receive(stream, message);
       },
       disconnect: () => {
         disconnected = true;
-        if (!stream || stream.providerClosed || stream.stopped) return;
-        void this.failStream(stream, new Error('Audio connection closed before flush'));
+        if (
+          !stream ||
+          stream.connectionId !== connectionId ||
+          stream.providerClosed ||
+          stream.stopped
+        )
+          return;
+        const current = stream;
+        current.disconnected = setTimeout(
+          () => void this.failStream(current, new Error('Audio reconnect window expired')),
+          15_000,
+        );
+        current.disconnected.unref?.();
       },
     };
   }
@@ -104,7 +148,25 @@ export class SpeechService {
     actor: Actor,
     message: Extract<AudioClientMessage, { type: 'audio.start' }>,
     send: InputStream['send'],
+    connectionId: string,
   ): Promise<InputStream> {
+    const existing = [...this.streams.values()].find(
+      (s) =>
+        s.clientStreamId === message.clientStreamId &&
+        s.actor.userId === actor.userId &&
+        s.topicId === message.topicId,
+    );
+    if (existing) {
+      if (existing.stopped || (message.resumeStreamId && message.resumeStreamId !== existing.id))
+        throw new Error('INPUT_CLOSED');
+      clearTimeout(existing.disconnected);
+      existing.connectionId = connectionId;
+      existing.send = send;
+      await existing.providerReady.promise;
+      send({ type: 'audio.ready', streamId: existing.id, topicId: existing.topicId });
+      return existing;
+    }
+    if (message.resumeStreamId) throw new Error('RESUME_STREAM_EXPIRED');
     const snapshot = await this.ports.studies.getForTopic(actor, message.topicId);
     if (
       snapshot.topic?.id !== message.topicId ||
@@ -127,6 +189,12 @@ export class SpeechService {
       context: [snapshot.topic.content?.title, snapshot.topic.content?.situationText]
         .filter(Boolean)
         .join('\n'),
+      previousContext: (snapshot.segments ?? [])
+        .filter((s) => s.rawStatus === 'ready')
+        .slice(-3)
+        .map((s) => s.rawText ?? '')
+        .join('\n')
+        .slice(-1000),
       send,
       provider: null,
       segments: new Map(),
@@ -142,11 +210,17 @@ export class SpeechService {
       providerReady: deferred<void>(),
       lastSegment: null,
       eventChain: Promise.resolve(),
+      persistence: Promise.resolve(),
+      group: null,
+      work: new Set(),
+      connectionId,
+      receipts: new Map(),
     };
     this.streams.set(stream.id, stream);
     try {
       await this.openProvider(stream);
       stream.providerReady.resolve();
+      this.scheduleRotation(stream);
       // A close may have frozen this stream while the provider was opening. Let the browser flush its empty buffer.
       send({ type: 'audio.ready', streamId: stream.id, topicId: stream.topicId });
       return stream;
@@ -163,7 +237,8 @@ export class SpeechService {
     const generation = ++stream.providerGeneration;
     stream.providerClosed = false;
     stream.providerStartedAt = Date.now();
-    stream.provider = await this.provider.connectTranscription({
+    stream.mapping = new RealtimeSegmentMap();
+    const provider = await this.provider.connectTranscription({
       onEvent: (event) => {
         if (stream.providerGeneration !== generation) return;
         // Resolve identity synchronously before another browser segment can start.
@@ -194,6 +269,11 @@ export class SpeechService {
           void this.failStream(stream, new Error('Provider input closed unexpectedly'));
       },
     });
+    if (this.shuttingDown || stream.stopped || stream.providerGeneration !== generation) {
+      provider.close();
+      return;
+    }
+    stream.provider = provider;
   }
 
   private async receive(
@@ -206,9 +286,11 @@ export class SpeechService {
     if (message.type === 'audio.stop') {
       if (stream.active) throw new Error('UNCOMMITTED_AUDIO');
       stream.stopped = true;
-      await Promise.all([...stream.segments.values()].map((segment) => segment.done));
+      stream.group?.boundary.close('mic_off');
+      await Promise.all([...stream.work]);
       this.closeProvider(stream);
       stream.flushed.resolve();
+      this.streams.delete(stream.id);
       return;
     }
     if (message.type === 'audio.flush') {
@@ -220,7 +302,8 @@ export class SpeechService {
         (last ? last.nextSeq - 1 : null) !== message.lastSeq
       )
         throw new Error('INCOMPLETE_AUDIO_FLUSH');
-      await Promise.all([...stream.segments.values()].map((segment) => segment.done));
+      stream.group?.boundary.close('topic_close');
+      await Promise.all([...stream.work]);
       await stream.eventChain;
       stream.stopped = true;
       this.closeProvider(stream);
@@ -230,15 +313,36 @@ export class SpeechService {
     }
     if (stream.stopped || stream.providerClosed) throw new Error('INPUT_CLOSED');
     if (message.type === 'audio.segment_start') {
+      const prior = stream.segments.get(message.clientSegmentId);
+      const receipt = stream.receipts.get(message.clientSegmentId);
+      if (prior || receipt) {
+        stream.send({
+          type: 'audio.segment_ready',
+          clientSegmentId: message.clientSegmentId,
+          segmentId: prior?.segment.id ?? receipt!.id,
+          startOrder: prior?.segment.startOrder ?? receipt!.startOrder,
+        });
+        return;
+      }
       if (stream.active || stream.segments.has(message.clientSegmentId))
         throw new Error('SEGMENT_ALREADY_ACTIVE');
-      // Realtime sessions have a 60-minute provider lifetime. Rotate healthy connections between segments.
-      if (Date.now() - stream.providerStartedAt >= 55 * 60_000) {
-        await Promise.all([...stream.segments.values()].map((segment) => segment.done));
-        this.closeProvider(stream);
-        await this.openProvider(stream);
-      }
+      stream.group?.boundary.start();
+      if (
+        stream.group &&
+        stream.group.segments.reduce((n, s) => n + s.bytes, 0) > MAX_GROUP_PCM_BYTES - 20 * 48_000
+      )
+        stream.group.boundary.close('size_limit');
+      // Idle rotation and a new segment share the same provider readiness barrier.
+      if (stream.rotating) await stream.rotating;
+      else if (Date.now() - stream.providerStartedAt >= 55 * 60_000)
+        await this.rotateProvider(stream);
       // A closing stream may send a final buffered segment after the close notification.
+      if (
+        message.startedAt &&
+        (Date.parse(message.startedAt) > Date.now() + 30_000 ||
+          Date.parse(message.startedAt) < Date.now() - 300_000)
+      )
+        throw new Error('INVALID_CAPTURE_TIMESTAMP');
       const segment = await this.ports.speech.begin(stream.actor, {
         topicId: stream.topicId,
         clientStreamId: stream.clientStreamId,
@@ -259,12 +363,18 @@ export class SpeechService {
         partialRevision: 0,
         raw: deferred<TranscriptSegment>(),
         done: null,
+        media: null,
+        group: null,
+        lastVoicedSample: 0,
+        hashes: [],
       };
       stream.segments.set(message.clientSegmentId, pending);
       stream.byId.set(segment.id, pending);
       stream.active = pending;
       stream.lastSegment = pending;
       stream.mapping.begin(segment.id);
+      this.attachGroup(stream, pending);
+      await pending.group!.saves;
       stream.send({
         type: 'audio.segment_ready',
         clientSegmentId: message.clientSegmentId,
@@ -273,7 +383,46 @@ export class SpeechService {
       });
       return;
     }
+    const receipt = stream.receipts.get(message.clientSegmentId);
+    if (receipt) {
+      if (
+        message.type === 'audio.chunk' &&
+        (message.seq >= receipt.nextSeq ||
+          createHash('sha256').update(Buffer.from(message.pcmBase64, 'base64')).digest('hex') !==
+            receipt.hashes[message.seq])
+      )
+        throw new Error('REPLAY_MISMATCH');
+      if (message.type === 'audio.segment_commit') {
+        if (message.lastSeq !== receipt.nextSeq - 1) throw new Error('REPLAY_MISMATCH');
+        stream.send({
+          type: 'audio.segment_committed',
+          clientSegmentId: message.clientSegmentId,
+          segmentId: receipt.id,
+          lastSeq: message.lastSeq,
+        });
+      }
+      return;
+    }
     const pending = stream.segments.get(message.clientSegmentId);
+    if (pending && message.type === 'audio.chunk' && message.seq < pending.nextSeq) {
+      if (
+        createHash('sha256').update(Buffer.from(message.pcmBase64, 'base64')).digest('hex') !==
+        pending.hashes[message.seq]
+      )
+        throw new Error('REPLAY_MISMATCH');
+      return;
+    }
+    if (pending?.committed && message.type === 'audio.segment_commit') {
+      if (message.lastSeq !== pending.nextSeq - 1) throw new Error('REPLAY_MISMATCH');
+      await pending.media;
+      stream.send({
+        type: 'audio.segment_committed',
+        clientSegmentId: pending.clientSegmentId,
+        segmentId: pending.segment.id,
+        lastSeq: message.lastSeq,
+      });
+      return;
+    }
     if (!pending || stream.active !== pending || pending.committed)
       throw new Error('SEGMENT_NOT_ACTIVE');
     if (message.type === 'audio.chunk') {
@@ -283,9 +432,10 @@ export class SpeechService {
         !pcm.byteLength ||
         pcm.byteLength % 2 !== 0 ||
         pcm.byteLength > 48_000 ||
-        pending.bytes + pcm.byteLength > 1_200_000
+        pending.bytes + pcm.byteLength > 960_000
       )
         throw new Error('INVALID_PCM');
+      pending.hashes.push(createHash('sha256').update(pcm).digest('hex'));
       pending.chunks.push(pcm);
       pending.bytes += pcm.byteLength;
       pending.nextSeq += 1;
@@ -294,12 +444,44 @@ export class SpeechService {
     }
     if (message.lastSeq !== pending.nextSeq - 1 || !pending.bytes)
       throw new Error('INCOMPLETE_SEGMENT');
+    const lastVoicedSample = message.lastVoicedSample ?? pending.bytes / 2;
+    if (lastVoicedSample > pending.bytes / 2 || pending.bytes / 2 - lastVoicedSample > 24_000)
+      throw new Error('INVALID_ACTIVITY_OFFSET');
+    this.options.onDiagnostic?.({
+      stage: 'commit',
+      streamId: stream.id,
+      segmentId: pending.segment.id,
+      trailingSilenceMs: (pending.bytes / 2 - lastVoicedSample) / 24,
+      captureArrivalAgeMs: Date.now() - Date.parse(pending.segment.startedAt) - pending.bytes / 48,
+    });
+    pending.lastVoicedSample = lastVoicedSample;
     pending.committed = true;
     stream.active = null;
     stream.mapping.commit(pending.segment.id);
     stream.provider!.commit();
-    pending.done = this.finishSegment(stream, pending);
+    pending.media = this.ports.media
+      .put({
+        kind: 'audio',
+        studyId: stream.studyId,
+        segmentId: pending.segment.id,
+        bytes: pcm16ToWav(Buffer.concat(pending.chunks)),
+        contentType: 'audio/wav',
+      })
+      .then(() => {
+        pending.chunks = [];
+        stream.send({
+          type: 'audio.segment_committed',
+          clientSegmentId: pending.clientSegmentId,
+          segmentId: pending.segment.id,
+          lastSeq: pending.nextSeq - 1,
+        });
+      });
+    void pending.media.catch(() => undefined);
+    pending.group!.boundary.end((pending.bytes / 2 - lastVoicedSample) / 24);
+    pending.done = this.finishRaw(stream, pending);
     void pending.done.catch(() => undefined);
+    if (pending.group!.segments.reduce((n, p) => n + p.bytes, 0) >= MAX_GROUP_PCM_BYTES)
+      pending.group!.boundary.close('size_limit');
   }
 
   private async providerEvent(
@@ -310,7 +492,12 @@ export class SpeechService {
     const pending = stream.byId.get(segmentId);
     if (!pending || pending.failed || pending.rawReceived || pending.rawAttempt > 0) return;
     if (event.type === 'conversation.item.input_audio_transcription.failed') {
-      pending.raw.reject(new Error('Provider transcription failed'));
+      pending.raw.reject(
+        new AiProviderError(
+          event.error?.code ?? 'RAW_TRANSCRIPTION_FAILED',
+          'Provider transcription failed',
+        ),
+      );
       return;
     }
     if (
@@ -342,7 +529,7 @@ export class SpeechService {
       typeof event.transcript === 'string'
     ) {
       const endedAt = new Date(
-        Date.parse(pending.segment.startedAt) + Math.round(pending.bytes / 48),
+        Date.parse(pending.segment.startedAt) + Math.round(pending.lastVoicedSample / 24),
       ).toISOString();
       const updated = await this.ports.speech.completeRaw(segmentId, {
         text: event.transcript,
@@ -354,99 +541,348 @@ export class SpeechService {
     }
   }
 
-  private async finishSegment(stream: InputStream, pending: PendingSegment): Promise<void> {
+  private attachGroup(stream: InputStream, pending: PendingSegment) {
+    let group = stream.group;
+    if (!group) {
+      const segment = pending.segment;
+      group = {
+        stream,
+        data: {
+          id: randomUUID(),
+          revision: 0,
+          studyId: stream.studyId,
+          topicId: stream.topicId,
+          speakerUserId: stream.actor.userId,
+          startOrder: segment.startOrder,
+          segmentIds: [segment.id],
+          rawRevisions: [],
+          rawText: '',
+          correctedText: null,
+          state: 'collecting',
+          startedAt: segment.startedAt,
+          endedAt: null,
+          closeReason: null,
+          attemptId: randomUUID(),
+          error: null,
+        },
+        segments: [],
+        saves: Promise.resolve(),
+        done: null,
+        boundary: null as unknown as SpeechBoundary,
+      };
+      const current = group;
+      group.boundary = new SpeechBoundary({
+        ...this.options,
+        decide: async (text, silenceMs, signal) => {
+          const began = performance.now();
+          const result = await this.provider.decideSpeech(
+            { text, context: stream.context, previousContext: stream.previousContext, silenceMs },
+            signal,
+          );
+          this.options.onDiagnostic?.({
+            stage: 'decision',
+            streamId: stream.id,
+            groupId: current.data.id,
+            revision: current.data.revision,
+            choice: result.choice,
+            confidence: result.confidence,
+            silenceMs,
+            elapsedMs: Math.round(performance.now() - began),
+          });
+          return result;
+        },
+        onDeciding: () => {
+          current.data.state = 'deciding';
+          this.saveGroup(current);
+        },
+        freeze: (reason) => {
+          if (stream.group === current) stream.group = null;
+          this.options.onDiagnostic?.({
+            stage: 'freeze',
+            streamId: stream.id,
+            groupId: current.data.id,
+            revision: current.data.revision,
+            reason,
+          });
+          current.data.closeReason = reason;
+          current.data.state = 'correcting';
+          this.saveGroup(current);
+          current.done = this.finishGroup(stream, current);
+          stream.work.add(current.done);
+          void current.done
+            .finally(() => {
+              stream.work.delete(current.done!);
+              if (stream.stopped && !stream.work.size) this.streams.delete(stream.id);
+            })
+            .catch(() => undefined);
+        },
+      });
+      stream.group = group;
+      this.saveGroup(group, true);
+    } else {
+      group.data.segmentIds.push(pending.segment.id);
+      group.data.state = 'collecting';
+      this.saveGroup(group);
+    }
+    group.segments.push(pending);
+    pending.group = group;
+    group.boundary.start();
+  }
+  private saveGroup(group: PendingGroup, create = false) {
+    const expected = create ? null : group.data.revision++;
+    const data = structuredClone(group.data);
+    group.saves = group.stream.persistence.then(async () => {
+      if (!(await this.ports.speech.saveGroup(data, expected)))
+        throw new Error('SPEECH_GROUP_REVISION_EXPIRED');
+    });
+    group.stream.persistence = group.saves;
+    void group.saves.catch(() => undefined);
+  }
+  private refreshRaw(group: PendingGroup) {
+    const ordered = group.segments;
+    group.data.rawText = ordered.map((p) => p.segment.rawText ?? '').join('\n');
+    group.data.rawRevisions = ordered.map((p) => p.segment.rawRevision ?? p.segment.revision);
+    group.data.endedAt = ordered.at(-1)?.segment.endedAt ?? null;
+    this.saveGroup(group);
+    if (ordered.every((p) => p.rawReceived && p.committed))
+      group.boundary.text(group.data.rawText, group.data.revision);
+  }
+  private async finishRaw(stream: InputStream, pending: PendingSegment): Promise<void> {
     try {
-      const raw = await withTimeout(pending.raw.promise, 60_000);
-      const pcm = Buffer.concat(pending.chunks);
-      await this.ports.media.put({
-        kind: 'audio',
-        studyId: stream.studyId,
-        segmentId: raw.id,
-        bytes: pcm16ToWav(pcm),
-        contentType: 'audio/wav',
-      });
-      const corrected = await withTimeout(this.provider.transcribe(pcm, stream.context), 60_000);
-      if (pending.failed) return;
-      assertCorrectionCoverage(raw.rawText ?? '', corrected);
-      const applied = await this.ports.speech.applyCorrection(raw.id, {
-        text: corrected,
-        expectedRevision: raw.revision,
-      });
-      if (!applied) throw new Error('TRANSCRIPTION_REVISION_EXPIRED');
-      pending.segment = applied;
+      await withTimeout(pending.raw.promise, 60_000);
+      await pending.media;
+      this.refreshRaw(pending.group!);
     } catch (error) {
+      if (this.shuttingDown) return;
       pending.failed = true;
-      await this.ports.speech.fail(
-        pending.segment.id,
-        pending.rawReceived ? 'correction' : 'raw',
-        publicAiError(error),
-      );
+      this.options.onDiagnostic?.({
+        stage: 'raw_failed',
+        streamId: stream.id,
+        segmentId: pending.segment.id,
+        providerCode: diagnosticErrorCode(error),
+      });
+      await this.ports.speech.fail(pending.segment.id, 'raw', publicAiError(error));
+      pending.group!.boundary.close('silence_timeout');
       stream.send({
-        type: 'audio.error',
-        error: { ...publicAiError(error), code: 'AUDIO_FAILED' },
-        requestId: randomUUID(),
+        type: 'audio.processing_error',
+        groupId: pending.group!.data.id,
+        segmentId: pending.segment.id,
+        error: publicAiError(error),
       });
       throw error;
     }
   }
-
-  private async retryRaw(stream: InputStream, pending: PendingSegment): Promise<void> {
-    pending.failed = false;
-    pending.rawAttempt += 1;
-    const attempt = pending.rawAttempt;
-    pending.raw = deferred<TranscriptSegment>();
-    let connection: RealtimeConnection | null = null;
+  private async pcm(pending: PendingSegment) {
+    await pending.media;
+    if (pending.chunks.length) return Buffer.concat(pending.chunks);
+    const wav = Buffer.from(await this.ports.media.readSegmentAudio(pending.segment.id));
+    if (wav.toString('ascii', 0, 4) !== 'RIFF' || wav.length < 44)
+      throw new Error('INVALID_STORED_AUDIO');
+    return wav.subarray(44);
+  }
+  private async finishGroup(stream: InputStream, group: PendingGroup) {
     try {
-      connection = await this.provider.connectTranscription({
-        onError: (error) => pending.raw.reject(error),
-        onEvent: (event) => {
-          if (pending.failed || pending.rawAttempt !== attempt || pending.rawReceived) return;
-          if (event.type === 'conversation.item.input_audio_transcription.failed')
-            pending.raw.reject(new Error('Provider transcription failed'));
-          if (
-            event.type === 'conversation.item.input_audio_transcription.completed' &&
-            typeof event.transcript === 'string'
-          ) {
-            // This replacement provider receives only the retained, already committed PCM for this one segment.
-            const endedAt = new Date(
-              Date.parse(pending.segment.startedAt) + Math.round(pending.bytes / 48),
-            ).toISOString();
-            void this.ports.speech
-              .completeRaw(pending.segment.id, { text: event.transcript, endedAt })
-              .then((updated) => {
-                if (pending.rawAttempt !== attempt || pending.failed) return;
-                pending.rawReceived = true;
-                pending.segment = updated;
-                pending.raw.resolve(updated);
-              })
-              .catch(pending.raw.reject);
-          }
-        },
-      });
-      connection.append(Buffer.concat(pending.chunks));
-      connection.commit();
-      await this.finishSegment(stream, pending);
-    } catch (error) {
-      if (!pending.failed) {
-        pending.failed = true;
-        await this.ports.speech.fail(pending.segment.id, 'raw', publicAiError(error));
+      await Promise.all(group.segments.map((p) => p.done));
+      await group.saves;
+      // Frozen membership is immutable even when raw transcription misses the silence deadline.
+      group.data.rawText = group.segments.map((p) => p.segment.rawText ?? '').join('\n');
+      group.data.rawRevisions = group.segments.map(
+        (p) => p.segment.rawRevision ?? p.segment.revision,
+      );
+      group.data.endedAt = group.segments.at(-1)?.segment.endedAt ?? null;
+      if (!group.data.rawText.trim()) {
+        group.data.state = 'no_speech';
+        group.data.correctedText = '';
+      } else {
+        const pcm = Buffer.concat(await Promise.all(group.segments.map((p) => this.pcm(p))));
+        const corrected = await withTimeout(this.provider.transcribe(pcm, stream.context), 60_000);
+        if (this.shuttingDown) return;
+        group.data.correctedText = corrected;
+        group.data.state = 'ready';
       }
-      throw error;
+      this.saveGroup(group);
+      await group.saves;
+      if (group.data.state === 'ready') stream.previousContext = group.data.rawText.slice(-1000);
+    } catch (error) {
+      if (this.shuttingDown) return;
+      group.data.state = 'failed';
+      group.data.error = {
+        phase: group.segments.some((p) => !p.rawReceived) ? 'raw' : 'correction',
+        ...publicAiError(error),
+      };
+      // Public error DTO has details; group errors deliberately contain only sanitized diagnostics.
+      this.options.onDiagnostic?.({
+        stage: 'group_failed',
+        providerCode: diagnosticErrorCode(error),
+        streamId: stream.id,
+        groupId: group.data.id,
+        revision: group.data.revision,
+        code: group.data.error.code,
+        phase: group.data.error.phase,
+      });
+      const { phase, code, message } = group.data.error;
+      group.data.error = { phase, code, message };
+      this.saveGroup(group);
+      await group.saves;
+      stream.send({
+        type: 'audio.processing_error',
+        groupId: group.data.id,
+        segmentId: null,
+        error: publicAiError(error),
+      });
     } finally {
-      connection?.close();
+      for (const p of group.segments) {
+        p.chunks = [];
+        stream.receipts.set(p.clientSegmentId, {
+          id: p.segment.id,
+          startOrder: p.segment.startOrder,
+          nextSeq: p.nextSeq,
+          hashes: p.hashes,
+        });
+        if (stream.receipts.size > 64) stream.receipts.delete(stream.receipts.keys().next().value!);
+        stream.segments.delete(p.clientSegmentId);
+        stream.byId.delete(p.segment.id);
+      }
+      if (stream.stopped && !stream.work.size) this.streams.delete(stream.id);
     }
+  }
+  async retry(actor: Actor, topicId: string, groupId: string): Promise<SpeechGroup> {
+    const snapshot = await this.ports.studies.getForTopic(actor, topicId);
+    if (snapshot.topic?.id !== topicId || !['talking', 'closing'].includes(snapshot.topic.state))
+      throw new Error('TOPIC_NOT_TALKING');
+    const group = (await this.ports.speech.listGroups(topicId)).find(
+      (g) => g.id === groupId && g.speakerUserId === actor.userId,
+    );
+    if (!group) throw new Error('SPEECH_GROUP_NOT_FOUND');
+    if (group.state === 'failed')
+      await this.retryGroup(group, snapshot.topic.content?.situationText ?? '');
+    return (await this.ports.speech.listGroups(topicId)).find((g) => g.id === groupId)!;
+  }
+  private async retryGroup(group: SpeechGroup, context: string) {
+    const segments = (await this.ports.speech.listSegments(group.topicId)).filter((s) =>
+      group.segmentIds.includes(s.id),
+    );
+    const expected = group.revision;
+    group = {
+      ...group,
+      revision: expected + 1,
+      state: 'correcting',
+      error: null,
+      attemptId: randomUUID(),
+    };
+    if (!(await this.ports.speech.saveGroup(group, expected))) return;
+    try {
+      const pcm: Buffer[] = [];
+      for (const segment of segments) {
+        const wav = Buffer.from(await this.ports.media.readSegmentAudio(segment.id));
+        const bytes = wav.subarray(44);
+        pcm.push(bytes);
+        if (segment.rawStatus !== 'ready') {
+          const raw = deferred<string>();
+          const connection = await this.provider.connectTranscription({
+            onError: raw.reject,
+            onEvent: (event) => {
+              if (
+                event.type === 'conversation.item.input_audio_transcription.completed' &&
+                typeof event.transcript === 'string'
+              )
+                raw.resolve(event.transcript);
+              if (event.type === 'conversation.item.input_audio_transcription.failed')
+                raw.reject(new Error('RAW_TRANSCRIPTION_FAILED'));
+            },
+          });
+          try {
+            connection.append(bytes);
+            connection.commit();
+            Object.assign(
+              segment,
+              await this.ports.speech.completeRaw(segment.id, {
+                text: await withTimeout(raw.promise, 60_000),
+                endedAt:
+                  segment.endedAt ??
+                  new Date(Date.parse(segment.startedAt) + bytes.length / 48).toISOString(),
+              }),
+            );
+          } finally {
+            connection.close();
+          }
+        }
+      }
+      group.rawText = segments.map((s) => s.rawText ?? '').join('\n');
+      group.rawRevisions = segments.map((s) => s.rawRevision ?? s.revision);
+      group.endedAt = segments.at(-1)?.endedAt ?? null;
+      group.correctedText = group.rawText.trim()
+        ? await withTimeout(this.provider.transcribe(Buffer.concat(pcm), context), 60_000)
+        : '';
+      group.state = group.rawText.trim() ? 'ready' : 'no_speech';
+    } catch (error) {
+      group.state = 'failed';
+      const { code, message } = publicAiError(error);
+      group.error = {
+        phase: segments.some((s) => s.rawStatus !== 'ready') ? 'raw' : 'correction',
+        code,
+        message,
+      };
+    }
+    const revision = group.revision++;
+    await this.ports.speech.saveGroup(group, revision);
+  }
+  private rotateProvider(stream: InputStream): Promise<void> {
+    if (stream.rotating) return stream.rotating;
+    stream.rotating = (async () => {
+      await Promise.allSettled([...stream.byId.values()].map((p) => p.done));
+      await stream.eventChain;
+      if (stream.stopped || this.shuttingDown) return;
+      this.closeProvider(stream);
+      await this.openProvider(stream);
+      this.scheduleRotation(stream);
+    })().finally(() => {
+      stream.rotating = undefined;
+    });
+    return stream.rotating;
+  }
+  private scheduleRotation(stream: InputStream, delay = 55 * 60_000) {
+    clearTimeout(stream.rotation);
+    stream.rotation = setTimeout(() => {
+      if (stream.stopped) return;
+      if (stream.active || [...stream.byId.values()].some((p) => !p.rawReceived)) {
+        this.scheduleRotation(stream, 1_000);
+        return;
+      }
+      void this.rotateProvider(stream).catch((e) => this.failStream(stream, e));
+    }, delay);
+    stream.rotation.unref?.();
   }
 
   private async failStream(stream: InputStream, error: unknown): Promise<void> {
+    if (stream.failedStream || this.shuttingDown) return;
+    stream.failedStream = true;
     stream.stopped = true;
     for (const pending of stream.segments.values())
       if (!pending.rawReceived) {
         pending.raw.reject(error);
         if (!pending.done) {
           pending.failed = true;
+          if (pending.bytes) {
+            pending.media = this.ports.media
+              .put({
+                kind: 'audio',
+                studyId: stream.studyId,
+                segmentId: pending.segment.id,
+                bytes: pcm16ToWav(Buffer.concat(pending.chunks)),
+                contentType: 'audio/wav',
+              })
+              .then(() => {
+                pending.chunks = [];
+              });
+            await pending.media.catch(() => undefined);
+          }
+          pending.done = Promise.reject(error);
+          void pending.done.catch(() => undefined);
           await this.ports.speech.fail(pending.segment.id, 'raw', publicAiError(error));
         }
       }
+    stream.group?.boundary.close('mic_off');
     stream.flushed.reject(error);
     stream.send({
       type: 'audio.error',
@@ -454,8 +890,11 @@ export class SpeechService {
       requestId: randomUUID(),
     });
     this.closeProvider(stream);
+    if (!stream.work.size) this.streams.delete(stream.id);
   }
   private closeProvider(stream: InputStream) {
+    clearTimeout(stream.rotation);
+    clearTimeout(stream.disconnected);
     stream.providerClosed = true;
     stream.provider?.close();
   }
@@ -467,29 +906,9 @@ export class SpeechService {
     await withTimeout(
       Promise.all(
         streams.map(async (stream) => {
-          // Explicit user close retry may retry a failed correction from retained PCM, without client retransmission.
-          const currentSegments = await this.ports.speech.listSegments(topicId);
-          for (const pending of stream.segments.values())
-            if (pending.failed && pending.committed) {
-              const current = currentSegments.find((segment) => segment.id === pending.segment.id);
-              if (!current) throw new Error('RAW_TRANSCRIPTION_UNAVAILABLE');
-              // Persisted status wins if a raw completion raced a timeout/failure update.
-              if (current.rawStatus !== 'ready') {
-                pending.rawReceived = false;
-                pending.done = this.retryRaw(stream, pending);
-                void pending.done.catch(() => undefined);
-                continue;
-              }
-              pending.rawReceived = true;
-              pending.segment = current;
-              pending.raw = deferred<TranscriptSegment>();
-              pending.raw.resolve(current);
-              pending.failed = false;
-              pending.done = this.finishSegment(stream, pending);
-              void pending.done.catch(() => undefined);
-            }
           if (stream.stopped) {
-            await Promise.all([...stream.segments.values()].map((segment) => segment.done));
+            stream.group?.boundary.close('topic_close');
+            await Promise.all([...stream.work]);
             return;
           }
           stream.closingId = closeId;
@@ -511,23 +930,25 @@ export class SpeechService {
       ),
       150_000,
     );
+    for (const group of await this.ports.speech.listGroups(topicId)) {
+      if (group.state === 'failed') await this.retryGroup(group, streams[0]?.context ?? '');
+    }
+    for (const stream of streams) this.streams.delete(stream.id);
+    this.closingTopics.delete(topicId);
   }
 
   shutdown(): void {
-    for (const stream of this.streams.values()) this.closeProvider(stream);
+    this.shuttingDown = true;
+    for (const stream of this.streams.values()) {
+      stream.group?.boundary.dispose();
+      for (const p of stream.byId.values()) p.raw.reject(new Error('SERVICE_CLOSED'));
+      this.closeProvider(stream);
+    }
+    this.streams.clear();
   }
 }
 
-/** A conservative omission guard; it never replaces audio transcription with guessed text. */
-export function assertCorrectionCoverage(raw: string, corrected: string): void {
-  const hangul = (text: string) => (text.match(/[가-힣]/gu) ?? []).length;
-  const english = (text: string) => (text.match(/\b[A-Za-z]{2,}\b/gu) ?? []).length;
-  const rawKorean = hangul(raw),
-    rawEnglish = english(raw);
-  if (rawKorean >= 2 && rawEnglish >= 2 && (hangul(corrected) === 0 || english(corrected) === 0)) {
-    throw new Error(
-      'CORRECTION_LANGUAGE_OMISSION: mixed-language speech needs explicit retranscription',
-    );
-  }
-  if (/\S/u.test(raw) && !/\S/u.test(corrected)) throw new Error('EMPTY_CORRECTION');
+function diagnosticErrorCode(error: unknown): string {
+  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+  return /^[A-Za-z0-9_.-]{1,80}$/.test(code) ? code : 'UNKNOWN';
 }

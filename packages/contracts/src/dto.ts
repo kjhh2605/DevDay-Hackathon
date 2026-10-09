@@ -79,11 +79,17 @@ export const TranscriptSegmentSchema = z.strictObject({
   endedAt: TimestampSchema.nullable(),
   rawText: z.string().nullable(),
   rawStatus: ProcessingStatusSchema,
+  rawRevision: RevisionSchema.optional(),
   correctedText: z.string().nullable(),
   correctionStatus: ProcessingStatusSchema,
   sentenceStatus: z.enum(['pending', 'ready', 'failed']),
+  groupId: IdSchema.optional(),
+  noSpeech: z.boolean().optional(),
+  error: z
+    .object({ phase: z.enum(['raw', 'correction', 'sentences']), message: z.string() })
+    .optional(),
 });
-export const SourceRangeSchema = z
+export const LegacySourceRangeSchema = z
   .strictObject({
     segmentId: IdSchema,
     rawStart: RevisionSchema,
@@ -95,6 +101,62 @@ export const SourceRangeSchema = z
     (r) => r.rawEnd >= r.rawStart && r.correctedEnd >= r.correctedStart,
     'Range end must follow start',
   );
+export const GroupSourceRangeSchema = z
+  .strictObject({
+    version: z.literal(2),
+    groupId: IdSchema,
+    rawSources: z
+      .array(
+        z
+          .strictObject({ segmentId: IdSchema, start: RevisionSchema, end: RevisionSchema })
+          .refine((r) => r.end >= r.start),
+      )
+      .min(1),
+    correctedStart: RevisionSchema,
+    correctedEnd: RevisionSchema,
+    audioSegmentIds: z.array(IdSchema).min(1),
+  })
+  .refine((r) => r.correctedEnd >= r.correctedStart);
+export const SourceRangeSchema = z.union([LegacySourceRangeSchema, GroupSourceRangeSchema]);
+export const SpeechGroupSchema = z
+  .strictObject({
+    id: IdSchema,
+    ...revision,
+    studyId: IdSchema,
+    topicId: IdSchema,
+    speakerUserId: IdSchema,
+    startOrder: RevisionSchema,
+    segmentIds: z.array(IdSchema).min(1),
+    rawRevisions: z.array(RevisionSchema),
+    rawText: z.string(),
+    correctedText: z.string().nullable(),
+    state: z.enum(['collecting', 'deciding', 'correcting', 'ready', 'no_speech', 'failed']),
+    startedAt: TimestampSchema,
+    endedAt: TimestampSchema.nullable(),
+    closeReason: z
+      .enum(['decision_complete', 'silence_timeout', 'mic_off', 'topic_close', 'size_limit'])
+      .nullable(),
+    attemptId: IdSchema,
+    error: z
+      .strictObject({ phase: z.enum(['raw', 'correction']), code: z.string(), message: z.string() })
+      .nullable(),
+  })
+  .superRefine((group, ctx) => {
+    if (new Set(group.segmentIds).size !== group.segmentIds.length)
+      ctx.addIssue({ code: 'custom', message: 'Duplicate group segment' });
+    if (['collecting', 'deciding'].includes(group.state) && group.closeReason !== null)
+      ctx.addIssue({ code: 'custom', message: 'Open group cannot have a close reason' });
+    if (
+      ['ready', 'no_speech'].includes(group.state) &&
+      (group.closeReason === null ||
+        group.rawRevisions.length !== group.segmentIds.length ||
+        group.correctedText === null)
+    )
+      ctx.addIssue({ code: 'custom', message: 'Terminal group requires frozen sources' });
+    if (group.state === 'no_speech' && (group.rawText.trim() || group.correctedText !== ''))
+      ctx.addIssue({ code: 'custom', message: 'No-speech must be empty' });
+  });
+export type SpeechGroup = z.infer<typeof SpeechGroupSchema>;
 export const UtteranceSchema = z.strictObject({
   id: IdSchema,
   ...revision,
@@ -321,6 +383,7 @@ export const StudySnapshotSchema = z
     study: StudySchema,
     topic: TopicSchema.nullable(),
     segments: z.array(TranscriptSegmentSchema),
+    speechGroups: z.array(SpeechGroupSchema).optional(),
     utterances: z.array(UtteranceSchema),
     feedback: z.array(FeedbackSchema),
     sharedExpressions: z.array(SharedExpressionSchema),
@@ -340,7 +403,7 @@ export const StudySnapshotSchema = z
         path: ['topic'],
       });
     if (
-      [...snapshot.segments, ...snapshot.utterances].some(
+      [...snapshot.segments, ...snapshot.utterances, ...(snapshot.speechGroups ?? [])].some(
         (item) => item.studyId !== snapshot.study.id || item.topicId !== snapshot.topic?.id,
       )
     )

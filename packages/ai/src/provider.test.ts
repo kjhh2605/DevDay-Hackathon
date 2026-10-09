@@ -252,3 +252,50 @@ describe('OpenAI provider contract', () => {
     expect(createWebSocket).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Decisions speech classification adapter', () => {
+  it('sends a choice question and validates its confidence without retries', async () => {
+    const fetch = vi.fn(async () =>
+      Response.json({
+        answers: [
+          { type: 'choice', name: 'speech_completion', choice: 'complete', confidence: 0.93 },
+        ],
+      }),
+    );
+    const provider = new OpenAIProvider(config, { fetch });
+    expect(
+      await provider.decideSpeech({ text: 'Yes.', context: 'Travel', silenceMs: 1000 }),
+    ).toEqual({ choice: 'complete', confidence: 0.93 });
+    const init = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(init[0]).toBe('https://api.openai.com/v1/decisions');
+    expect(JSON.parse(init[1].body as string)).toMatchObject({
+      model: 'gpt-6-luna',
+      questions: [{ type: 'choice', name: 'speech_completion' }],
+    });
+    expect(JSON.parse(init[1].body as string)).not.toHaveProperty('tools');
+  });
+  it.each([
+    { answers: [{ type: 'refusal', name: 'speech_completion' }] },
+    {
+      answers: [{ type: 'choice', name: 'speech_completion', choice: 'complete', confidence: 1.1 }],
+    },
+    { answers: [{ type: 'choice', name: 'speech_completion', choice: 'complete' }] },
+    { answers: [{ type: 'choice', name: 'other', choice: 'complete', confidence: 1 }] },
+    {},
+  ])('fails closed for invalid or refused output %#', async (body) => {
+    const fetch = vi.fn(async () => Response.json(body));
+    const provider = new OpenAIProvider(config, { fetch });
+    expect(
+      await provider.decideSpeech({ text: 'I went to', context: '', silenceMs: 1000 }),
+    ).toEqual({ choice: 'uncertain', confidence: 0 });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it.each([429, 500, 503])('does not retry HTTP %s', async (status) => {
+    const fetch = vi.fn(async () => new Response('', { status }));
+    const provider = new OpenAIProvider(config, { fetch });
+    expect(
+      (await provider.decideSpeech({ text: 'Yes', context: '', silenceMs: 1000 })).choice,
+    ).toBe('uncertain');
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});

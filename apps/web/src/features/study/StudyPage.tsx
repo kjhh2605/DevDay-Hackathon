@@ -1,3 +1,4 @@
+import { api } from '../../shared/api';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import type { StudySnapshot, DomainEvent } from '@devday/contracts';
@@ -24,6 +25,24 @@ import s from './StudyPage.module.css';
 
 type Partial = Extract<DomainEvent, { type: 'transcript.partial' }>['payload'];
 function LiveTranscript({ snapshot }: { snapshot: StudySnapshot }) {
+  const { user } = useSession();
+  const [retrying, setRetrying] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState<unknown>(null);
+  const retry = async (groupId: string) => {
+    if (!snapshot.topic) return;
+    setRetrying(groupId);
+    setRetryError(null);
+    try {
+      await api.request('retrySpeechGroup', {
+        params: { topicId: snapshot.topic.id, groupId },
+        body: {},
+      });
+    } catch (error) {
+      setRetryError(error);
+    } finally {
+      setRetrying(null);
+    }
+  };
   const [partials, setPartials] = useState<Record<string, Partial>>({});
   const newest = useRef<HTMLDivElement>(null);
   useEffect(() => setPartials({}), [snapshot.topic?.id]);
@@ -42,17 +61,38 @@ function LiveTranscript({ snapshot }: { snapshot: StudySnapshot }) {
       });
   });
   const lines = [
-    ...snapshot.segments.map((segment) => ({
-      id: segment.id,
-      speaker: segment.speakerUserId,
-      order: segment.startOrder,
-      raw:
-        segment.rawStatus === 'ready'
-          ? segment.rawText
-          : (partials[segment.id]?.partialText ?? segment.rawText),
-      corrected: segment.correctedText,
-      status: segment.correctionStatus,
+    ...(snapshot.speechGroups ?? []).map((group) => ({
+      id: group.id,
+      speaker: group.speakerUserId,
+      order: group.startOrder,
+      raw: group.segmentIds
+        .map((id) => {
+          const segment = snapshot.segments.find((s) => s.id === id);
+          return segment?.rawStatus === 'ready'
+            ? segment.rawText
+            : (partials[id]?.partialText ?? segment?.rawText ?? '');
+        })
+        .filter(Boolean)
+        .join(' '),
+      corrected: group.correctedText,
+      status: group.state,
     })),
+    ...snapshot.segments
+      .filter(
+        (segment) =>
+          !segment.groupId || !snapshot.speechGroups?.some((g) => g.id === segment.groupId),
+      )
+      .map((segment) => ({
+        id: segment.id,
+        speaker: segment.speakerUserId,
+        order: segment.startOrder,
+        raw:
+          segment.rawStatus === 'ready'
+            ? segment.rawText
+            : (partials[segment.id]?.partialText ?? segment.rawText),
+        corrected: segment.correctedText,
+        status: segment.correctionStatus,
+      })),
     ...Object.values(partials)
       .filter((partial) => !snapshot.segments.some((segment) => segment.id === partial.segmentId))
       .map((partial) => ({
@@ -64,6 +104,7 @@ function LiveTranscript({ snapshot }: { snapshot: StudySnapshot }) {
         status: 'pending',
       })),
   ]
+    .filter((line) => line.raw?.trim() || line.corrected?.trim())
     .sort((a, b) => a.order - b.order)
     .slice(-3);
   useEffect(() => {
@@ -90,13 +131,16 @@ function LiveTranscript({ snapshot }: { snapshot: StudySnapshot }) {
             <div>
               <p>
                 <small>원문</small>
-                {line.raw || '듣고 있어요…'}
+                {line.raw}
               </p>
               <p className={s.lyricCorrection}>
                 <small>인식 보정</small>
                 {line.status === 'failed'
                   ? '인식 보정에 실패했어요'
-                  : (line.corrected ?? '인식 보정 중…')}
+                  : (line.corrected ??
+                    (['pending', 'collecting', 'deciding'].includes(line.status)
+                      ? '이어서 말해 주세요'
+                      : '인식 보정 중…'))}
               </p>
             </div>
           </div>
@@ -111,6 +155,20 @@ function LiveTranscript({ snapshot }: { snapshot: StudySnapshot }) {
           </p>
         </div>
       )}
+      {snapshot.segments.some(
+        (segment) => segment.rawStatus === 'failed' && !segment.rawText?.trim(),
+      ) && <p role="alert">음성 원문을 처리하지 못했어요. 주제 종료 시 다시 시도합니다.</p>}
+      {(snapshot.speechGroups ?? [])
+        .filter((g) => g.state === 'failed' && g.speakerUserId === user?.id)
+        .map((group) => (
+          <div key={group.id} role="status">
+            <span>{group.error?.message ?? '음성을 처리하지 못했어요.'}</span>{' '}
+            <Button size="sm" loading={retrying === group.id} onClick={() => void retry(group.id)}>
+              이 발화 다시 처리
+            </Button>
+          </div>
+        ))}
+      <ErrorMessage error={retryError} />
       <div ref={newest} />
     </section>
   );
@@ -283,7 +341,9 @@ export function StudyPage({
                   @{member.handle} · {member.state === 'joined' ? '참여 중' : '초대 보냄'}
                 </span>
               </div>
-              {member.userId === user?.id && mic.enabled && <Icon name="mic" size={17} />}
+              {member.userId === user?.id && mic.state.status === 'capturing' && (
+                <Icon name="mic" size={17} />
+              )}
             </div>
           ))}
         </div>
@@ -471,18 +531,29 @@ export function StudyPage({
                   ? '마지막 음성 전송 중'
                   : mic.enabled
                     ? topic?.state === 'talking'
-                      ? '마이크 켜짐'
+                      ? mic.state.status === 'capturing'
+                        ? '마이크 켜짐'
+                        : mic.state.status === 'reconnecting'
+                          ? '다시 연결 중…'
+                          : '마이크 연결 대기'
                       : '마이크 대기 중'
                     : '마이크 켜기'}
               </Button>
               <span>
                 {mic.enabled
                   ? topic?.state === 'talking'
-                    ? '내 목소리만 기록하고 있어요'
+                    ? mic.state.status === 'capturing'
+                      ? '듣고 있어요…'
+                      : '연결 상태를 확인해 주세요'
                     : '검토 중에는 음성을 보내지 않아요'
                   : '대화 시작 후 마이크를 허용해 주세요'}
               </span>
             </div>
+            {mic.state.status === 'error' && topic?.state === 'talking' && (
+              <Button size="sm" onClick={() => void mic.enable()}>
+                마이크 다시 연결
+              </Button>
+            )}
             <div className={s.actions}>
               {topic?.state === 'talking' ? (
                 <>

@@ -2,6 +2,7 @@ import {
   API_BASE_PATH,
   endpointRegistry,
   mediaEndpoint,
+  audioEndpoint,
   type EndpointName,
   type Job,
 } from '@devday/contracts';
@@ -16,6 +17,7 @@ import { assertBrowserOrigin, authenticateRequest, SESSION_COOKIE } from './secu
 export interface HttpRouteOptions {
   service: DomainService;
   aiJobs: AiJobs;
+  speech?: import('@devday/ai').SpeechService;
   config: ApiConfig;
 }
 type Actor = { userId: string };
@@ -24,7 +26,7 @@ type Params<K extends EndpointName> = z.output<(typeof endpointRegistry)[K]['par
 
 export function registerHttpRoutes(
   app: FastifyInstance,
-  { service, aiJobs, config }: HttpRouteOptions,
+  { service, aiJobs, config, speech }: HttpRouteOptions,
 ): void {
   registerErrorHandler(app);
   const launched = new Set<string>();
@@ -173,6 +175,17 @@ export function registerHttpRoutes(
   );
   route('job', async ({ actor, params }) => service.getJob(actor, params.id));
 
+  route('retrySpeechGroup', async ({ actor, params }) => {
+    if (!speech) throw new Error('Speech service unavailable');
+    return speech.retry(actor, params.topicId, params.groupId);
+  });
+  app.get(`${API_BASE_PATH}${audioEndpoint.path}`, async (request, reply) => {
+    const user = await authenticateRequest(request, service);
+    const { id } = audioEndpoint.params.parse(request.params);
+    const bytes = await service.resolveSegmentAudio({ userId: user.id }, id);
+    reply.header('cache-control', 'no-store').header('x-content-type-options', 'nosniff');
+    return reply.type('audio/wav').send(Buffer.from(bytes));
+  });
   app.get(`${API_BASE_PATH}${mediaEndpoint.path}`, async (request, reply) => {
     const user = await authenticateRequest(request, service);
     const { id } = mediaEndpoint.params.parse(request.params);

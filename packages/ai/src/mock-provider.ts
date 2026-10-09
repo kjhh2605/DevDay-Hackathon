@@ -48,7 +48,11 @@ function message(outputText: string): { output: ResponseOutputItem[]; outputText
 export class MockAiProvider implements AiProvider {
   private readonly transcript: string;
   constructor(options: MockProviderOptions = {}) {
-    this.transcript = options.transcript?.trim() || `${MOCK} I enjoy learning English.`;
+    this.transcript = options.transcript ?? `${MOCK} I enjoy learning English.`;
+  }
+
+  async decideSpeech() {
+    return { choice: 'complete' as const, confidence: 1 };
   }
 
   async structured<T>(

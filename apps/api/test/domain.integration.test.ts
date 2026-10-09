@@ -623,3 +623,116 @@ describe('PostgreSQL domain invariants', () => {
     ).toBe('failed');
   });
 });
+
+describe('persisted speech groups and versioned sources', () => {
+  it('claims one revision atomically and preserves segment raw text separately from group correction', async () => {
+    const { a, study } = await pair();
+    await experience(a.actor);
+    await command(a.actor, study.id, 'study.start');
+    const topic = await generate(a.actor, study.id);
+    const segments = [];
+    for (const text of ['I participated', 'in a hackathon last weekend.']) {
+      const segment = await service.speech.begin(a.actor, {
+        topicId: topic.id,
+        clientStreamId: uuid(),
+        clientSegmentId: uuid(),
+        startedAt: new Date().toISOString(),
+      });
+      segments.push(
+        await service.speech.completeRaw(segment.id, { text, endedAt: new Date().toISOString() }),
+      );
+    }
+    const group: import('@devday/contracts').SpeechGroup = {
+      id: uuid(),
+      revision: 0,
+      studyId: study.id,
+      topicId: topic.id,
+      speakerUserId: a.actor.userId,
+      startOrder: segments[0]!.startOrder,
+      segmentIds: segments.map((s) => s.id),
+      rawRevisions: segments.map((s) => s.rawRevision!),
+      rawText: segments.map((s) => s.rawText).join('\n'),
+      correctedText: null,
+      state: 'collecting',
+      startedAt: segments[0]!.startedAt,
+      endedAt: segments[1]!.endedAt,
+      closeReason: null,
+      attemptId: uuid(),
+      error: null,
+    };
+    expect(await service.speech.saveGroup(group, null)).toBe(true);
+    const frozen = {
+      ...group,
+      revision: 1,
+      state: 'correcting' as const,
+      closeReason: 'mic_off' as const,
+    };
+    expect(
+      (
+        await Promise.all([
+          service.speech.saveGroup(frozen, 0),
+          service.speech.saveGroup(frozen, 0),
+        ])
+      ).sort(),
+    ).toEqual([false, true]);
+    const ready = {
+      ...frozen,
+      revision: 2,
+      state: 'ready' as const,
+      correctedText: 'I participated in a hackathon last weekend.',
+    };
+    expect(await service.speech.saveGroup(ready, 1)).toBe(true);
+    expect(await service.speech.saveGroup({ ...ready, revision: 3 }, 2)).toBe(false);
+    const snapshot = await service.snapshot(a.actor, study.id);
+    expect(snapshot.speechGroups?.[0]?.correctedText).toBe(ready.correctedText);
+    expect(snapshot.segments.every((s) => s.correctedText === null)).toBe(true);
+    const close = await command(a.actor, study.id, 'topic.close');
+    const draft = {
+      sentenceIndex: 0,
+      speakerUserId: a.actor.userId,
+      startOrder: group.startOrder,
+      startedAt: group.startedAt,
+      endedAt: group.endedAt!,
+      rawText: group.rawText,
+      correctedText: ready.correctedText,
+      sourceRanges: [
+        {
+          version: 2 as const,
+          groupId: group.id,
+          rawSources: segments.map((s) => ({ segmentId: s.id, start: 0, end: s.rawText!.length })),
+          correctedStart: 0,
+          correctedEnd: ready.correctedText.length,
+          audioSegmentIds: group.segmentIds,
+        },
+      ],
+    };
+    await expect(
+      service.speech.finalizeSentences(
+        topic.id,
+        [{ ...draft, correctedText: 'invented' }],
+        close.jobId!,
+      ),
+    ).rejects.toThrow();
+    const utterances = await service.speech.finalizeSentences(topic.id, [draft], close.jobId!);
+    expect(utterances[0]?.sourceRanges).toEqual(draft.sourceRanges);
+  });
+  it('finishes empty successful raw audio without requiring correction or feedback', async () => {
+    const { a, study } = await pair();
+    await experience(a.actor);
+    await command(a.actor, study.id, 'study.start');
+    const topic = await generate(a.actor, study.id);
+    const segment = await service.speech.begin(a.actor, {
+      topicId: topic.id,
+      clientStreamId: uuid(),
+      clientSegmentId: uuid(),
+      startedAt: new Date().toISOString(),
+    });
+    await service.speech.completeRaw(segment.id, {
+      text: '   ',
+      endedAt: new Date().toISOString(),
+    });
+    const close = await command(a.actor, study.id, 'topic.close');
+    expect(await service.speech.finalizeSentences(topic.id, [], close.jobId!)).toEqual([]);
+    expect(await service.studies.completeClose(close.jobId!)).toBe(true);
+  });
+});

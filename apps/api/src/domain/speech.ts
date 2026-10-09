@@ -9,6 +9,8 @@ import type {
 } from '@devday/application-ports';
 import {
   TopicContentSchema,
+  SpeechGroupSchema,
+  type SpeechGroup,
   type TranscriptSegment,
   type Utterance,
   type Feedback,
@@ -61,6 +63,92 @@ export class SpeechService extends PrivateService {
     });
   }
   speech: SpeechStore = {
+    listGroups: (topicId) =>
+      many<SpeechGroup>(
+        this.db.pool,
+        'SELECT data FROM speech_groups WHERE topic_id=$1 ORDER BY start_order',
+        [topicId],
+      ),
+    saveGroup: async (input, expectedRevision) =>
+      this.transaction(async (tx, events) => {
+        const group = SpeechGroupSchema.parse(input);
+        const study = await this.study(tx, group.studyId, true);
+        const topic = await this.topic(tx, group.topicId, true);
+        if (study.currentTopicId !== topic.id || !['talking', 'closing'].includes(topic.state))
+          return false;
+        const current = await one<SpeechGroup>(
+          tx,
+          'SELECT data FROM speech_groups WHERE id=$1 FOR UPDATE',
+          [group.id],
+        );
+        if (
+          expectedRevision === null ? !!current : !current || current.revision !== expectedRevision
+        )
+          return false;
+        if (current && ['ready', 'no_speech'].includes(current.state)) return false;
+        if (
+          current &&
+          current.closeReason &&
+          (group.closeReason !== current.closeReason ||
+            JSON.stringify(current.segmentIds) !== JSON.stringify(group.segmentIds))
+        )
+          return false;
+        if (group.revision !== (expectedRevision === null ? 0 : expectedRevision + 1)) return false;
+        for (const segmentId of group.segmentIds) {
+          const segment = requireValue(
+            await one<TranscriptSegment>(
+              tx,
+              'SELECT data FROM transcript_segments WHERE id=$1 FOR UPDATE',
+              [segmentId],
+            ),
+          );
+          if (
+            segment.topicId !== group.topicId ||
+            segment.speakerUserId !== group.speakerUserId ||
+            (segment.groupId && segment.groupId !== group.id)
+          )
+            throw new DomainError('INVALID_INPUT', '발화 묶음 출처가 일치하지 않습니다.');
+          const before = JSON.stringify(segment);
+          segment.groupId = group.id;
+          if (group.state === 'ready' || group.state === 'no_speech') {
+            segment.correctionStatus = 'ready';
+            segment.noSpeech = !(segment.rawText ?? '').trim();
+            if (segment.noSpeech) segment.sentenceStatus = 'ready';
+          } else if (group.state === 'failed') segment.correctionStatus = 'failed';
+          if (JSON.stringify(segment) !== before) {
+            segment.revision++;
+            await update(tx, 'transcript_segments', segment.id, segment);
+            this.segmentEvent(events, segment);
+          }
+          if (
+            ['ready', 'no_speech'].includes(group.state) &&
+            (segment.rawStatus !== 'ready' ||
+              group.rawRevisions[group.segmentIds.indexOf(segment.id)] !==
+                (segment.rawRevision ?? segment.revision))
+          )
+            throw new DomainError('ACTION_NOT_READY', '발화 원문이 변경되었습니다.');
+        }
+        if (!current)
+          await tx.query(
+            'INSERT INTO speech_groups(id,study_id,topic_id,speaker_user_id,start_order,data) VALUES($1,$2,$3,$4,$5,$6)',
+            [
+              group.id,
+              group.studyId,
+              group.topicId,
+              group.speakerUserId,
+              group.startOrder,
+              JSON.stringify(group),
+            ],
+          );
+        else await update(tx, 'speech_groups', group.id, group);
+        events.push({
+          scope: 'study',
+          id: group.studyId,
+          type: 'speech.group.updated',
+          payload: group,
+        });
+        return true;
+      }),
     begin: async (actor, input) =>
       this.transaction(async (tx, events) => {
         const initial = await this.topic(tx, input.topicId);
@@ -106,10 +194,17 @@ export class SpeechService extends PrivateService {
       this.transaction(async (tx, events) => {
         const { segment } = await this.lockSegment(tx, segmentId);
         if (segment.rawStatus === 'ready') return segment;
+        segment.rawRevision = (segment.rawRevision ?? 0) + 1;
+        delete segment.error;
         segment.rawText = input.text;
         segment.endedAt = input.endedAt;
         segment.rawStatus = 'ready';
-        segment.correctionStatus = 'running';
+        segment.noSpeech = !input.text.trim();
+        segment.correctionStatus = segment.noSpeech ? 'ready' : 'pending';
+        if (segment.noSpeech) {
+          segment.correctedText = '';
+          segment.sentenceStatus = 'ready';
+        }
         segment.revision++;
         await update(tx, 'transcript_segments', segment.id, segment);
         this.segmentEvent(events, segment);
@@ -128,7 +223,7 @@ export class SpeechService extends PrivateService {
         this.segmentEvent(events, segment);
         return segment;
       }),
-    fail: async (segmentId, phase, _error, originJobId) =>
+    fail: async (segmentId, phase, error, originJobId) =>
       this.transaction(async (tx, events) => {
         const { segment } = await this.lockSegment(tx, segmentId);
         if (originJobId) {
@@ -143,6 +238,7 @@ export class SpeechService extends PrivateService {
           )
             return;
         }
+        segment.error = { phase, message: error.message };
         if (phase === 'raw') segment.rawStatus = 'failed';
         if (phase === 'correction') segment.correctionStatus = 'failed';
         if (phase === 'sentences') segment.sentenceStatus = 'failed';
@@ -186,7 +282,12 @@ export class SpeechService extends PrivateService {
           'SELECT data FROM transcript_segments WHERE topic_id=$1 ORDER BY start_order',
           [topicId],
         );
-        validateSentences(segments, sentences);
+        const groups = await many<SpeechGroup>(
+          tx,
+          'SELECT data FROM speech_groups WHERE topic_id=$1 ORDER BY start_order',
+          [topicId],
+        );
+        validateSentences(segments, sentences, groups);
         const utterances: Utterance[] = [];
         for (const sentence of sentences) {
           const utterance: Utterance = {
@@ -495,7 +596,15 @@ export class SpeechService extends PrivateService {
     },
   };
 }
-export function validateSentences(segments: TranscriptSegment[], sentences: SentenceDraft[]) {
+export function validateSentences(
+  segments: TranscriptSegment[],
+  sentences: SentenceDraft[],
+  groups: SpeechGroup[] = [],
+) {
+  if (groups.length || sentences.some((s) => s.sourceRanges.some((r) => 'version' in r))) {
+    return validateGroupSentences(segments, groups, sentences);
+  }
+
   const used = new Map<string, { raw: Set<number>; corrected: Set<number> }>();
   for (const segment of segments) {
     if (
@@ -518,6 +627,7 @@ export function validateSentences(segments: TranscriptSegment[], sentences: Sent
     const corrected: string[] = [];
     let previous = -1;
     for (const range of sentence.sourceRanges) {
+      if ('version' in range) throw new DomainError('INVALID_INPUT', '묶음 출처가 필요합니다.');
       const segment = segments.find((s) => s.id === range.segmentId);
       if (
         !segment ||
@@ -550,7 +660,9 @@ export function validateSentences(segments: TranscriptSegment[], sentences: Sent
       raw.push(segment.rawText!.slice(range.rawStart, range.rawEnd));
       corrected.push(segment.correctedText!.slice(range.correctedStart, range.correctedEnd));
     }
-    const first = segments.find((s) => s.id === sentence.sourceRanges[0]!.segmentId)!;
+    const firstRange = sentence.sourceRanges[0]!;
+    if ('version' in firstRange) throw new DomainError('INVALID_INPUT', '묶음 출처가 필요합니다.');
+    const first = segments.find((s) => s.id === firstRange.segmentId)!;
     const key = `${sentence.startOrder}:${sentence.sentenceIndex}`;
     if (
       sentence.startOrder !== first.startOrder ||
@@ -573,6 +685,117 @@ export function validateSentences(segments: TranscriptSegment[], sentences: Sent
       for (let i = 0; i < text.length; i++) {
         if (!/\s/u.test(text[i]!) && !used.get(segment.id)![field].has(i))
           throw new DomainError('INVALID_INPUT', '문장에서 원문 문자가 누락되었습니다.', 400);
+      }
+    }
+  }
+}
+
+function validateGroupSentences(
+  segments: TranscriptSegment[],
+  groups: SpeechGroup[],
+  sentences: SentenceDraft[],
+) {
+  const invalid = () => {
+    throw new DomainError('INVALID_INPUT', '묶음의 원문·보정문 출처가 일치하지 않습니다.', 400);
+  };
+  const used = new Map<string, Set<number>>();
+  const cursors = new Map<string, number>();
+  const take = (key: string, text: string, start: number, end: number) => {
+    if (
+      !Number.isInteger(start) ||
+      !Number.isInteger(end) ||
+      start < 0 ||
+      end < start ||
+      end > text.length
+    )
+      return invalid();
+    if (end > start) {
+      if (start < (cursors.get(key) ?? 0)) return invalid();
+      cursors.set(key, end);
+    }
+    const set = used.get(key) ?? new Set<number>();
+    used.set(key, set);
+    for (let i = start; i < end; i++) {
+      if (/\s/u.test(text[i]!)) continue;
+      if (set.has(i)) invalid();
+      set.add(i);
+    }
+    return text.slice(start, end);
+  };
+  const legacy = segments.filter((s) => !s.groupId && !s.noSpeech);
+  const legacySentences = sentences.filter((s) => s.sourceRanges.every((r) => !('version' in r)));
+  validateSentences(legacy, legacySentences);
+  const keys = new Set<string>();
+  for (const sentence of sentences.filter((s) => !legacySentences.includes(s))) {
+    const raw: string[] = [],
+      corrected: string[] = [];
+    let first: SpeechGroup | undefined;
+    let priorOrder = -1;
+    for (const range of sentence.sourceRanges) {
+      if (!('version' in range)) return invalid();
+      const group = groups.find((g) => g.id === range.groupId);
+      if (
+        !group ||
+        group.state !== 'ready' ||
+        group.correctedText === null ||
+        group.speakerUserId !== sentence.speakerUserId ||
+        group.startOrder < priorOrder
+      )
+        return invalid();
+      first ??= group;
+      priorOrder = group.startOrder;
+      if (JSON.stringify(range.audioSegmentIds) !== JSON.stringify(group.segmentIds)) invalid();
+      let priorSegment = -1;
+      const pieces: string[] = [];
+      for (const source of range.rawSources) {
+        const segment = segments.find((s) => s.id === source.segmentId);
+        const index = group.segmentIds.indexOf(source.segmentId);
+        if (
+          !segment ||
+          index < 0 ||
+          index < priorSegment ||
+          segment.rawStatus !== 'ready' ||
+          segment.rawText === null ||
+          segment.groupId !== group.id ||
+          segment.speakerUserId !== sentence.speakerUserId
+        )
+          return invalid();
+        priorSegment = index;
+        pieces.push(take('raw:' + segment.id, segment.rawText, source.start, source.end));
+      }
+      raw.push(pieces.join('\n'));
+      corrected.push(
+        take(
+          'corrected:' + group.id,
+          group.correctedText,
+          range.correctedStart,
+          range.correctedEnd,
+        ),
+      );
+    }
+    const key = `${sentence.startOrder}:${sentence.sentenceIndex}`;
+    if (
+      !first ||
+      sentence.startOrder !== first.startOrder ||
+      keys.has(key) ||
+      raw.join('\n') !== sentence.rawText ||
+      corrected.join('\n') !== sentence.correctedText
+    )
+      invalid();
+    keys.add(key);
+  }
+  for (const group of groups) {
+    if (!['ready', 'no_speech'].includes(group.state)) invalid();
+    for (const segmentId of group.segmentIds) {
+      const segment = segments.find((s) => s.id === segmentId);
+      if (!segment || segment.rawStatus !== 'ready' || segment.groupId !== group.id)
+        return invalid();
+      for (const [key, text] of [
+        ['raw:' + segmentId, segment.rawText ?? ''],
+        ['corrected:' + group.id, group.correctedText ?? ''],
+      ]) {
+        for (let i = 0; i < text!.length; i++)
+          if (/\S/u.test(text![i]!) && !used.get(key!)?.has(i)) invalid();
       }
     }
   }

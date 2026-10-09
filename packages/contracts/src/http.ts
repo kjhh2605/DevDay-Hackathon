@@ -20,6 +20,7 @@ import {
   UserSchema,
   UtteranceSchema,
   FeedbackSchema,
+  SpeechGroupSchema,
 } from './dto.js';
 const empty = z.strictObject({});
 const idParams = z.strictObject({ id: IdSchema });
@@ -55,6 +56,13 @@ function endpoint<P extends z.ZodType, I extends z.ZodType, O extends z.ZodType>
   return { method, path, params, input, output } as const;
 }
 export const endpointRegistry = {
+  retrySpeechGroup: endpoint(
+    'POST',
+    '/topics/:topicId/speech-groups/:groupId/retry',
+    z.strictObject({ topicId: IdSchema, groupId: IdSchema }),
+    empty,
+    SpeechGroupSchema,
+  ),
   register: endpoint(
     'POST',
     '/auth/register',
@@ -197,3 +205,5 @@ export type EndpointOutput<K extends EndpointName> = z.output<
 export type PrepareExperienceInput = z.infer<typeof PrepareExperienceInputSchema>;
 export type CreateExperienceInput = z.infer<typeof CreateExperienceInputSchema>;
 export type UpdateExperienceInput = z.infer<typeof UpdateExperienceInputSchema>;
+
+export const audioEndpoint = { method: 'GET' as const, path: '/audio/:id', params: idParams };

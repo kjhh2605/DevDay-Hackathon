@@ -98,6 +98,9 @@ export function createApiClient(
       if (!parsed.success) throw new ContractError(`Invalid response for ${name}`, parsed.error);
       return parsed.data.data as EndpointOutput<K>;
     },
+    audioUrl(segmentId: string) {
+      return `${baseUrl}/audio/${encodeURIComponent(segmentId)}`;
+    },
     mediaUrl(mediaId: string) {
       return `${baseUrl}/media/${encodeURIComponent(mediaId)}`;
     },
@@ -121,6 +124,8 @@ export class EventRevisionTracker {
       entries.push([`segment:${item.id}`, item.revision]);
       if (item.rawStatus === 'ready') this.readySegments.add(item.id);
     }
+    for (const item of snapshot.speechGroups ?? [])
+      entries.push([`speech:${item.id}`, item.revision]);
     for (const item of snapshot.utterances) {
       entries.push([`utterance:${item.id}`, item.revision]);
       this.correctionRevisions.set(item.id, item.correctionRevision);

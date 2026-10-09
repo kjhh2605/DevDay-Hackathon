@@ -12,9 +12,14 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 export interface AiFeatureOptions {
   ports: ApplicationPorts;
   provider?: AiProvider;
+  speechPolicy?: import('@devday/ai').SpeechServiceOptions;
 }
-export function createAiFeature({ ports, provider = new OpenAIProvider() }: AiFeatureOptions) {
-  const speech = new SpeechService(ports, provider);
+export function createAiFeature({
+  ports,
+  provider = new OpenAIProvider(),
+  speechPolicy,
+}: AiFeatureOptions) {
+  const speech = new SpeechService(ports, provider, speechPolicy);
   const jobs = createAiJobs(ports, provider, speech);
   return {
     jobs,

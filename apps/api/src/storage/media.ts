@@ -23,6 +23,7 @@ export interface MediaMetadata {
 export interface MediaMetadataRepository {
   insert(record: MediaMetadata): Promise<void>;
   findById(id: string): Promise<MediaMetadata | undefined>;
+  findBySegment?(segmentId: string): Promise<MediaMetadata | undefined>;
 }
 export class MediaNotFoundError extends Error {
   readonly code = 'NOT_FOUND';
@@ -98,6 +99,11 @@ export class LocalFilesystemMediaStore implements MediaStore {
     return { mediaId: record.id };
   }
 
+  async readSegmentAudio(segmentId: string): Promise<Uint8Array> {
+    const record = await this.repository.findBySegment?.(segmentId);
+    if (!record || record.kind !== 'audio') throw new MediaNotFoundError();
+    return readFile(this.path(record.storageKey));
+  }
   async resolveImage(id: string): Promise<ResolvedImage> {
     const record = await imageRecord(this.repository, id);
     try {
@@ -150,6 +156,15 @@ export class S3MediaStore implements MediaStore {
     return { mediaId: record.id };
   }
 
+  async readSegmentAudio(segmentId: string): Promise<Uint8Array> {
+    const record = await this.options.repository.findBySegment?.(segmentId);
+    if (!record || record.kind !== 'audio') throw new MediaNotFoundError();
+    const result = await this.client.send(
+      new GetObjectCommand({ Bucket: this.options.bucket, Key: record.storageKey }),
+    );
+    if (!result.Body) throw new MediaNotFoundError();
+    return result.Body.transformToByteArray();
+  }
   async resolveImage(id: string): Promise<ResolvedImage> {
     const record = await imageRecord(this.options.repository, id);
     const url = await getSignedUrl(

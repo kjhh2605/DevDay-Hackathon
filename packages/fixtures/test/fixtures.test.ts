@@ -59,6 +59,7 @@ describe('contract fixtures', () => {
   it('keeps source ranges faithful to raw and audio-corrected text', () => {
     for (const utterance of fixtures.utterances) {
       const slices = utterance.sourceRanges.map((range) => {
+        if ('version' in range) throw new Error('Expected a legacy fixture');
         const segment = fixtures.transcriptSegments.find((item) => item.id === range.segmentId)!;
         expect(segment.speakerUserId).toBe(utterance.speakerUserId);
         return {

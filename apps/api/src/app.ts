@@ -43,19 +43,31 @@ export async function createApp(options: AppOptions = {}) {
       loadAiConfig({
         OPENAI_API_KEY: config.openai.apiKey,
         OPENAI_TEXT_MODEL: config.openai.textModel,
+        OPENAI_DECISION_MODEL: config.openai.decisionModel,
+        SPEECH_DECISION_TIMEOUT_MS: config.openai.decisionTimeoutMs,
+        SPEECH_DECISION_CONFIDENCE: config.openai.decisionConfidence,
         OPENAI_LIVE_TRANSCRIBE_MODEL: config.openai.liveTranscribeModel,
         OPENAI_CORRECTION_MODEL: config.openai.correctionModel,
         OPENAI_IMAGE_MODEL: config.openai.imageModel,
       }),
+      { onAudit: (event) => app.log.info(event, 'AI provider request') },
     );
-  const ai = createAiFeature({ ports, provider });
+  const ai = createAiFeature({
+    ports,
+    provider,
+    speechPolicy: {
+      timeoutMs: Number(config.openai.decisionTimeoutMs),
+      confidence: Number(config.openai.decisionConfidence),
+      onDiagnostic: (event) => app.log.info(event, 'speech processing'),
+    },
+  });
   service.aiJobs = ai.jobs;
   app.get('/healthz', async () => ({ status: 'ok' }));
   app.get('/readyz', async (_request, reply) => {
     const ready = await db.ready();
     return reply.code(ready ? 200 : 503).send({ status: ready ? 'ready' : 'not_ready' });
   });
-  registerHttpRoutes(app, { service, aiJobs: ai.jobs, config });
+  registerHttpRoutes(app, { service, aiJobs: ai.jobs, config, speech: ai.speech });
   registerEventRoutes(app, { service, hub, config });
   ai.registerAudio(app, async (request) => {
     assertBrowserOrigin(request, config);

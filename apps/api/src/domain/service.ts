@@ -1,3 +1,5 @@
+import { one } from '../db/client.js';
+import type { TranscriptSegment } from '@devday/contracts';
 import type { Actor, ApplicationPorts, MediaStore } from '@devday/application-ports';
 import { SpeechService } from './speech.js';
 import type { MediaMetadata, MediaMetadataRepository } from '../storage/media.js';
@@ -16,6 +18,15 @@ export class DomainService extends SpeechService {
           record.contentType,
         ],
       );
+    },
+    findBySegment: async (segmentId) => {
+      const row = (
+        await this.db.pool.query(
+          "SELECT id FROM media WHERE segment_id=$1 AND kind='audio' LIMIT 1",
+          [segmentId],
+        )
+      ).rows[0];
+      return row ? this.mediaRepository.findById(row.id) : undefined;
     },
     findById: async (mediaId) => {
       const row = (
@@ -36,6 +47,17 @@ export class DomainService extends SpeechService {
         : undefined;
     },
   };
+  async resolveSegmentAudio(actor: Actor, segmentId: string) {
+    const segment = requireValue(
+      await one<TranscriptSegment>(
+        this.db.pool,
+        'SELECT data FROM transcript_segments WHERE id=$1',
+        [segmentId],
+      ),
+    );
+    await this.assertMember(actor, segment.studyId);
+    return requireValue(this.mediaStore).readSegmentAudio(segmentId);
+  }
   async resolveMedia(actor: Actor, mediaId: string) {
     const media = requireValue(await this.mediaRepository.findById(mediaId));
     if (media.kind !== 'image')

@@ -1,5 +1,8 @@
 export interface AiConfig {
   apiKey: string;
+  decisionModel: string;
+  decisionTimeoutMs: number;
+  decisionConfidence: number;
   textModel: string;
   liveTranscribeModel: string;
   correctionModel: string;
@@ -13,6 +16,9 @@ export interface AiConfig {
 }
 
 export const AI_DEFAULTS = Object.freeze({
+  decisionModel: 'gpt-6-luna',
+  decisionTimeoutMs: 2_000,
+  decisionConfidence: 0.85,
   textModel: 'gpt-6-luna',
   liveTranscribeModel: 'gpt-live-transcribe',
   correctionModel: 'gpt-transcribe',
@@ -32,10 +38,20 @@ export function loadAiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig {
   return {
     ...AI_DEFAULTS,
     apiKey,
+    decisionModel: env.OPENAI_DECISION_MODEL?.trim() || AI_DEFAULTS.decisionModel,
+    decisionTimeoutMs: boundedNumber(env.SPEECH_DECISION_TIMEOUT_MS, 2_000, 1, 10_000),
+    decisionConfidence: boundedNumber(env.SPEECH_DECISION_CONFIDENCE, 0.85, 0, 1),
     textModel: env.OPENAI_TEXT_MODEL?.trim() || AI_DEFAULTS.textModel,
     liveTranscribeModel:
       env.OPENAI_LIVE_TRANSCRIBE_MODEL?.trim() || AI_DEFAULTS.liveTranscribeModel,
     correctionModel: env.OPENAI_CORRECTION_MODEL?.trim() || AI_DEFAULTS.correctionModel,
     imageModel: env.OPENAI_IMAGE_MODEL?.trim() || AI_DEFAULTS.imageModel,
   };
+}
+
+function boundedNumber(value: string | undefined, fallback: number, min: number, max: number) {
+  const result = value === undefined ? fallback : Number(value);
+  if (!Number.isFinite(result) || result < min || result > max)
+    throw new Error('Invalid speech decision configuration');
+  return result;
 }
