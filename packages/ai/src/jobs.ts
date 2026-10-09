@@ -64,19 +64,9 @@ export function createAiJobs(
       try {
         await ports.jobs.succeedIfRunning(jobId, await withTimeout(work(), timeout));
       } catch (error) {
-        const failure = publicAiError(error);
-        // Mark the visible entity before the job becomes terminal; store writes are guarded by running jobs.
-        if (kind === 'chat.respond') await ports.chat.fail(job.targetId, failure);
-        if (kind === 'utterance.feedback') {
-          const input = await ports.jobs.readInput(jobId, 'utterance.feedback');
-          await ports.feedback.applyIfCurrent(jobId, {
-            utteranceId: input.utteranceId,
-            inputCorrectionRevision: input.correctionRevision,
-            items: [],
-            error: failure,
-          });
-        }
-        await ports.jobs.failIfRunning(jobId, failure);
+        // The durable store terminates the job and its visible entity atomically.
+        // A separate entity write here would leave the job open to late provider writes.
+        await ports.jobs.failIfRunning(jobId, publicAiError(error));
       }
     })().finally(() => active.delete(jobId));
     active.set(jobId, task);
@@ -158,32 +148,22 @@ export function createAiJobs(
         const input = await ports.jobs.readInput(jobId, 'utterance.feedback');
         if (input.correctionRevision !== utterance.correctionRevision)
           throw new Error('FEEDBACK_STALE');
-        try {
-          const result = FeedbackOutputSchema.parse(
-            await provider.structured(
-              'sentence_feedback',
-              jsonSchema(FeedbackOutputSchema),
-              PROMPTS.feedback,
-              { correctedText: utterance.correctedText },
-            ),
-          );
-          const applied = await ports.feedback.applyIfCurrent(jobId, {
-            utteranceId: utterance.id,
-            inputCorrectionRevision: input.correctionRevision,
-            items: result.items.map((item) => ({ ...item, id: randomUUID() })),
-            error: null,
-          });
-          if (!applied) throw new Error('FEEDBACK_STALE');
-          return { utteranceId: utterance.id, inputCorrectionRevision: input.correctionRevision };
-        } catch (error) {
-          await ports.feedback.applyIfCurrent(jobId, {
-            utteranceId: utterance.id,
-            inputCorrectionRevision: input.correctionRevision,
-            items: [],
-            error: publicAiError(error),
-          });
-          throw error;
-        }
+        const result = FeedbackOutputSchema.parse(
+          await provider.structured(
+            'sentence_feedback',
+            jsonSchema(FeedbackOutputSchema),
+            PROMPTS.feedback,
+            { correctedText: utterance.correctedText },
+          ),
+        );
+        const applied = await ports.feedback.applyIfCurrent(jobId, {
+          utteranceId: utterance.id,
+          inputCorrectionRevision: input.correctionRevision,
+          items: result.items.map((item) => ({ ...item, id: randomUUID() })),
+          error: null,
+        });
+        if (!applied) throw new Error('FEEDBACK_STALE');
+        return { utteranceId: utterance.id, inputCorrectionRevision: input.correctionRevision };
       });
     },
     closeTopic(jobId) {

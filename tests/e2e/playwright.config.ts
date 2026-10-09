@@ -7,6 +7,7 @@ const port = Number(process.env.E2E_WEB_PORT ?? 5174);
 export default defineConfig({
   testDir: '.',
   testMatch: '**/*.spec.ts',
+  testIgnore: ['**/failure.spec.ts'],
   timeout: 45_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

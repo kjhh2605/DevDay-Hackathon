@@ -104,7 +104,11 @@ async function waitForApi() {
 try {
   await ensureIsolatedDatabase();
   await migrate();
-  launch(['--import', 'tsx', 'apps/api/src/server.ts']);
+  launch([
+    '--import',
+    'tsx',
+    process.env.E2E_FAILURE_MODE === 'true' ? 'tests/e2e/failure-api.ts' : 'apps/api/src/server.ts',
+  ]);
   await waitForApi();
   const requireWeb = createRequire(resolve(root, 'apps/web/package.json'));
   const vite = resolve(dirname(requireWeb.resolve('vite/package.json')), 'bin/vite.js');

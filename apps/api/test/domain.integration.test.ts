@@ -468,6 +468,135 @@ describe('PostgreSQL domain invariants', () => {
     );
     expect((await service.speech.listSegments(topic.id))[0]!.sentenceStatus).toBe('ready');
   });
+  it('commits feedback and terminal job atomically before event publication or approval', async () => {
+    const { a, study } = await pair();
+    await experience(a.actor);
+    await command(a.actor, study.id, 'study.start');
+    const topic = await generate(a.actor, study.id);
+    const segment = await speech(a.actor, topic);
+    const [utterance] = await review(a.actor, study.id, [segment]);
+    const failure = { code: 'TIMEOUT' as const, message: 'injected timeout', details: null };
+    for (const outcome of ['failed', 'ready'] as const) {
+      const job = await service.startFeedback(a.actor, utterance!.id, {
+        correctionRevision: utterance!.correctionRevision,
+        commandId: uuid(),
+      });
+      let release!: () => void;
+      let entered!: () => void;
+      const published = new Promise<void>((resolve) => {
+        entered = resolve;
+      });
+      const publicationGate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const isolated = new DomainService(db, {
+        toUser: (owner, event) => service.events.toUser(owner, event),
+        toStudy: async (owner, event) => {
+          await service.events.toStudy(owner, event);
+          if (
+            (outcome === 'failed' &&
+              event.type === 'job.updated' &&
+              event.payload.id === job.id &&
+              event.payload.status === 'failed') ||
+            (outcome === 'ready' &&
+              event.type === 'feedback.updated' &&
+              event.payload.utteranceId === utterance!.id &&
+              event.payload.status === 'ready')
+          ) {
+            entered();
+            await publicationGate;
+          }
+        },
+      });
+      const write =
+        outcome === 'failed'
+          ? isolated.jobs.failIfRunning(job.id, failure)
+          : isolated.feedback.applyIfCurrent(job.id, {
+              utteranceId: utterance!.id,
+              inputCorrectionRevision: utterance!.correctionRevision,
+              items: [],
+              error: null,
+            });
+      await published;
+      try {
+        const snapshot = await service.snapshot(a.actor, study.id);
+        expect(snapshot.feedback.find((f) => f.utteranceId === utterance!.id)?.status).toBe(
+          outcome,
+        );
+        expect((await service.getJob(a.actor, job.id)).status).toBe(
+          outcome === 'ready' ? 'succeeded' : 'failed',
+        );
+        if (outcome === 'failed') {
+          expect(
+            await service.feedback.applyIfCurrent(job.id, {
+              utteranceId: utterance!.id,
+              inputCorrectionRevision: utterance!.correctionRevision,
+              items: [],
+              error: null,
+            }),
+          ).toBeNull();
+          await expect(command(a.actor, study.id, 'study.finish')).rejects.toMatchObject({
+            code: 'FEEDBACK_STALE',
+          });
+        } else {
+          expect(await service.jobs.failIfRunning(job.id, failure)).toBe(false);
+        }
+      } finally {
+        release();
+        await write;
+      }
+    }
+    await command(a.actor, study.id, 'study.finish');
+    expect((await service.snapshot(a.actor, study.id)).study.status).toBe('ended');
+  });
+  it('terminates chat visibility and job together, retaining timeout text and rejecting late writes', async () => {
+    const { a, study } = await pair();
+    const first = await service.beginChat(a.actor, study.id, {
+      text: 'hello',
+      clientMessageId: uuid(),
+    });
+    const failure = {
+      code: 'TIMEOUT' as const,
+      message: 'injected visible timeout',
+      details: null,
+    };
+    await service.jobs.failIfRunning(first.job.id, failure);
+    const failed = (await service.listChat(a.actor, study.id)).find(
+      (m) => m.id === first.job.targetId,
+    )!;
+    expect(failed.status).toBe('failed');
+    expect(failed.text).toBe(failure.message);
+    expect(
+      await service.chat.complete(first.job.targetId, {
+        text: 'too late',
+        commandResults: [],
+        learningItemIds: [],
+        shareProposalId: null,
+      }),
+    ).toBeNull();
+    const second = await service.beginChat(a.actor, study.id, {
+      text: 'hello again',
+      clientMessageId: uuid(),
+    });
+    await service.chat.complete(second.job.targetId, {
+      text: 'done',
+      commandResults: [],
+      learningItemIds: [],
+      shareProposalId: null,
+    });
+    expect((await service.getJob(a.actor, second.job.id)).status).toBe('succeeded');
+    expect(await service.jobs.failIfRunning(second.job.id, failure)).toBe(false);
+    const third = await service.beginChat(a.actor, study.id, {
+      text: 'fail explicitly',
+      clientMessageId: uuid(),
+    });
+    await service.chat.fail(third.job.targetId, failure, {
+      commandResults: [],
+      learningItemIds: [],
+      shareProposalId: null,
+    });
+    expect((await service.getJob(a.actor, third.job.id)).status).toBe('failed');
+  });
   it('marks interrupted jobs failed without rerunning and ignores late writes', async () => {
     const { a, study } = await pair();
     await experience(a.actor);

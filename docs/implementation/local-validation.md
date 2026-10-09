@@ -21,7 +21,7 @@ S1은 `MediaStore.put/resolveImage` 포트의 두 adapter를 구현한다. FE는
 
 ## 2. 환경과 실행 명령
 
-전체 변수 이름·기본값·조건은 [준비 사항과 환경변수](prerequisites.md)를 기준으로 한다. S0는 이 계약을 실제 `.env.example`에 반영하고, S1/S3/S5가 소유 코드에서 구현한다. 아래는 로컬 실행에 쓰는 요약이다. 현재 저장소에 실행 가능한 script가 이미 있다고 가정하지 않는다.
+전체 변수 이름·기본값·조건은 [준비 사항과 환경변수](prerequisites.md)를 기준으로 한다. 실제 `.env.example`과 실행 script에 아래 계약을 반영했다. 표의 주소는 새 환경의 기본값이며, 실행할 때는 기존 `.env.local`과 Vite 출력의 주소를 사용한다. 포트 충돌로 다른 앱에 접속하지 않도록 현재 검증 환경의 주소를 [실행 기록](evidence/local-validation.md)에 별도로 남긴다.
 
 | 변수 | 로컬 설정 |
 | --- | --- |
@@ -63,7 +63,7 @@ pnpm dev
 1. 개발 호스트에 mkcert를 설치하고 로컬 CA를 신뢰하도록 설정한다. 호스트의 LAN IP를 인증서 대상에 포함해 인증서를 발급한다. IP가 바뀌면 다시 발급한다.
 2. 테스트할 두 번째 노트북에도 **공개 CA 인증서 `rootCA.pem`만** 설치해 브라우저가 신뢰하도록 한다. CA 개인키 `rootCA-key.pem`과 서버 개인키는 전달하지 않는다. mkcert는 개발 기기에만 사용한다. [mkcert 공식 사용법](https://github.com/FiloSottile/mkcert)
 3. S5가 인증서·로컬 실행 절차를 준비하고 S3가 Vite 설정을 적용한다. `dev:lan`은 인증서를 읽어 HTTPS로 기동하고 LAN 접근을 허용한다. `/api`와 `/ws`를 API로 proxy하며 WS upgrade를 켜고 경로·Host·Origin을 유지한다. 명시한 테스트 origin만 API가 허용한다. [Vite 서버 설정](https://vite.dev/config/server-options)
-4. 두 노트북 모두 같은 `https://<호스트 LAN IP>:5173`에 접속한다. 인증서 오류 없이 `window.isSecureContext=true`, 사용자별 세션 쿠키, `/ws/events`·`/ws/audio` 연결, 각 마이크 권한을 확인한다. 브라우저 보안 검사 해제 옵션을 통과 방법으로 쓰지 않는다.
+4. 두 노트북 모두 같은 `https://<호스트 LAN IP>:<WEB_PORT>`에 접속한다. 인증서 오류 없이 `window.isSecureContext=true`, 사용자별 세션 쿠키, `/ws/events`·`/ws/audio` 연결, 각 마이크 권한을 확인한다. 브라우저 보안 검사 해제 옵션을 통과 방법으로 쓰지 않는다.
 5. G3 최종 확인에는 `pnpm build` 결과를 `pnpm preview:lan`으로 같은 HTTPS origin에서 제공한다. dev 서버를 먼저 종료하고 port를 고정한다. preview의 HTTPS·proxy도 명시하고, 같은 API production image를 로컬 DB·파일 저장소에 연결해 검사한다. Vite preview는 이 로컬 확인에만 사용한다. [Vite preview 설정](https://vite.dev/config/preview-options)
 
 LAN 방화벽/무선 AP의 기기 간 접근이 막히면 해당 개발 네트워크를 해결한다. 로컬 마이크 연결 실패를 이유로 AWS 조기 배포로 순서를 바꾸지 않는다. 각 마이크에는 해당 참여자 음성만 들어온다는 PRD 전제는 유지한다.
@@ -118,7 +118,7 @@ mkcert -install
 pnpm setup:cert --host=172.24.100.52
 ```
 
-인증서 생성 도구는 `.env.local`을 덮어쓰지 않는다. 출력된 `LOCAL_TLS_CERT`/`LOCAL_TLS_KEY` 절대 경로, `LOCAL_WEB_ORIGIN=https://<현재 LAN IP>:5173`, `SESSION_COOKIE_SECURE=true`를 설정하고 `pnpm preflight --target=lan`을 실행한다. preflight는 인증서 유효기간·SAN·키 일치를 확인한다. 두 기기의 OS/브라우저 신뢰와 마이크 권한은 각각 직접 확인해야 한다. macOS에서 `mkcert -install`이 관리자 인증을 요청하면 사용자가 해당 터미널에서 완료한다.
+인증서 생성 도구는 `.env.local`을 덮어쓰지 않는다. 출력된 `LOCAL_TLS_CERT`/`LOCAL_TLS_KEY` 절대 경로, `LOCAL_WEB_ORIGIN=https://<현재 LAN IP>:<WEB_PORT>`, `SESSION_COOKIE_SECURE=true`를 설정하고 `pnpm preflight --target=lan`을 실행한다. `WEB_PORT`는 사용 중이지 않은 고정 포트로 선택하고 URL의 포트와 일치시킨다. preflight는 인증서 유효기간·SAN·키 일치를 확인한다. 두 기기의 OS/브라우저 신뢰와 마이크 권한은 각각 직접 확인해야 한다. macOS에서 `mkcert -install`이 관리자 인증을 요청하면 사용자가 해당 터미널에서 완료한다.
 
 ```sh
 # root Dockerfile은 Linux amd64, Node 24, 동일 lockfile/migration으로 만든다.

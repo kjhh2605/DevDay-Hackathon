@@ -257,10 +257,11 @@ export class DomainBase {
         const input = (await tx.query('SELECT input FROM jobs WHERE id=$1', [jobId])).rows[0]
           ?.input as { correctionRevision?: number } | undefined;
         if (
-          feedback?.status === 'running' &&
+          (feedback?.status === 'running' || feedback?.status === 'ready') &&
           feedback.inputCorrectionRevision === input?.correctionRevision
         ) {
           feedback.status = 'failed';
+          feedback.items = [];
           feedback.error = error;
           feedback.revision++;
           await update(tx, 'feedback', feedback.utteranceId, feedback);
@@ -280,6 +281,7 @@ export class DomainBase {
         );
         if (message?.status === 'running') {
           message.status = 'failed';
+          message.text = error.message;
           message.revision++;
           await update(tx, 'chat_messages', message.id, message);
           events.push({

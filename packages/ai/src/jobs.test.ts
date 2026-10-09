@@ -48,6 +48,9 @@ function harness(kind: Job['kind'] = 'utterance.feedback') {
       failIfRunning: vi.fn(async () => {
         if (!running) return false;
         running = false;
+        if (kind === 'utterance.feedback' && utterance.correctionRevision === 0)
+          writes.push('feedback-failed');
+        if (kind === 'chat.respond') writes.push('chat-failed');
         writes.push('job-failed');
         return true;
       }),
@@ -103,7 +106,7 @@ function harness(kind: Job['kind'] = 'utterance.feedback') {
 
 afterEach(() => vi.useRealTimers());
 describe('AI job outcomes and late-result barriers', () => {
-  it('records timeout on feedback before closing job and ignores a later provider success', async () => {
+  it('atomically records timeout on feedback and ignores a later provider success', async () => {
     vi.useFakeTimers();
     const h = harness();
     let release!: (value: unknown) => void;
@@ -120,6 +123,43 @@ describe('AI job outcomes and late-result barriers', () => {
     release({ items: [] });
     await vi.advanceTimersByTimeAsync(0);
     expect(h.writes).toEqual(['feedback-failed', 'job-failed']);
+  });
+  it('does not reopen a timed-out feedback while terminal events are being published', async () => {
+    vi.useFakeTimers();
+    const h = harness();
+    let release!: (value: unknown) => void;
+    vi.spyOn(h.provider, 'structured').mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const apply = h.ports.feedback.applyIfCurrent.getMockImplementation()!;
+    h.ports.feedback.applyIfCurrent.mockImplementation(async (jobId, input) => {
+      const result = await apply(jobId, input);
+      // This is the old race: a separate failure write publishes events while
+      // the provider success arrives and the job is still open.
+      if (input.error) {
+        release({ items: [] });
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+      return result;
+    });
+    const terminate = h.ports.jobs.failIfRunning.getMockImplementation()!;
+    h.ports.jobs.failIfRunning.mockImplementation(async () => {
+      const won = await terminate();
+      // The DB commit precedes publication. Late success must now be rejected.
+      release({ items: [] });
+      await new Promise((resolve) => setTimeout(resolve, 1));
+      return won;
+    });
+    const task = h.jobs.feedback(h.id);
+    await vi.advanceTimersByTimeAsync(60_010);
+    await task;
+    expect(h.writes).toEqual(['feedback-failed', 'job-failed']);
+    expect(
+      h.ports.feedback.applyIfCurrent.mock.calls.every(([, input]) => input.error === null),
+    ).toBe(true);
   });
   it('does not overwrite an edited sentence when an older feedback finishes', async () => {
     const h = harness();
@@ -155,7 +195,7 @@ describe('AI job outcomes and late-result barriers', () => {
     expect(h.ports.studies.applyGeneratedTopic).not.toHaveBeenCalled();
     expect(h.writes).toEqual(['job-failed']);
   });
-  it('records timeout on the visible chat before closing its job', async () => {
+  it('atomically records timeout on the visible chat and its job', async () => {
     vi.useFakeTimers();
     const h = harness('chat.respond');
     const task = h.jobs.chat(h.id);

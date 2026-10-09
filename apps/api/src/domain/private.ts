@@ -663,6 +663,16 @@ export class PrivateService extends CommandsService {
         revision: message.revision + 1,
       };
       await update(tx, 'chat_messages', messageId, completed);
+      const terminal = JobSchema.parse({
+        ...job,
+        status: 'succeeded',
+        result: { messageId },
+        error: null,
+        finishedAt: now(),
+        revision: job.revision + 1,
+      });
+      await this.updateJob(tx, terminal);
+      this.jobEvent(events, terminal);
       events.push({
         scope: 'user',
         id: message.ownerUserId,
@@ -702,6 +712,16 @@ export class PrivateService extends CommandsService {
       message.status = 'failed';
       message.revision++;
       await update(tx, 'chat_messages', messageId, message);
+      const terminal = JobSchema.parse({
+        ...job,
+        status: 'failed',
+        result: null,
+        error,
+        finishedAt: now(),
+        revision: job.revision + 1,
+      });
+      await this.updateJob(tx, terminal);
+      this.jobEvent(events, terminal);
       events.push({
         scope: 'user',
         id: message.ownerUserId,

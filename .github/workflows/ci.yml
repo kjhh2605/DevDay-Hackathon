@@ -47,6 +47,9 @@ jobs:
       - run: pnpm test:integration
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: pnpm exec playwright test --config tests/e2e/playwright.layout.config.ts
+      - run: pnpm exec playwright test --config tests/e2e/playwright.failure.config.ts
+      - run: pnpm test:audio-browser
       - run: pnpm build
       - run: pnpm infra:synth
       - run: pnpm build:api-image
@@ -54,9 +57,13 @@ jobs:
         if: failure()
         with:
           name: browser-failure
+          include-hidden-files: true
           path: |
             test-results
+            tests/e2e/test-results
             playwright-report
+            .local/validation/screenshots
+            .local/validation/layout-independence
 
 # CI uses explicit AI_MODE=mock. It does not certify two physical laptops,
 # real microphones, live OpenAI, or grant permission to deploy AWS resources.

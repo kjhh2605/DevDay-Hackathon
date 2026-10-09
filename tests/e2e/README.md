@@ -22,6 +22,24 @@ The audio scenario sends a generated 200 ms tone directly to `/ws/audio`; its tr
 
 These automated tests do **not** prove real OpenAI quality, real microphone capture, two physical laptops, LAN certificate trust, app/container restart persistence, or AWS behavior. Their passing result is evidence for the listed browser integration scenarios only; it cannot close G1/G2/G3 by itself. See `docs/implementation/acceptance.md` for the physical/live checks.
 
-On failure Playwright writes a screenshot and trace under `test-results/e2e`. The HTML report is at `test-results/e2e-report`.
+On failure Playwright writes a screenshot and trace under `test-results/e2e`. The HTML report is at `tests/e2e/test-results/e2e-report`.
 
 Passing route-state captures are written to `.local/validation/screenshots` for visual inspection; they contain only generated test accounts and fixture data.
+
+## Layout/contract independence
+
+```sh
+pnpm exec playwright test --config tests/e2e/playwright.layout.config.ts
+```
+
+This separate project reruns the populated audio review and private-chat/shared-state scenarios with a runtime stylesheet only. It measures the chat panel changing from 330 to 440 px, feedback moving above the topic, and the close/approval controls reversing horizontal position before exercising the existing accessible controls. It additionally executes both natural-language next requests, `다음 주제로 넘어갈게` and `다음 주제 만들어줘`, and verifies the returned command and shared topic progression. Product handlers, DTOs, endpoint names, and AI tool definitions are unchanged.
+
+Measurements are saved under `.local/validation/layout-independence`, screenshots use the `layout-` prefix, and the report is `tests/e2e/test-results/e2e-layout-report`. The normal four-test project retains the product layout. Like the normal suite, this uses explicit mock AI and synthetic audio and is automated evidence for the covered E04–E06 interactions, not the physical/live portions of those scenarios.
+
+## Provider failure and manual retry
+
+```sh
+pnpm exec playwright test --config tests/e2e/playwright.failure.config.ts
+```
+
+This fixture-only project runs its own injected mock provider/API on ports 4102/5175 with database `devday_study_failure_e2e`. Its API entry point exists only in `tests/e2e`; production configuration and routes do not expose failure injection. It covers image/feedback failure display, absence of automatic retries, and explicit same-topic retry without repeated approval storage. The scenario is excluded from the default project because it requires that test adapter. Its report is `tests/e2e/test-results/e2e-failure-report`.

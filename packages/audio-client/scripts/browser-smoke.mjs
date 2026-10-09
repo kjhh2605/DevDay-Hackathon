@@ -51,11 +51,15 @@ try {
   wav.writeUInt16LE(16, 34);
   wav.write('data', 36);
   wav.writeUInt32LE(samples * 2, 40);
-  for (let index = 0; index < samples; index++)
+  for (let index = 0; index < samples; index++) {
+    // Two speech-like tones separated by >700 ms silence exercise a VAD commit
+    // while the first server readiness acknowledgement is still delayed.
+    const silence = index >= rate * 0.5 && index < rate * 1.4;
     wav.writeInt16LE(
-      Math.round(0.35 * 32767 * Math.sin((2 * Math.PI * 440 * index) / rate)),
+      silence ? 0 : Math.round(0.35 * 32767 * Math.sin((2 * Math.PI * 440 * index) / rate)),
       44 + index * 2,
     );
+  }
   const wavPath = resolve(temporary, 'microphone.wav');
   await writeFile(wavPath, wav);
   server = createServer((request, response) => {
@@ -82,24 +86,91 @@ try {
   const browserErrors = [];
   page.on('pageerror', (error) => browserErrors.push(error.message));
   const received = [];
+  const protocolFailures = [];
+  const segmentCaptureTimes = [];
+  const acknowledgedSegments = [];
+  let segmentOrdinal = 0;
   await page.routeWebSocket('**/ws/audio', (socket) => {
     const streamId = randomUUID();
+    let activeSegment = null;
+    let lastSegment = null;
     socket.onMessage((raw) => {
       const message = JSON.parse(raw.toString());
       received.push(message);
       const send = (value) => socket.send(JSON.stringify(value));
+      const check = (condition, reason) => {
+        if (condition) return true;
+        protocolFailures.push(reason);
+        send({
+          type: 'audio.error',
+          error: { code: 'AUDIO_FAILED', message: reason, details: null },
+          requestId: randomUUID(),
+        });
+        return false;
+      };
       if (message.type === 'audio.start')
         send({ type: 'audio.ready', streamId, topicId: message.topicId });
-      else if (message.type === 'audio.segment_start')
-        send({
-          type: 'audio.segment_ready',
-          clientSegmentId: message.clientSegmentId,
-          segmentId: randomUUID(),
-          startOrder: received.filter((item) => item.type === 'audio.segment_start').length - 1,
+      else if (message.type === 'audio.segment_start') {
+        if (!check(activeSegment === null, 'SEGMENT_ALREADY_ACTIVE')) return;
+        const segment = {
+          clientId: message.clientSegmentId,
+          id: randomUUID(),
+          ready: false,
+          nextSeq: 0,
+          ordinal: segmentOrdinal++,
+        };
+        activeSegment = segment;
+        segmentCaptureTimes.push({
+          startedAt: Date.parse(message.startedAt),
+          receivedAt: Date.now(),
         });
-      else if (message.type === 'audio.flush')
+        setTimeout(
+          () => {
+            segment.ready = true;
+            acknowledgedSegments.push({ ordinal: segment.ordinal, at: Date.now() });
+            send({
+              type: 'audio.segment_ready',
+              clientSegmentId: segment.clientId,
+              segmentId: segment.id,
+              startOrder: segment.ordinal,
+            });
+          },
+          segment.ordinal === 0 ? 1_900 : 0,
+        );
+      } else if (message.type === 'audio.chunk') {
+        if (
+          !check(
+            activeSegment?.clientId === message.clientSegmentId && activeSegment.ready,
+            'SEGMENT_NOT_READY',
+          )
+        )
+          return;
+        if (!check(message.seq === activeSegment.nextSeq, 'INVALID_SEQUENCE')) return;
+        activeSegment.nextSeq++;
+      } else if (message.type === 'audio.segment_commit') {
+        if (
+          !check(
+            activeSegment?.clientId === message.clientSegmentId && activeSegment.ready,
+            'SEGMENT_NOT_READY',
+          )
+        )
+          return;
+        if (!check(message.lastSeq === activeSegment.nextSeq - 1, 'INVALID_COMMIT_SEQUENCE'))
+          return;
+        lastSegment = activeSegment;
+        activeSegment = null;
+      } else if (message.type === 'audio.flush') {
+        if (!check(activeSegment === null, 'UNCOMMITTED_SEGMENT')) return;
+        if (
+          !check(
+            message.lastSegmentId === (lastSegment?.id ?? null) &&
+              message.lastSeq === (lastSegment ? lastSegment.nextSeq - 1 : null),
+            'INVALID_FLUSH_SEQUENCE',
+          )
+        )
+          return;
         send({ type: 'audio.flushed', streamId, closeId: message.closeId });
-      else if (message.type === 'heartbeat.ping') send({ type: 'heartbeat.pong' });
+      } else if (message.type === 'heartbeat.ping') send({ type: 'heartbeat.pong' });
     });
   });
   await page.goto(`http://127.0.0.1:${server.address().port}`);
@@ -119,12 +190,25 @@ try {
     });
     await window.capture.startCapture(topicId);
   }, randomUUID());
-  await page.waitForTimeout(1_100);
+  await page.waitForTimeout(2_700);
   await page.evaluate((closeId) => window.capture.flush(closeId), randomUUID());
   const firstCount = received.length;
   await page.waitForTimeout(250);
   assert.equal(received.length, firstCount, 'Review must not transmit surrounding audio');
   const firstChunks = received.filter((item) => item.type === 'audio.chunk');
+  assert.equal(
+    received.filter((item) => item.type === 'audio.segment_start').length,
+    2,
+    'The first topic must capture two VAD segments across the delayed readiness boundary',
+  );
+  assert.ok(
+    segmentCaptureTimes[1].startedAt < acknowledgedSegments[0].at - 100,
+    'The second segment must be captured before the first segment is ready',
+  );
+  assert.ok(
+    segmentCaptureTimes[1].receivedAt >= acknowledgedSegments[0].at,
+    'The second segment must reach the server only after the preceding segment is ready and committed',
+  );
   assert.ok(firstChunks.length >= 3, 'Real AudioWorklet must send captured PCM');
   assert.ok(
     firstChunks.some((item) => Buffer.from(item.pcmBase64, 'base64').some((byte) => byte !== 0)),
@@ -146,6 +230,11 @@ try {
   );
   assert.equal(outcome.tracksEnded, true, 'Explicit stop must release the physical microphone');
   assert.deepEqual(browserErrors, []);
+  assert.deepEqual(
+    protocolFailures,
+    [],
+    'Every segment must obey the real server active-segment invariant',
+  );
   const starts = received.filter((item) => item.type === 'audio.start');
   assert.ok(
     received
@@ -163,6 +252,8 @@ try {
       status: 'passed',
       test: 'real Chromium / generated microphone / minified production bundle',
       streams: starts.length,
+      segments: segmentOrdinal,
+      delayedReadinessMs: 1_900,
       chunks: received.filter((item) => item.type === 'audio.chunk').length,
       ...outcome,
     }),

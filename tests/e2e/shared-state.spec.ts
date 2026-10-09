@@ -15,6 +15,12 @@ import {
   snapshot,
 } from './helpers.js';
 
+import {
+  assertReviewLayoutChanged,
+  isLayoutVariant,
+  perturbStudyLayout,
+} from './layout-variant.js';
+
 async function sendChat(page: Page, studyId: string, text: string) {
   const prior = await responseData<ChatMessage[]>(
     await page.request.get(`/api/v1/studies/${studyId}/chat/messages`),
@@ -83,6 +89,8 @@ test('A03/A04/A05/A21–A24: shared progress, private chat, explicit sharing, ne
     const studyId = await createAndJoin(a, b, bUser.handle);
     await a.getByRole('button', { name: '첫 주제 시작', exact: true }).click();
     const firstTopic = await assertTalkingOnBoth(a, b, studyId);
+    await perturbStudyLayout(a, testInfo, 'A');
+    await perturbStudyLayout(b, testInfo, 'B');
     expect(firstTopic.content?.kind).toBe('image');
     expect(bEvents.join('\n')).toContain(firstTopic.id);
     expect(bEvents.join('\n')).toContain('study.changed');
@@ -179,12 +187,30 @@ test('A03/A04/A05/A21–A24: shared progress, private chat, explicit sharing, ne
       await b.getByRole('button', { name: '주제 종료', exact: true }).click();
       await expect(a.getByRole('region', { name: '문장별 대화 검토' })).toBeVisible();
       await expect(b.getByRole('region', { name: '문장별 대화 검토' })).toBeVisible();
+      await assertReviewLayoutChanged(a, testInfo, 'A');
+      await assertReviewLayoutChanged(b, testInfo, 'B');
       await capture(a, 'study-review');
       await a.getByRole('button', { name: '승인하고 다음 주제', exact: true }).click();
       const secondTopic = await assertTalkingOnBoth(a, b, studyId);
       expect(secondTopic.id).not.toBe(firstTopic.id);
       expect(secondTopic.ordinal).toBe(2);
       expect(secondTopic.content!.sharedExpressionIds).toEqual([accepted!.id]);
+      if (isLayoutVariant(testInfo)) {
+        for (const [actor, phrase, ordinal] of [
+          [a, '다음 주제로 넘어갈게', 3],
+          [b, '다음 주제 만들어줘', 4],
+        ] as const) {
+          await b.getByRole('button', { name: '주제 종료', exact: true }).click();
+          await expect(actor.getByRole('region', { name: '문장별 대화 검토' })).toBeVisible();
+          const reply = await sendChat(actor, studyId, phrase);
+          expect(reply.commandResults).toHaveLength(1);
+          expect(reply.commandResults[0]!.outcome).toBe('applied');
+          const next = await assertTalkingOnBoth(a, b, studyId);
+          expect(next.ordinal).toBe(ordinal);
+          expect(next.id).toBe(reply.commandResults[0]!.topicId);
+          expect(next.content!.sharedExpressionIds).toEqual([accepted!.id]);
+        }
+      }
       await b.getByRole('button', { name: '주제 종료', exact: true }).click();
       await expect(
         a.getByRole('button', { name: '승인하고 스터디 종료', exact: true }),

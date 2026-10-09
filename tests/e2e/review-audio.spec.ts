@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { ChatMessage, LearningItem } from '../../packages/contracts/src/dto.js';
 import { capture, createAndJoin, register, responseData, snapshot } from './helpers.js';
 import { sendSyntheticSegment } from './synthetic-audio.js';
+import { assertReviewLayoutChanged, perturbStudyLayout } from './layout-variant.js';
 
 test('synthetic PCM: live rows, peer correction, feedback revision, concurrent next and speaker-owned approval', async ({
   browser,
@@ -31,6 +32,8 @@ test('synthetic PCM: live rows, peer correction, feedback revision, concurrent n
     await a.getByRole('button', { name: '첫 주제 시작', exact: true }).click();
     await expect.poll(async () => (await snapshot(a, studyId)).topic?.state).toBe('talking');
     const firstTopic = (await snapshot(a, studyId)).topic!;
+    await perturbStudyLayout(a, testInfo, 'A');
+    await perturbStudyLayout(b, testInfo, 'B');
     const [aSegmentId, bSegmentId] = await Promise.all([
       sendSyntheticSegment(a, studyId, firstTopic.id),
       sendSyntheticSegment(b, studyId, firstTopic.id),
@@ -56,6 +59,8 @@ test('synthetic PCM: live rows, peer correction, feedback revision, concurrent n
     const reviewB = b.getByRole('region', { name: '문장별 대화 검토' });
     await expect(reviewA.getByRole('article')).toHaveCount(2);
     await expect(reviewB.getByRole('article')).toHaveCount(2);
+    await assertReviewLayoutChanged(a, testInfo, 'A');
+    await assertReviewLayoutChanged(b, testInfo, 'B');
     const before = await snapshot(a, studyId);
     const utteranceA = before.utterances.find((item) => item.speakerUserId === aUser.id)!;
     const utteranceB = before.utterances.find((item) => item.speakerUserId === bUser.id)!;

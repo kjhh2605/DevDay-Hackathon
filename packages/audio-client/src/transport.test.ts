@@ -15,8 +15,11 @@ class Socket implements AudioSocket {
   onerror: AudioSocket['onerror'] = null;
   onclose: AudioSocket['onclose'] = null;
   sent: Record<string, unknown>[] = [];
+  inspect: ((message: Record<string, unknown>) => void) | null = null;
   send(value: string) {
-    this.sent.push(JSON.parse(value));
+    const message = JSON.parse(value);
+    this.inspect?.(message);
+    this.sent.push(message);
   }
   close() {
     this.readyState = 3;
@@ -104,35 +107,138 @@ describe('audio transport', () => {
     await flushed;
   });
 
-  it('keeps consecutive server segments distinct even with out-of-order readiness', async () => {
-    const { transport, socket } = await connected();
+  it('queues captured segments until the previous server segment is committed, preserving all PCM and capture times', async () => {
+    const { transport, socket, onFailure } = await connected();
+    // Strict emulator of SpeechCoordinator: at most one active server segment;
+    // its chunks require readiness and a commit must contain the final sequence.
+    let serverActive: { id: unknown; ready: boolean; nextSeq: number } | null = null;
+    socket.inspect = (message) => {
+      if (message.type === 'audio.segment_start') {
+        if (serverActive) throw new Error('SEGMENT_ALREADY_ACTIVE');
+        serverActive = { id: message.clientSegmentId, ready: false, nextSeq: 0 };
+      } else if (message.type === 'audio.chunk') {
+        expect(serverActive?.id).toBe(message.clientSegmentId);
+        expect(serverActive?.ready).toBe(true);
+        expect(message.seq).toBe(serverActive!.nextSeq++);
+      } else if (message.type === 'audio.segment_commit') {
+        expect(serverActive?.id).toBe(message.clientSegmentId);
+        expect(message.lastSeq).toBe(serverActive!.nextSeq - 1);
+        serverActive = null;
+      } else if (message.type === 'audio.flush') {
+        expect(serverActive).toBeNull();
+      }
+    };
+    const acknowledge = (clientSegmentId: unknown, serverId: string, startOrder: number) => {
+      expect(serverActive?.id).toBe(clientSegmentId);
+      serverActive!.ready = true;
+      socket.receive({
+        type: 'audio.segment_ready',
+        clientSegmentId,
+        segmentId: serverId,
+        startOrder,
+      });
+    };
+    const capturedTimes = [
+      '2026-10-09T01:02:03.100Z',
+      '2026-10-09T01:02:04.400Z',
+      '2026-10-09T01:02:05.700Z',
+    ];
+    transport.beginSegment(capturedTimes[0]);
+    const first = socket.sent.at(-1)!.clientSegmentId;
+    transport.append(new Int16Array([1, -1]));
+    transport.append(new Int16Array([2]));
+    transport.commit();
+    transport.beginSegment(capturedTimes[1]);
+    transport.append(new Int16Array([3, -3]));
+    transport.commit();
+    transport.beginSegment(capturedTimes[2]);
+    transport.append(new Int16Array([4, -4]));
+    transport.commit();
+    const flushed = transport.flush(closeId);
+    expect(socket.sent.map((message) => message.type)).toEqual([
+      'audio.start',
+      'audio.segment_start',
+    ]);
+    expect(onFailure).not.toHaveBeenCalled();
+    acknowledge(first, crypto.randomUUID(), 0);
+    const second = socket.sent.at(-1)!.clientSegmentId;
+    expect(socket.sent.at(-1)).toMatchObject({
+      type: 'audio.segment_start',
+      startedAt: capturedTimes[1],
+    });
+    acknowledge(second, crypto.randomUUID(), 1);
+    const third = socket.sent.at(-1)!.clientSegmentId;
+    expect(socket.sent.at(-1)).toMatchObject({
+      type: 'audio.segment_start',
+      startedAt: capturedTimes[2],
+    });
+    acknowledge(third, segmentId, 2);
+    await vi.waitFor(() => expect(socket.sent.at(-1)?.type).toBe('audio.flush'));
+    expect(socket.sent.map((message) => message.type)).toEqual([
+      'audio.start',
+      'audio.segment_start',
+      'audio.chunk',
+      'audio.chunk',
+      'audio.segment_commit',
+      'audio.segment_start',
+      'audio.chunk',
+      'audio.segment_commit',
+      'audio.segment_start',
+      'audio.chunk',
+      'audio.segment_commit',
+      'audio.flush',
+    ]);
+    const chunks = socket.sent.filter((item) => item.type === 'audio.chunk');
+    expect(chunks.map((item) => [item.clientSegmentId, item.seq])).toEqual([
+      [first, 0],
+      [first, 1],
+      [second, 0],
+      [third, 0],
+    ]);
+    expect(chunks.map((item) => item.pcmBase64)).toEqual([
+      pcm16ToBase64(new Int16Array([1, -1])),
+      pcm16ToBase64(new Int16Array([2])),
+      pcm16ToBase64(new Int16Array([3, -3])),
+      pcm16ToBase64(new Int16Array([4, -4])),
+    ]);
+    expect(
+      socket.sent
+        .filter((item) => item.type === 'audio.segment_start')
+        .map((item) => item.startedAt),
+    ).toEqual(capturedTimes);
+    expect(socket.sent.at(-1)).toMatchObject({ lastSegmentId: segmentId, lastSeq: 0 });
+    socket.receive({ type: 'audio.flushed', streamId, closeId });
+    await flushed;
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+
+  it('starts each readiness timeout when that segment reaches the server', async () => {
+    vi.useFakeTimers();
+    const { transport, socket, onFailure } = await connected();
     transport.beginSegment();
     const first = socket.sent.at(-1)!.clientSegmentId;
     transport.append(new Int16Array([1]));
     transport.commit();
     transport.beginSegment();
-    const second = socket.sent.at(-1)!.clientSegmentId;
     transport.append(new Int16Array([2]));
     transport.commit();
-    socket.receive({
-      type: 'audio.segment_ready',
-      clientSegmentId: second,
-      segmentId,
-      startOrder: 1,
-    });
+    await vi.advanceTimersByTimeAsync(14_000);
     socket.receive({
       type: 'audio.segment_ready',
       clientSegmentId: first,
       segmentId: crypto.randomUUID(),
       startOrder: 0,
     });
+    const second = socket.sent.at(-1)!.clientSegmentId;
+    await vi.advanceTimersByTimeAsync(14_000);
+    expect(onFailure).not.toHaveBeenCalled();
+    socket.receive({
+      type: 'audio.segment_ready',
+      clientSegmentId: second,
+      segmentId,
+      startOrder: 1,
+    });
     await transport.drain();
-    const chunks = socket.sent.filter((item) => item.type === 'audio.chunk');
-    expect(chunks).toHaveLength(2);
-    expect(chunks.map((item) => [item.clientSegmentId, item.seq])).toEqual([
-      [second, 0],
-      [first, 0],
-    ]);
     transport.stop();
   });
 

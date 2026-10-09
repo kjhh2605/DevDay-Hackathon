@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { expect, type APIResponse, type Page } from '@playwright/test';
+import { expect, test, type APIResponse, type Page } from '@playwright/test';
 import type { Study, StudySnapshot, User } from '../../packages/contracts/src/dto.js';
 
 export const uniqueHandle = (label: string) => `e2e-${label}-${randomUUID().slice(0, 12)}`;
@@ -73,6 +73,7 @@ export function observeEvents(page: Page) {
 
 export async function capture(page: Page, name: string) {
   const directory = new URL('../../.local/validation/screenshots/', import.meta.url);
+  if (test.info().project.name === 'layout-perturbed') name = `layout-${name}`;
   await mkdir(directory, { recursive: true });
   await page.evaluate('document.fonts.ready');
   await page.screenshot({

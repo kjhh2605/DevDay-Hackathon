@@ -102,6 +102,10 @@ export interface FeedbackStore {
   ): Promise<Job>;
   getUtterance(actor: Actor, utteranceId: string): Promise<Utterance>;
   readForJob(jobId: string): Promise<Utterance>;
+  /**
+   * Check the running job and correction revision, then commit feedback and the job's
+   * terminal result in one transaction. Later runner completion/failure is a no-op.
+   */
   applyIfCurrent(
     jobId: string,
     input: {
@@ -175,6 +179,10 @@ export interface JobsStore {
   read(id: string): Promise<Job>;
   readInput<K extends JobKind>(id: string, kind: K): Promise<JobInputMap[K]>;
   succeedIfRunning(id: string, result: JobResult): Promise<boolean>;
+  /**
+   * Atomically fail the running job and its matching visible feedback/chat state.
+   * Publish only after commit; late provider writes must observe a terminal job.
+   */
   failIfRunning(id: string, error: ApiError): Promise<boolean>;
   isRunning(id: string): Promise<boolean>;
 }
@@ -192,6 +200,7 @@ export interface ChatStore {
   ): Promise<{ message: ChatMessage; job: Job; existing: boolean }>;
   readForJob(jobId: string): Promise<ChatExecutionContext>;
   list(actor: Actor, studyId: string): Promise<ChatMessage[]>;
+  /** Commit the completed message and successful job together, preserving persisted action IDs. */
   complete(
     messageId: string,
     input: {
@@ -201,6 +210,7 @@ export interface ChatStore {
       shareProposalId: string | null;
     },
   ): Promise<ChatMessage | null>;
+  /** Commit message failure, partial persisted action IDs, and failed job in one transaction. */
   fail(
     messageId: string,
     error: ApiError,

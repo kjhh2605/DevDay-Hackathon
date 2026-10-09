@@ -18,14 +18,18 @@ class Pending<T> {
   private settled = false;
   private resolvePromise!: (value: T) => void;
   private rejectPromise!: (error: CaptureError) => void;
-  private readonly timer: ReturnType<typeof setTimeout>;
-  constructor(timeoutMs: number, onTimeout: (error: CaptureError) => void) {
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  constructor(timeoutMs?: number, onTimeout?: (error: CaptureError) => void) {
     this.promise = new Promise<T>((resolve, reject) => {
       this.resolvePromise = resolve;
       this.rejectPromise = reject;
     });
     // Segment readiness can fail before flush/stop starts awaiting it.
     void this.promise.catch(() => undefined);
+    if (timeoutMs !== undefined && onTimeout) this.startTimeout(timeoutMs, onTimeout);
+  }
+  startTimeout(timeoutMs: number, onTimeout: (error: CaptureError) => void): void {
+    if (this.settled || this.timer) return;
     this.timer = setTimeout(
       () => onTimeout(new CaptureError('timeout', '음성 서버 응답 시간이 초과되었습니다.')),
       timeoutMs,
@@ -49,6 +53,8 @@ class Pending<T> {
 
 interface Segment {
   clientId: string;
+  startedAt?: string;
+  startSent: boolean;
   serverId: string | null;
   ready: Pending<void>;
   frames: { seq: number; pcmBase64: string }[];
@@ -82,6 +88,7 @@ export class AudioTransport {
   private topicId: string | null = null;
   private ready: Pending<void> | null = null;
   private segments: Segment[] = [];
+  private transmitIndex = 0;
   private active: Segment | null = null;
   private flushing: { closeId: string; pending: Pending<void> } | null = null;
   private heartbeat: ReturnType<typeof setInterval> | null = null;
@@ -156,10 +163,10 @@ export class AudioTransport {
       throw new CaptureError('protocol_error', '새 음성 구간을 시작할 수 없습니다.');
     const segment: Segment = {
       clientId: this.uuid(),
+      startedAt,
+      startSent: false,
       serverId: null,
-      ready: new Pending<void>(this.options.connectionTimeoutMs ?? 15_000, (error) =>
-        this.fail(error),
-      ),
+      ready: new Pending<void>(),
       frames: [],
       nextSeq: 0,
       committed: false,
@@ -167,12 +174,7 @@ export class AudioTransport {
     };
     this.segments.push(segment);
     this.active = segment;
-    this.send({
-      type: 'audio.segment_start',
-      streamId: this.streamId!,
-      clientSegmentId: segment.clientId,
-      ...(startedAt ? { startedAt } : {}),
-    });
+    this.pumpSegments();
   }
 
   append(pcm: Int16Array): void {
@@ -181,21 +183,13 @@ export class AudioTransport {
       throw new CaptureError('protocol_error', '음성 구간이 시작되지 않았습니다.');
     if (!pcm.length) return;
     const frame = { seq: this.active.nextSeq++, pcmBase64: pcm16ToBase64(pcm) };
-    if (this.active.serverId)
-      this.send({
-        type: 'audio.chunk',
-        streamId: this.streamId!,
-        clientSegmentId: this.active.clientId,
-        ...frame,
-      });
-    else {
-      this.active.frames.push(frame);
-      this.queuedChars += frame.pcmBase64.length;
-      if (this.queuedChars > 4_000_000)
-        this.fail(
-          new CaptureError('connection_failed', '음성 서버 전송이 지연되어 캡처를 중단했습니다.'),
-        );
-    }
+    this.active.frames.push(frame);
+    this.queuedChars += frame.pcmBase64.length;
+    if (this.queuedChars > 4_000_000)
+      this.fail(
+        new CaptureError('connection_failed', '음성 서버 전송이 지연되어 캡처를 중단했습니다.'),
+      );
+    this.pumpSegments();
   }
 
   commit(): void {
@@ -204,8 +198,8 @@ export class AudioTransport {
     if (!this.active.nextSeq)
       throw new CaptureError('protocol_error', '빈 음성 구간은 확정할 수 없습니다.');
     this.active.committed = true;
-    this.sendCommit(this.active);
     this.active = null;
+    this.pumpSegments();
   }
 
   async drain(): Promise<void> {
@@ -298,15 +292,49 @@ export class AudioTransport {
     }
   }
 
-  private sendCommit(segment: Segment): void {
-    if (!segment.serverId || !segment.committed || segment.commitSent) return;
-    this.send({
-      type: 'audio.segment_commit',
-      streamId: this.streamId!,
-      clientSegmentId: segment.clientId,
-      lastSeq: segment.nextSeq - 1,
-    });
-    segment.commitSent = true;
+  private pumpSegments(): void {
+    // Capture may advance while the server prepares a segment. Keep its PCM and
+    // capture timestamp queued, but only open the next server segment after the
+    // preceding segment's chunks and commit have been sent in order.
+    while (this.transmitIndex < this.segments.length && !this.error && !this.closed) {
+      const segment = this.segments[this.transmitIndex]!;
+      if (!segment.startSent) {
+        segment.startSent = true;
+        segment.ready.startTimeout(this.options.connectionTimeoutMs ?? 15_000, (error) =>
+          this.fail(error),
+        );
+        this.send({
+          type: 'audio.segment_start',
+          streamId: this.streamId!,
+          clientSegmentId: segment.clientId,
+          ...(segment.startedAt ? { startedAt: segment.startedAt } : {}),
+        });
+      }
+      if (!segment.serverId || this.error || this.closed) return;
+      const frames = segment.frames;
+      segment.frames = [];
+      for (const frame of frames) {
+        this.send({
+          type: 'audio.chunk',
+          streamId: this.streamId!,
+          clientSegmentId: segment.clientId,
+          ...frame,
+        });
+        this.queuedChars -= frame.pcmBase64.length;
+        if (this.error || this.closed) return;
+      }
+      if (!segment.committed) return;
+      if (!segment.commitSent) {
+        segment.commitSent = true;
+        this.send({
+          type: 'audio.segment_commit',
+          streamId: this.streamId!,
+          clientSegmentId: segment.clientId,
+          lastSeq: segment.nextSeq - 1,
+        });
+      }
+      this.transmitIndex++;
+    }
   }
 
   private receive(message: AudioServerMessage): void {
@@ -335,20 +363,14 @@ export class AudioTransport {
         return;
       case 'audio.segment_ready': {
         const segment = this.segments.find((item) => item.clientId === message.clientSegmentId);
-        if (!segment || (segment.serverId && segment.serverId !== message.segmentId))
+        if (
+          !segment ||
+          !segment.startSent ||
+          (segment.serverId && segment.serverId !== message.segmentId)
+        )
           throw new CaptureError('protocol_error', '음성 구간 응답이 일치하지 않습니다.');
         segment.serverId = message.segmentId;
-        for (const frame of segment.frames) {
-          this.send({
-            type: 'audio.chunk',
-            streamId: this.streamId!,
-            clientSegmentId: segment.clientId,
-            ...frame,
-          });
-          this.queuedChars -= frame.pcmBase64.length;
-        }
-        segment.frames = [];
-        this.sendCommit(segment);
+        this.pumpSegments();
         segment.ready.resolve();
         return;
       }

@@ -290,12 +290,26 @@ export class SpeechService extends PrivateService {
           'INSERT INTO feedback(id,data) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data',
           [utterance.id, JSON.stringify(feedback)],
         );
+        // Ready feedback and its successful job are one commit: approval cannot
+        // observe a ready result whose still-running job later times out.
+        const terminal = {
+          ...job,
+          status: input.error ? 'failed' : 'succeeded',
+          result: input.error
+            ? null
+            : { utteranceId: utterance.id, inputCorrectionRevision: input.inputCorrectionRevision },
+          error: input.error,
+          finishedAt: now(),
+          revision: job.revision + 1,
+        } as Job;
+        await this.updateJob(tx, terminal);
         events.push({
           scope: 'study',
           id: topic.studyId,
           type: 'feedback.updated',
           payload: feedback,
         });
+        this.jobEvent(events, terminal);
         return feedback;
       }),
   };

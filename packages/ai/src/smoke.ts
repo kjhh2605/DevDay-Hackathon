@@ -18,6 +18,11 @@ import {
   type ResponseInput,
 } from './provider.js';
 import { PROMPTS } from './prompts.js';
+import {
+  assessTranscriptionChecks,
+  inspectTranscription,
+  smokeProvenance,
+} from './smoke-verification.js';
 
 const runFile = promisify(execFile);
 type SmokeResult = {
@@ -126,6 +131,32 @@ async function main(): Promise<void> {
   const requestAudits: ProviderAudit[] = [];
   const provider = new OpenAIProvider(config, { onAudit: (audit) => requestAudits.push(audit) });
   const fixture = await audioFixture();
+  const correctionContext = process.env.OPENAI_SMOKE_CONTEXT || '친구와 카페에서 나눈 대화';
+  const wav = pcm16ToWav(fixture.pcm);
+  const sourcePaths = [
+    'smoke.ts',
+    'smoke-verification.ts',
+    'provider.ts',
+    'config.ts',
+    'prompts.ts',
+  ];
+  const runtimeSources = Object.fromEntries(
+    await Promise.all(
+      sourcePaths.map(async (path) => [
+        `packages/ai/src/${path}`,
+        await readFile(new URL(`./${path}`, import.meta.url), 'utf8'),
+      ]),
+    ),
+  );
+  const provenance = smokeProvenance({
+    pcm: fixture.pcm,
+    wav,
+    turns: fixture.turns,
+    livePrompt: PROMPTS.liveTranscriptionContext,
+    correctionPrompt: `${PROMPTS.transcriptionContext}\n${correctionContext}`.trim(),
+    runtimeSources,
+    nodeVersion: process.version,
+  });
   if (fixture.pcm.byteLength < 4_800 || fixture.pcm.byteLength % 2)
     throw new Error('Smoke audio must contain at least 100 ms of valid PCM16.');
   const reportPath = resolve(
@@ -133,7 +164,7 @@ async function main(): Promise<void> {
   );
   await mkdir(dirname(reportPath), { recursive: true });
   const audioPath = join(dirname(reportPath), 'openai-smoke-audio.wav');
-  await writeFile(audioPath, pcm16ToWav(fixture.pcm));
+  await writeFile(audioPath, wav);
   const availableCapabilities = [
     'live-transcription',
     'same-audio-correction',
@@ -247,15 +278,18 @@ async function main(): Promise<void> {
             'SMOKE_ITEM_MAPPING',
             'Commit and completion IDs did not match.',
           );
-        const rawText = committed.map((id) => transcripts.get(id)).join('\n');
+        const committedTranscripts = committed.map((itemId) => ({
+          itemId,
+          text: transcripts.get(itemId)!,
+        }));
+        const rawText = committedTranscripts.map(({ text }) => text).join('\n');
         return {
           rawText,
+          committedTranscripts,
           events,
           commitCount: committed.length,
           firstDeltaMs: events.find((event) => event.type.endsWith('.delta'))?.atMs ?? null,
-          terminalHumanPresent: /human/i.test(rawText),
-          koreanPresent: /[가-힣]/u.test(rawText),
-          learnerGrammarPreserved: /I go\b/i.test(rawText),
+          ...inspectTranscription(committedTranscripts.map(({ text }) => text)),
         };
       } finally {
         clearTimeout(timer);
@@ -263,15 +297,10 @@ async function main(): Promise<void> {
       }
     }),
     check('same-audio-correction', config.correctionModel, async () => {
-      const correctedText = await provider.transcribe(
-        fixture.pcm,
-        process.env.OPENAI_SMOKE_CONTEXT || '친구와 카페에서 나눈 대화',
-      );
+      const correctedText = await provider.transcribe(fixture.pcm, correctionContext);
       return {
         correctedText,
-        terminalHumanPresent: /human/i.test(correctedText),
-        koreanPresent: /[가-힣]/u.test(correctedText),
-        learnerGrammarPreserved: /I go\b/i.test(correctedText),
+        ...inspectTranscription([correctedText]),
       };
     }),
     check('responses-structured-and-tools', config.textModel, async () => {
@@ -341,23 +370,7 @@ async function main(): Promise<void> {
   ]);
 
   const completedResults = results.filter((result): result is SmokeResult => result !== null);
-  const requiredQualityChecks = [
-    ...(/[가-힣]/u.test(fixture.expectedText || '') ? ['koreanPresent'] : []),
-    ...(/I go\b/i.test(fixture.expectedText || '') ? ['learnerGrammarPreserved'] : []),
-    ...(/human/i.test(fixture.expectedText || '') ? ['terminalHumanPresent'] : []),
-  ];
-  const transcriptionChecksPassed = completedResults
-    .filter(
-      (result) =>
-        result.capability === 'live-transcription' || result.capability === 'same-audio-correction',
-    )
-    .every(
-      (result) =>
-        result.status === 'passed' &&
-        requiredQualityChecks.every(
-          (name) => (result.details as Record<string, unknown>)[name] === true,
-        ),
-    );
+  const transcriptionChecks = assessTranscriptionChecks(fixture.expectedText, completedResults);
   const report = {
     recordedAt: new Date().toISOString(),
     paidCalls: true,
@@ -365,6 +378,7 @@ async function main(): Promise<void> {
     audioPath,
     expectedText: fixture.expectedText,
     audioDurationMs: Math.round(fixture.pcm.byteLength / 48),
+    provenance,
     settings: {
       languages: ['ko', 'en'],
       delay: 'low',
@@ -379,15 +393,20 @@ async function main(): Promise<void> {
     },
     realMicrophoneAcceptanceVerified: false,
     selectedCapabilities,
-    allCapabilitiesIncluded: selectedCapabilities.length === availableCapabilities.length,
-    requiredQualityChecks,
-    transcriptionChecksPassed,
+    allCapabilitiesIncluded: availableCapabilities.every((name) =>
+      selectedCapabilities.includes(name),
+    ),
+    requiredQualityChecks: transcriptionChecks.requiredChecks,
+    transcriptionCheckStatus: transcriptionChecks.status,
+    transcriptionChecksPassed: transcriptionChecks.passed,
+    transcriptionCheckReason: transcriptionChecks.reason,
     transcriptionCheckScope:
-      'Only expected Korean presence, learner-grammar preservation and terminal human are checked. This is not an exact-transcript accuracy score or real-microphone acceptance.',
+      'Only expected Korean presence, learner-grammar preservation and exact final word human in the last committed segment (or file transcript) are checked. Missing expected speech or supported markers is not_verified. This is not an exact-transcript accuracy score or real-microphone acceptance.',
     results: completedResults,
     requestAudits,
     passed:
-      completedResults.every((result) => result.status === 'passed') && transcriptionChecksPassed,
+      completedResults.every((result) => result.status === 'passed') &&
+      (transcriptionChecks.status === 'passed' || transcriptionChecks.status === 'not_applicable'),
   };
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
   console.log(`Smoke report: ${reportPath}`);
