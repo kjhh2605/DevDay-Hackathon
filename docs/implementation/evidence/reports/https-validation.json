@@ -1,7 +1,7 @@
 {
   "archiveScope": "Built preview and actual HTTPS/WSS through explicit public CA validation; OS/browser CA trust remains unverified.",
   "sourceArtifact": ".local/https-validation-result.json",
-  "passedAt": "2026-10-09T04:31:48.919Z",
+  "passedAt": "2026-10-09T04:42:25.553Z",
   "origin": "https://172.24.100.52:5176",
   "builtPreview": true,
   "caAndHostnameVerified": true,

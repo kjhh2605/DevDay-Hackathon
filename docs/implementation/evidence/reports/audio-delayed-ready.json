@@ -1,0 +1,36 @@
+{
+  "archiveScope": "Real Chromium generated microphone and production bundle; strict delayed acknowledgement protocol emulator; not physical microphones or live OpenAI.",
+  "sourceArtifact": ".local/validation/audio-delayed-ready.json",
+  "command": "pnpm --filter @devday/audio-client test:browser",
+  "exitCode": 0,
+  "status": "passed",
+  "test": "real Chromium / generated microphone / minified production bundle",
+  "streams": 2,
+  "segments": 3,
+  "delayedReadinessMs": 1900,
+  "chunks": 32,
+  "mediaCalls": 1,
+  "tracksEnded": true,
+  "states": [
+    "requesting_permission",
+    "connecting",
+    "capturing",
+    "flushing",
+    "stopped",
+    "requesting_permission",
+    "connecting",
+    "capturing",
+    "flushing",
+    "stopped",
+    "stopped"
+  ],
+  "assertions": [
+    "First topic captures two VAD segments separated by 900 ms silence while first segment_ready is delayed 1900 ms",
+    "Second segment capture timestamp precedes first readiness acknowledgement",
+    "Second segment_start reaches strict server emulator only after first segment commit",
+    "Each segment has ordered PCM sequence, final commit sequence, and matching flush segment and sequence",
+    "Review transmits no audio and next topic reuses one granted microphone",
+    "Explicit stop releases all audio tracks and no browser or protocol errors occur"
+  ],
+  "scope": "Generated microphone and strict protocol emulator; not physical microphones or live OpenAI"
+}

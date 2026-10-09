@@ -1,0 +1,192 @@
+{
+  "archiveScope": "Real PostgreSQL/API/events/Chromium with two browser contexts, synthetic PCM, and a test-only failing MockAiProvider; not physical microphones or live OpenAI.",
+  "sourceArtifact": "tests/e2e/test-results/e2e-failure-report/index.html#e07-persisted-evidence.json",
+  "command": "pnpm exec playwright test --config tests/e2e/playwright.failure.config.ts",
+  "status": "passed",
+  "tests": 1,
+  "suiteDurationSeconds": 32.5,
+  "assertions": [
+    "Both users see running and failed feedback/image state; AI_FAILED jobs persist without automatic retry",
+    "Feedback retries only after explicit request",
+    "Concurrent next returns 202 and 409 and creates one topic ordinal and active generation job",
+    "Explicit image retry preserves topic ID and ordinal, creates a new job, and leaves the prior approved topic and learning unchanged"
+  ],
+  "persisted": {
+    "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+    "providerCalls": {
+      "image": 3,
+      "feedback": 2
+    },
+    "topics": [
+      {
+        "id": "e0ae734e-dd8b-42a8-b152-203e239b0b40",
+        "state": "approved",
+        "content": {
+          "kind": "image",
+          "title": "[Mock AI] 저장한 경험과 표현으로 대화하기",
+          "sentence": null,
+          "imageMediaId": "9eb200fd-6025-4b6a-a16b-e48844189221",
+          "situationText": "[Mock AI] 부산에 다녀왔어요",
+          "sharedExpressionIds": [],
+          "sourceExperienceIds": [
+            "c109b93e-e133-4b6f-ab91-84f4c6c7bd9b"
+          ],
+          "learningExpressionIds": [],
+          "conversationInstruction": "[Mock AI] 저장한 경험을 서로 이야기하고 제시된 표현을 사용해 보세요."
+        },
+        "ordinal": 1,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "revision": 4,
+        "approvedAt": "2026-10-09T04:42:47.616Z",
+        "focusUserId": null,
+        "generationJobId": "54c1c7b5-6bb3-4a7a-888b-80727b44cf26"
+      },
+      {
+        "id": "0849fc9a-8598-47b5-bc6c-c1841be77a15",
+        "state": "talking",
+        "content": {
+          "kind": "image",
+          "title": "[Mock AI] 저장한 경험과 표현으로 대화하기",
+          "sentence": null,
+          "imageMediaId": "70a963b9-7266-4659-a7ed-4500f2bd2600",
+          "situationText": "[Mock AI] 부산에 다녀왔어요 [Mock AI] I enjoy learning English.",
+          "sharedExpressionIds": [],
+          "sourceExperienceIds": [
+            "c109b93e-e133-4b6f-ab91-84f4c6c7bd9b"
+          ],
+          "learningExpressionIds": [
+            "372bf532-68a2-41b1-8509-67f93a544321"
+          ],
+          "conversationInstruction": "[Mock AI] 저장한 경험을 서로 이야기하고 제시된 표현을 사용해 보세요."
+        },
+        "ordinal": 2,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "revision": 3,
+        "approvedAt": null,
+        "focusUserId": null,
+        "generationJobId": "54adf80e-5283-41ba-9c4f-7063c346dc6d"
+      }
+    ],
+    "jobs": [
+      {
+        "id": "54c1c7b5-6bb3-4a7a-888b-80727b44cf26",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "e0ae734e-dd8b-42a8-b152-203e239b0b40",
+        "status": "succeeded",
+        "error": null,
+        "createdAt": "2026-10-09T04:42:37.937Z",
+        "finishedAt": "2026-10-09T04:42:38.017Z",
+        "kind": "topic.generate",
+        "result": {
+          "topicId": "e0ae734e-dd8b-42a8-b152-203e239b0b40"
+        }
+      },
+      {
+        "id": "f6a41c3a-99b0-4d12-b0a5-913ed3764e32",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "e0ae734e-dd8b-42a8-b152-203e239b0b40",
+        "status": "succeeded",
+        "error": null,
+        "createdAt": "2026-10-09T04:42:38.400Z",
+        "finishedAt": "2026-10-09T04:42:43.482Z",
+        "kind": "topic.close",
+        "result": {
+          "topicId": "e0ae734e-dd8b-42a8-b152-203e239b0b40",
+          "utteranceIds": [
+            "fa4d35f1-358e-47a4-8819-54ce12cc3099"
+          ]
+        }
+      },
+      {
+        "id": "a4b5e8a2-5f8d-441b-800e-7824b47c4773",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "fa4d35f1-358e-47a4-8819-54ce12cc3099",
+        "status": "failed",
+        "error": {
+          "code": "AI_FAILED",
+          "message": "AI 처리에 실패했습니다. 새 요청으로 다시 시도해 주세요.",
+          "details": null
+        },
+        "createdAt": "2026-10-09T04:42:38.443Z",
+        "finishedAt": "2026-10-09T04:42:43.469Z",
+        "kind": "utterance.feedback",
+        "result": null
+      },
+      {
+        "id": "7d68a90d-9c38-4933-a24f-f6b9c6461074",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "fa4d35f1-358e-47a4-8819-54ce12cc3099",
+        "status": "succeeded",
+        "error": null,
+        "createdAt": "2026-10-09T04:42:45.558Z",
+        "finishedAt": "2026-10-09T04:42:47.125Z",
+        "kind": "utterance.feedback",
+        "result": {
+          "utteranceId": "fa4d35f1-358e-47a4-8819-54ce12cc3099",
+          "inputCorrectionRevision": 0
+        }
+      },
+      {
+        "id": "d61b0065-99b0-490e-9fcb-9c5a4adfe324",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "0849fc9a-8598-47b5-bc6c-c1841be77a15",
+        "status": "failed",
+        "error": {
+          "code": "AI_FAILED",
+          "message": "AI 처리에 실패했습니다. 새 요청으로 다시 시도해 주세요.",
+          "details": null
+        },
+        "createdAt": "2026-10-09T04:42:47.618Z",
+        "finishedAt": "2026-10-09T04:42:52.634Z",
+        "kind": "topic.generate",
+        "result": null
+      },
+      {
+        "id": "54adf80e-5283-41ba-9c4f-7063c346dc6d",
+        "revision": 1,
+        "scope": "study",
+        "ownerUserId": null,
+        "studyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "targetId": "0849fc9a-8598-47b5-bc6c-c1841be77a15",
+        "status": "succeeded",
+        "error": null,
+        "createdAt": "2026-10-09T04:42:54.970Z",
+        "finishedAt": "2026-10-09T04:42:56.496Z",
+        "kind": "topic.generate",
+        "result": {
+          "topicId": "0849fc9a-8598-47b5-bc6c-c1841be77a15"
+        }
+      }
+    ],
+    "savedLearning": [
+      {
+        "id": "372bf532-68a2-41b1-8509-67f93a544321",
+        "ownerUserId": "24140cc7-1605-478d-8ed1-440bbea648f5",
+        "kind": "expression",
+        "expression": "[Mock AI] I enjoy learning English.",
+        "meaning": "[Mock AI] 입력된 보정문을 그대로 보관하는 테스트용 학습 항목",
+        "example": "[Mock AI] I enjoy learning English.",
+        "source": "approved_feedback",
+        "sourceKey": "feedback:e0ae734e-dd8b-42a8-b152-203e239b0b40:fa4d35f1-358e-47a4-8819-54ce12cc3099:dc0bf33e-68d7-478d-8db4-7aeddf60db50",
+        "sourceStudyId": "1b0b3afb-9320-469d-8b39-90ab9dfa7b03",
+        "sourceUtteranceId": "fa4d35f1-358e-47a4-8819-54ce12cc3099",
+        "createdAt": "2026-10-09T04:42:47.615Z"
+      }
+    ]
+  }
+}

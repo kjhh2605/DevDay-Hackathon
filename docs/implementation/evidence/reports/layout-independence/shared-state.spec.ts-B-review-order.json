@@ -1,0 +1,56 @@
+{
+  "archiveScope": "Test-only CSS layout perturbation; real API/PostgreSQL and explicit mock AI, not physical acceptance.",
+  "sourceArtifact": ".local/validation/layout-independence/shared-state.spec.ts-B-review-order.json",
+  "before": {
+    "review": {
+      "x": 32,
+      "y": 447.15625,
+      "width": 1022,
+      "height": 157.171875
+    },
+    "topic": {
+      "x": 32,
+      "y": 245.78125,
+      "width": 1022,
+      "height": 181.375
+    },
+    "next": {
+      "x": 892.734375,
+      "y": 784.203125,
+      "width": 161.265625,
+      "height": 44
+    },
+    "finish": {
+      "x": 734.359375,
+      "y": 784.203125,
+      "width": 149.375,
+      "height": 44
+    }
+  },
+  "after": {
+    "review": {
+      "x": 32,
+      "y": 379.96875,
+      "width": 912,
+      "height": 157.171875
+    },
+    "topic": {
+      "x": 32,
+      "y": 557.140625,
+      "width": 912,
+      "height": 181.375
+    },
+    "next": {
+      "x": 624.359375,
+      "y": 784.203125,
+      "width": 161.265625,
+      "height": 44
+    },
+    "finish": {
+      "x": 794.625,
+      "y": 784.203125,
+      "width": 149.375,
+      "height": 44
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "archiveScope": "Test-only CSS layout perturbation; real API/PostgreSQL and explicit mock AI, not physical acceptance.",
+  "sourceArtifact": ".local/validation/layout-independence/shared-state.spec.ts-B-chat-and-controls.json",
+  "before": {
+    "chat": {
+      "x": 1078,
+      "y": 87.75,
+      "width": 330,
+      "height": 880
+    },
+    "close": {
+      "x": 944.359375,
+      "y": 899.046875,
+      "width": 109.640625,
+      "height": 44
+    },
+    "finish": {
+      "x": 810.1875,
+      "y": 899.046875,
+      "width": 125.171875,
+      "height": 44
+    }
+  },
+  "after": {
+    "chat": {
+      "x": 968,
+      "y": 87.75,
+      "width": 440,
+      "height": 880
+    },
+    "close": {
+      "x": 700.1875,
+      "y": 899.046875,
+      "width": 109.640625,
+      "height": 44
+    },
+    "finish": {
+      "x": 818.828125,
+      "y": 899.046875,
+      "width": 125.171875,
+      "height": 44
+    }
+  }
+}

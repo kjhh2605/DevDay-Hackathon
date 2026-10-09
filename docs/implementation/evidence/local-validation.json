@@ -1,9 +1,9 @@
 {
   "gate": "pending",
-  "verifiedAt": "2026-10-09T04:32:13.215Z",
-  "targetCommit": "3d31883457a5aaaf6334a8a9a699102ff8cd6369",
+  "verifiedAt": "2026-10-09T04:47:23.418000Z",
+  "targetCommit": "a0c255627cc1320f11645dd495cb817c6836729c",
   "lockfileSha256": "e8d49ab375ecb96da7c3fa9da86b871f054ea7bc06d76aa070be685d47def67e",
-  "sourceSha256": "770f79b787adc1c80fe65e9399e2032df577a7a17ac7b8cfd4acb743ed6ffa2a",
+  "sourceSha256": "62d7e0e08dcb9568f5a32ac8da7f6814b6cf509d08e64bb79a80847980ef02a4",
   "aiMode": "live",
   "models": {
     "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
@@ -80,12 +80,17 @@
     "https": "docs/implementation/evidence/reports/https-validation.json",
     "liveFlow": "docs/implementation/evidence/reports/live-flow.json",
     "openAi": "docs/implementation/evidence/reports/openai-final-audited-smoke.json",
-    "e2e": "test-results/e2e-report",
+    "e2e": "tests/e2e/test-results/e2e-report/index.html",
     "screenshots": ".local/validation/screenshots",
     "branches": "docs/implementation/evidence/reports/live-branches.json",
     "namedParticipant": "docs/implementation/evidence/reports/live-named-participant.json",
     "detailedExperience": "docs/implementation/evidence/reports/live-detailed-experience.json",
-    "archivedScreenshots": "docs/implementation/evidence/screenshots"
+    "archivedScreenshots": "docs/implementation/evidence/screenshots",
+    "e2eLayout": "tests/e2e/test-results/e2e-layout-report/index.html",
+    "e2eFailure": "tests/e2e/test-results/e2e-failure-report/index.html",
+    "layoutMeasurements": "docs/implementation/evidence/reports/layout-independence",
+    "providerFailure": "docs/implementation/evidence/reports/e07-provider-failure.json",
+    "audioDelayedReady": "docs/implementation/evidence/reports/audio-delayed-ready.json"
   },
   "localOrigin": "http://localhost:5188",
   "apiOrigin": "http://127.0.0.1:4188",
@@ -99,16 +104,36 @@
     "reason": "Existing unrelated application occupied localhost:5173; selected separate local ports."
   },
   "finalCounts": {
-    "unitTests": 224,
-    "unitFiles": 26,
+    "unitTests": 250,
+    "unitFiles": 27,
     "contracts": 39,
-    "postgresIntegration": 13,
+    "postgresIntegration": 15,
     "e2e": 4,
+    "e2eDurationSeconds": 41.5,
+    "layoutE2e": 2,
+    "layoutE2eDurationSeconds": 31.6,
+    "providerFailureE2e": 1,
+    "providerFailureE2eDurationSeconds": 32.5,
     "audioBrowser": {
       "streams": 2,
-      "chunks": 17,
+      "segments": 3,
+      "chunks": 32,
       "captureRequests": 1,
       "physicalMicrophone": false
     }
+  },
+  "liveValidationScope": {
+    "rerunOnCurrentTarget": false,
+    "scope": "Historical real OpenAI reports preserve their original timestamps, failures, and request IDs. Continuation fixes covered delayed audio acknowledgements, atomic timeout failure persistence, and smoke verification; provider requests and prompts did not change. No additional paid live calls were made during this continuation.",
+    "archivedWithImplementationCommit": "3d31883457a5aaaf6334a8a9a699102ff8cd6369",
+    "exactHistoricalSourceIdentity": "Only available where an individual historical report recorded it; the archive commit does not assert every earlier request ran on that exact source revision."
+  },
+  "continuationChecks": {
+    "delayedAudioReadiness": "pass",
+    "atomicFeedbackTimeout": "pass",
+    "layoutIndependence": "pass",
+    "providerFailureExplicitRetry": "pass",
+    "smokeAuditHelpers": "pass",
+    "ciExecution": "not_run"
   }
 }

@@ -6,9 +6,9 @@
 
 ## 대상과 환경
 
-- 검증 대상 구현 commit: `3d31883457a5aaaf6334a8a9a699102ff8cd6369`. 이후 증거만 별도 commit할 수 있으며, 구현 소스가 달라지면 관련 검사를 다시 수행한다.
+- 검증 대상 구현 commit: `a0c255627cc1320f11645dd495cb817c6836729c`. 이후 증거만 별도 commit할 수 있으며, 구현 소스가 달라지면 관련 검사를 다시 수행한다.
 - lockfile SHA-256: `e8d49ab375ecb96da7c3fa9da86b871f054ea7bc06d76aa070be685d47def67e`.
-- 증거 경로를 제외한 소스 SHA-256: `770f79b787adc1c80fe65e9399e2032df577a7a17ac7b8cfd4acb743ed6ffa2a`.
+- 증거 경로를 제외한 소스 SHA-256: `62d7e0e08dcb9568f5a32ac8da7f6814b6cf509d08e64bb79a80847980ef02a4`.
 - 호스트: macOS 개발 노트북 1대. 사용자가 현재 두 번째 물리 노트북은 없다고 확인했다.
 - Node 24.20.0 / pnpm 10.33.2 / Docker 29.2.1 / Compose 5.1.0.
 - PostgreSQL 17.11: 실제 Docker `devday-study-local-postgres-1`, `127.0.0.1:5432`, 영속 volume `devday-study-local_postgres-data`.
@@ -29,7 +29,9 @@
 | mkcert 설치·LAN 인증서 발급 | 통과 | mkcert 1.4.4, SAN `172.24.100.52`/localhost/loopback |
 | `pnpm preflight --target=lan` | 통과 | 위 local 검사 및 HTTPS origin·Secure 쿠키 설정·인증서 SAN·유효기간·키 일치. 브라우저 신뢰·실마이크는 포함하지 않음 |
 | `mkcert -install` 시스템 신뢰 설치 | 실패/사용자 실행 필요 | macOS 관리자 인증이 필요하며 비대화형 세션에서 sudo 암호를 받을 수 없음 |
-| `pnpm test:e2e` | 통과 | 최종 4개 42.6초, 실제 API·별도 PostgreSQL `devday_study_e2e`, AI_MODE=mock, 독립 A/B context |
+| `pnpm test:e2e` | 통과 | 최종 4개 41.5초, 실제 API·별도 PostgreSQL `devday_study_e2e`, AI_MODE=mock, 독립 A/B context |
+| layout Playwright | 통과 | 2개 31.6초, chat 폭·review 위치·버튼 순서를 test-only CSS로 바꾼 상태에서 동일 사용자 흐름 |
+| provider failure Playwright | 통과 | 1개 32.5초, 실제 API/DB/이벤트와 테스트 provider의 실패·명시적 재시도·동시 next 검사 |
 | `pnpm --filter @devday/infra typecheck` | 통과 | CDK 3 stack의 TypeScript 검사 |
 | 인프라 template/SPA 검사 | 통과 | 10개: 네트워크·단일 task·retention·IAM·비밀·캐시·SPA·단방향 의존성 |
 | `pnpm infra:synth` | 통과 | strict/no-lookups, AWS 자격증명 환경변수 해제·설정 파일 `/dev/null` 상태에서도 통과 |
@@ -38,12 +40,24 @@
 | build preview HTTPS/WSS probe | 통과 | CA·호스트명 검증, Secure/HttpOnly/SameSite=Lax 쿠키, 미가입 JSON 401, `/ws/events`와 `/ws/audio` 101 및 heartbeat |
 | `pnpm typecheck` | 통과 | 전체 workspace와 root 도구 strict TypeScript 검사 |
 | `pnpm contracts:check` | 통과 | 39개 계약 검사 |
-| `pnpm test:unit` | 통과 | A15 최종 수정 이후 26개 파일, 224개 검사 |
-| `pnpm test:integration` | 통과 | 실제 PostgreSQL 도메인/HTTP 통합 13개 |
+| `pnpm test:unit` | 통과 | 최종 회귀 수정 이후 27개 파일, 250개 검사 |
+| `pnpm test:integration` | 통과 | 실제 PostgreSQL 도메인/HTTP 통합 15개 |
 | `pnpm build` | 통과 | API bundle·web 정적 build |
-| `pnpm test:audio-browser` | 통과 | 실제 Chromium AudioWorklet·VAD 경로, capture 1회로 2개 stream·17개 chunk. 입력은 합성/fake audio이며 실마이크 인수가 아님 |
+| `pnpm test:audio-browser` | 통과 | 실제 Chromium AudioWorklet·VAD 경로, capture 1회로 2개 stream·3개 segment·32개 chunk, segment_ready 1900ms 지연. 입력은 합성/fake audio이며 실마이크 인수가 아님 |
+
+### 최종 회귀 검사와 근거
+
+최종 구현 commit에서는 지연된 `segment_ready` 동안 캡처된 다음 발화가 직전 segment commit 후 전송되도록 수정했고, timeout이 지난 피드백과 job 상태가 하나의 실패로 저장되도록 보완했다. [audio-delayed-ready.json](reports/audio-delayed-ready.json)은 실제 Chromium의 minified production bundle에서 1900ms ack 지연·3개 발화 segment·순서와 flush·다음 주제의 capture 재사용·종료 후 track 해제를 검사했다. 마이크 입력은 생성한 신호, 서버는 엄격한 protocol emulator다. timeout 실패 경합은 `apps/api/test/domain.integration.test.ts`와 AI jobs 회귀 검사에서 검증했다.
+
+[layout-independence/](reports/layout-independence/)의 8개 측정 결과는 chat 330→440px, topic보다 먼저 놓인 review, next/finish 버튼 역순을 증명한다. [실제 내용이 있는 검토 화면](screenshots/layout-review-populated.png)과 [개인 chat·공유 화면](screenshots/layout-chat-sharing.png)을 보존했다. DOM 위치가 바뀐 상태에서도 상대 수정·재피드백·승인, 개인/공유 구분, 자연어 next가 통과했다.
+
+[E07 저장 결과](reports/e07-provider-failure.json)는 양쪽 UI의 진행/실패, 자동 재시도 없음, 명시적 피드백 재시도, 동시 next 202/409, 실패 이미지의 같은 topic·ordinal 재시도를 확인한다. 이전 승인과 학습 기록은 중복되지 않았다. 실제 DB에 남은 실패/성공 job과 fixture provider 호출 수 image 3회·feedback 2회를 저장했다. [피드백 실패](screenshots/e07-feedback-failed.png), [이미지 실패](screenshots/e07-image-failed.png), [명시적 재시도 복구](screenshots/e07-image-recovered.png) 화면은 테스트 전용 실패 주입 결과다.
+
+smoke 검증 helper는 마지막 단어의 정확한 비교, 기대 조건이 없을 때 `not_verified`, 입력·요청 audit 지문을 검사하도록 수정했고 24개 helper 검사가 통과했다. 이번 후속 검증에는 추가 유료 OpenAI 호출이 없었다. CI에는 baseline/layout/failure/audio 검사를 구성했으며, 원격 CI 자체를 실행했다고 주장하지 않는다.
 
 ### 실제 OpenAI와 제품 연결
+
+아래 실제 OpenAI 호출들은 이전 검증 주기에 실행되어 구현 commit `3d31883457a5aaaf6334a8a9a699102ff8cd6369`의 기록에 포함된 결과다. 각 보고서의 원래 시각·요청 ID·품질 실패를 보존했으며 최종 commit에서 새로 호출한 결과로 표시하지 않는다. 이후 변경은 오디오 ack 순서·timeout 상태 경합·smoke 판정 보완이며 provider 요청과 prompt는 그대로다.
 
 자격증명을 포함하지 않는 실행 보고서를 [`reports/`](reports/)에 보관했다. 녹음·inspection session·쿠키·환경파일·프로세스 로그는 저장소에 넣지 않았다.
 
@@ -55,17 +69,17 @@
 - [상세 경험에 불필요한 질문이 나온 기존 실패](reports/live-branches-detailed-question-regression.json)를 보존했다. schema·prompt·분기 수정 후 [실제 상세 경험 재검증](reports/live-detailed-experience.json)에서 원문에 이미 장소·사람·사건·행동이 있는 경우 질문 0개와 grounded 정리본을 받았다. 해당 실행은 draft까지만 검사했고, 편집/저장/재조회는 E2E와 주 흐름에서 확인했다.
 - 실제 생성 이미지 렌더는 [live-image-topic.png](screenshots/live-image-topic.png)와 [메타데이터](reports/live-image-topic.json)에 보관했다. [경험 카드](screenshots/experience-cards.png), [출처별 개인 학습](screenshots/learning-loaded-mixed-sources.png), [문장 검토](screenshots/review-populated.png)는 명시적 AI fixture의 화면이다. 세 주요 화면의 라이트 테마·색상·폰트/아이콘 배치와 읽기 가능성을 직접 확인했으며, `apps/web/seed-design/ui/`의 실제 `@seed-design/react` 사용 및 `design/tokens.css` 연결도 확인했다.
 
-Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중복 거절, B가 다른 화면에 있을 때 전역 초대, 경험 없는 시작의 CONTEXT_REQUIRED, 보충 질문 생략과 기존 답변 보존·원문/정리/맥락 수정·저장·재조회, 양쪽 공통 상태와 동일 권한, 개인 chat/학습 비노출, 단어·표현 저장, no·pending·yes 결정과 중복 yes 방지, 공유 표현의 다음 주제 반영, 스터디 종료. 추가 audio 검사는 각 사용자 소켓에 200ms 합성 PCM을 전송하여 두 review 행·상대 수정·stale·문장별 재요청·동시 next 202+409·단일 생성·발화자 저장·마지막 승인·새 스터디 ID를 확인했다. AI 출력은 명시적 fixture이며 실마이크·실제 OpenAI 결과가 아니다. `.local/validation/screenshots/`에 주요 상태 13장, `test-results/e2e-report/`에 HTML 결과가 있다.
+Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중복 거절, B가 다른 화면에 있을 때 전역 초대, 경험 없는 시작의 CONTEXT_REQUIRED, 보충 질문 생략과 기존 답변 보존·원문/정리/맥락 수정·저장·재조회, 양쪽 공통 상태와 동일 권한, 개인 chat/학습 비노출, 단어·표현 저장, no·pending·yes 결정과 중복 yes 방지, 공유 표현의 다음 주제 반영, 스터디 종료. 추가 audio 검사는 각 사용자 소켓에 200ms 합성 PCM을 전송하여 두 review 행·상대 수정·stale·문장별 재요청·동시 next 202+409·단일 생성·발화자 저장·마지막 승인·새 스터디 ID를 확인했다. AI 출력은 명시적 fixture이며 실마이크·실제 OpenAI 결과가 아니다. `.local/validation/screenshots/`에 주요 상태 화면이 있으며, 로컬 HTML 결과는 `tests/e2e/test-results/e2e-report/index.html`, `tests/e2e/test-results/e2e-layout-report/index.html`, `tests/e2e/test-results/e2e-failure-report/index.html`이다. 재현에 필요한 간결한 측정·DB 결과와 선택한 화면은 저장소의 `reports/`, `screenshots/`에 보관했다.
 
 ### API image와 재시작 결과
 
-최종 A15 runtime 수정의 rebuild 후 2026-10-09T04:30:59.624Z에 image 검증을 완료했다. image ID는 `sha256:c3e9c9797d6cc04eeb0fce056d761b91bd8c69acf5af239174cce1e6694ac272`, 실제 Node 버전은 `v24.20.0`이다. runtime에 `.env.local`·로컬 TLS 인증서가 없고 `/app/certs/global-bundle.pem`이 있음을 확인했다.
+최종 timeout·audio 회귀 수정 이후 API rebuild 후 2026-10-09T04:41:42.362Z에 image 검증을 완료했다. image ID는 `sha256:443d21c4b5e567a7a7375392d76fdf7db8569c5f3b61db507013409b9c2ba01f`, 실제 Node 버전은 `v24.20.0`이다. runtime에 `.env.local`·로컬 TLS 인증서가 없고 `/app/certs/global-bundle.pem`이 있음을 확인했다.
 
-별도 DB `devday_study_image_1791520241692`에서 API image의 `apps/api/dist/db/migrate.js`를 실행했다. `AI_MODE=mock`, 빈 OpenAI key로 경험과 실제 미디어 파일·개인 학습 항목 1개를 만들었다. 현재 주제를 검토하고 스터디를 종료한 다음 컨테이너를 재시작했다. 기존 쿠키의 사용자, 경험 ID/내용, 학습 항목, 이미지 bytes가 같았으며 B에게 A의 개인 기록이 노출되지 않았다. fixture PNG는 68 bytes, SHA-256 `5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15`다. 이 값은 **실제 OpenAI 생성 이미지 증거가 아니다**. 저장소 증거는 [image-validation.json](reports/image-validation.json), 로컬 로그는 `.local/image-validation.log`다.
+별도 DB `devday_study_image_1791520876034`에서 API image의 `apps/api/dist/db/migrate.js`를 실행했다. `AI_MODE=mock`, 빈 OpenAI key로 경험과 실제 미디어 파일·개인 학습 항목 1개를 만들었다. 현재 주제를 검토하고 스터디를 종료한 다음 컨테이너를 재시작했다. 기존 쿠키의 사용자, 경험 ID/내용, 학습 항목, 이미지 bytes가 같았으며 B에게 A의 개인 기록이 노출되지 않았다. fixture PNG는 68 bytes, SHA-256 `5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15`다. 이 값은 **실제 OpenAI 생성 이미지 증거가 아니다**. 저장소 증거는 [image-validation.json](reports/image-validation.json), 로컬 로그는 `.local/image-validation.log`다.
 
 ### HTTPS·쿠키·WSS 결과
 
-최종 image로 2026-10-09T04:31:48.919Z에 Vite build preview `https://172.24.100.52:5176`에서 production API image port 3100으로 proxy를 검증했다. `scripts/local/verify-https.mjs`는 공개 mkcert CA를 명시하고 TLS 검증을 유지한 HTTPS/WSS 클라이언트다. 익명 `/api/v1/me`는 HTML 대신 JSON 401, 가입 쿠키는 Secure/HttpOnly/SameSite=Lax, 같은 쿠키로 me 조회 및 `/ws/events`·`/ws/audio` 101+heartbeat가 통과했다. [https-validation.json](reports/https-validation.json)에 결과를 남겼다. **OS/브라우저 신뢰·실마이크·두 물리 기기 결과는 아니다.** 검사 후 해당 API 컨테이너와 TLS preview만 중지했다. PostgreSQL volume과 현재 live 개발 앱 4188/5188은 유지했다.
+최종 image로 2026-10-09T04:42:25.553Z에 Vite build preview `https://172.24.100.52:5176`에서 production API image port 3100으로 proxy를 검증했다. `scripts/local/verify-https.mjs`는 공개 mkcert CA를 명시하고 TLS 검증을 유지한 HTTPS/WSS 클라이언트다. 익명 `/api/v1/me`는 HTML 대신 JSON 401, 가입 쿠키는 Secure/HttpOnly/SameSite=Lax, 같은 쿠키로 me 조회 및 `/ws/events`·`/ws/audio` 101+heartbeat가 통과했다. [https-validation.json](reports/https-validation.json)에 결과를 남겼다. **OS/브라우저 신뢰·실마이크·두 물리 기기 결과는 아니다.** 검사 후 해당 API 컨테이너와 TLS preview만 중지했다. PostgreSQL volume과 현재 live 개발 앱 4188/5188은 유지했다.
 
 ## G3 인수 상태
 
@@ -78,13 +92,13 @@ Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중�
 | A03 | 양 actor 시작/close/next/finish·새 스터디 ID: `shared-state.spec.ts`, `review-audio.spec.ts` | 두 기기 실제 흐름 대기 |
 | A04 | 서로 다른 A/B context와 쿠키의 HTTP/WS 공통 state 확인 | 두 물리 노트북 동기화 미실행 |
 | A05 | private chat/WS/학습 owner 분리: E2E/HTTP 통합 및 `reports/live-flow.json` 실제 Responses | 두 기기 사용자 흐름 대기 |
-| A06 | 합성 PCM 두 화자의 `/ws/audio` 귀속: `review-audio.spec.ts` | 두 실제 마이크·계속 켜기 미실행 |
+| A06 | 합성 PCM 두 화자의 `/ws/audio` 귀속과 지연 ack 3개 segment 순서: `review-audio.spec.ts`, `reports/audio-delayed-ready.json` | 두 실제 마이크·계속 켜기 미실행 |
 | A07 | 실제 합성 파일 전사/보정, 한국어·학습자 문법 확인; 네 경로 최종 smoke에서 raw 마지막 단어 검사 실패 기록 | 실마이크 청취 비교 미실행; API 성공과 품질을 구분 |
 | A08 | raw/보정 별도 필드와 화면: `synthetic-live-transcript.png`, speech/provider 검사 | 실마이크와 동일 오디오 보정의 실제 품질 비교 미실행 |
 | A09 | 라이브 전사 화면·발화자 순서의 합성 PCM 검사 | 실제 교대 발화 화면 인수 미실행 |
 | A10 | synthetic audio 종료→2문장 review→summary/상세: `review-audio.spec.ts`, `review-populated.png` | 실제 마지막 발화·여러/긴 문장 비교 미실행 |
 | A11 | B가 A 보정문 편집, 양쪽 화면·stale 상태: `review-audio.spec.ts` | 두 기기 E04 대기 |
-| A12 | 해당 문장만 refeedback; 오래된 revision 거절: `review-audio.spec.ts`, domain/jobs 통합·단위 검사 | 두 기기 실제 피드백 E04 대기 |
+| A12 | 해당 문장만 refeedback; 오래된 revision 거절·timeout 실패 원자 저장: `review-audio.spec.ts`, domain/jobs 통합·단위 검사, E07 UI | 두 기기 실제 피드백 E04 대기 |
 | A13 | E2E/domain 동시 next 및 실제 OpenAI 자연어 next·발화자 학습 저장: `reports/live-flow.json` | 두 기기 실제 발화 대기 |
 | A14 | 첫 finish는 review, 최종 finish 승인 저장·ended: `review-audio.spec.ts`, domain 통합 | 두 기기 마지막 실제 발화 E08 대기 |
 | A15 | 부족한 입력 질문/skip와 수정 후 실제 상세 입력 질문0개: `reports/live-detailed-experience.json` | 두 기기 사용자 흐름 대기 |
@@ -98,16 +112,16 @@ Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중�
 | A23 | yes만 공통·다음 입력 포함, 중복 yes=1: E2E/domain 및 실제 `reports/live-flow.json` | 두 기기 사용자 흐름 대기 |
 | A24 | 학습 원문/보정/출처·개인 목록 및 재시작 조회: `learning-loaded-mixed-sources.png`, image 검사 | 두 기기 E08 대기 |
 | A25 | 네 경로 실제 요청 성공·1.7MB 실제 이미지·실제 feedback: OpenAI/live-flow 보고서 | speech-quality 최종 smoke 실패 및 실제 마이크 미검증으로 전체 통과 아님 |
-| A26 | 실제 PostgreSQL 동시 next·unique job·stale 및 명시적 실패 주입: domain/jobs 검사; E2E 동시 next | 실제 두 기기 진행/실패 표시 E07 대기 |
+| A26 | 실제 PostgreSQL 동시 next·unique job·stale 및 E07 양쪽 UI 진행/실패/명시적 재시도: `reports/e07-provider-failure.json` | 실제 두 기기 진행/실패 표시 E07 대기 |
 | A27 | 실제 SEED·local tokens·세 경로 라이트 화면을 직접 검토, `screenshots/`에 주요 화면 보존 | 데스크톱 현재 렌더 확인; 전체 G3는 별도 미통과 |
 | A28 | AWS 배포 후 확인 | G4 범위; AWS 실행 없음 |
 | E01 | A/B context 가입·타 화면 초대·CONTEXT_REQUIRED 자동 통과 | 두 물리 노트북 실행 미실행 |
 | E02 | 실제 질문 skip/수정저장/재조회 및 수정 후 상세 원문 직접 정리 통과 | 두 기기 사용자 실행과 경험 충실도의 사람 비교 대기 |
 | E03 | 실제 OpenAI image bytes+합성 WAV live 전사/보정: `reports/live-flow.json` | 실마이크 교대 발화·전사 충실도 비교 미실행 |
-| E04 | synthetic 마감·두 문장·상대 편집·refeedback/stale 자동 통과 | 실제 마지막 발화·긴 문장 청취 비교 미실행 |
+| E04 | synthetic 마감·두 문장·상대 편집·refeedback/stale 자동 통과; 위치 변경 측정/화면 `reports/layout-independence/`, `layout-review-populated.png` | 실제 마지막 발화·긴 문장 청취 비교 미실행 |
 | E05 | private/공유 no·pending·yes/중복/다음 입력 자동 통과 | 두 기기 actual OpenAI 사용자 흐름 미실행 |
 | E06 | 실제 지명·sentence 분기·두 자연어 next와 발화자 저장: live-flow/live-branches 보고서 | 두 기기 실제 발화 포함 사용자 흐름 미실행 |
-| E07 | 동시 next/단일 생성/실패/명시적 재요청 자동 검사 | 두 기기 UI에서 실패 주입 인수 미실행 |
+| E07 | 실제 API/DB/두 context에서 동시 next/단일 생성/실패/명시적 재요청과 승인·학습 비중복 통과: `reports/e07-provider-failure.json` | 두 기기 UI에서 실패 주입 인수 미실행 |
 | E08 | image 재시작의 세션·경험·학습·미디어 bytes 영속성 통과 | 두 물리 기기의 마지막 실제 발화 승인/재조회 미실행 |
 
 ## 남은 외부 조건
