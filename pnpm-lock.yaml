@@ -234,6 +234,8 @@ importers:
         specifier: ^2.12.10
         version: 2.15.0(@types/node@24.19.1)(typescript@5.9.3)
 
+  packages/test-voice: {}
+
 packages:
 
   '@aws-cdk/asset-awscli-v1@2.2.292':
