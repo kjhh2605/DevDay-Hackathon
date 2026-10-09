@@ -22,7 +22,7 @@ test('A01/A02: duplicate registration, invitation on learning screen, and contex
 
     await test.step('the UI rejects an existing handle without identifying a new user', async () => {
       const duplicate = await duplicateContext.newPage();
-      await duplicate.goto('/');
+      await duplicate.goto('/study');
       await capture(duplicate, 'registration');
       await duplicate.getByRole('textbox', { name: '이름', exact: true }).fill('중복 사용자');
       await duplicate.getByRole('textbox', { name: '아이디', exact: true }).fill(aUser.handle);

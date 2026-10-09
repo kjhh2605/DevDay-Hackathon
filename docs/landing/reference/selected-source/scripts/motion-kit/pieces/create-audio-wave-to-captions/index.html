@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1080,height=830">
+<link rel="stylesheet" href="brand/cha.css"><link rel="stylesheet" href="brand/immersive-create.css">
+<script src="brand/gsap.min.js"></script><script src="brand/cha-motion.js"></script><script src="brand/immersive-create.js"></script>
+<style>#wave{position:absolute;left:58px;top:163px;display:flex;gap:6px;height:180px;align-items:center}.bar{width:10px;background:#bcbcb5;border-radius:4px;transform-origin:50% 50%}#wave-playhead{position:absolute;left:58px;top:135px;width:3px;height:235px;background:#d4f527}#words{position:absolute;left:54px;right:54px;top:388px;display:flex;justify-content:center;gap:26px}.word{display:block;white-space:nowrap;font-size:62px;font-weight:500;letter-spacing:-.04em}#wave-label{position:absolute;left:58px;top:48px;font-size:24px}#under{position:absolute;left:220px;top:478px;width:544px;height:4px;background:#d4f527;transform-origin:0 50%}</style><link rel="stylesheet" href="brand/immersive-life.css"><script src="brand/immersive-life.js"></script></head><body>
+<div class="cha ic-stage" id="stage" data-composition-id="create-audio-wave-to-captions" data-start="0" data-duration="6.8" data-width="1080" data-height="830" data-composition-variables='[{&quot;id&quot;: &quot;headline&quot;, &quot;type&quot;: &quot;string&quot;, &quot;label&quot;: &quot;headline&quot;, &quot;default&quot;: &quot;말소리를 읽을 수 있는 문장으로&quot;}, {&quot;id&quot;: &quot;phrase&quot;, &quot;type&quot;: &quot;string&quot;, &quot;label&quot;: &quot;phrase&quot;, &quot;default&quot;: &quot;말하면 자막이 됩니다&quot;}]'>
+<div class="ic-head"><span>CREATE / AUDIO-WAVE-TO-CAPTIONS</span><span>CHA MOTION</span></div><div class="ic-title" id="headline"></div>
+<div class="ic-body clip" id="canvas" data-start="0" data-duration="6.8" data-track-index="0"><div id="wave"></div><div id="wave-playhead"></div><div id="words"></div><div id="wave-label" class="ic-label">AUDIO → CAPTIONS</div><div id="under"></div></div>
+<div class="ic-foot"><span>설명용 재연 · 원본 벡터 아트</span><span>EDITABLE / 06.8 SEC</span></div></div>
+<script>(()=>{
+const V=CHA.vars({"headline": "말소리를 읽을 수 있는 문장으로", "phrase": "말하면 자막이 됩니다"});
+IC.setText('headline',IC.txt(V.headline,22));
+const tl=gsap.timeline({paused:true});
+window.__timelines=window.__timelines||{};
+window.__timelines["create-audio-wave-to-captions"]=tl;
+document.getElementById('wave').innerHTML=Array.from({length:54},(_,i)=>`<i class="bar" style="height:${18+Math.abs(Math.sin(i*1.17)*Math.cos(i*.27))*153}px"></i>`).join('');const words=IC.txt(V.phrase,18).split(' ').filter(Boolean).slice(0,4);document.getElementById('words').innerHTML=words.map(s=>`<span class="word">${IC.esc(s)}</span>`).join('');gsap.set('.word',{opacity:0,y:-55});gsap.set('#under',{scaleX:0});
+tl.to('#wave-playhead',{x:855,duration:2.45,ease:'none'},.6);const bars=gsap.utils.toArray('.bar');
+words.forEach((_,i)=>{tl.to(bars.slice(i*18,(i+1)*18),{scaleY:.05,opacity:.25,duration:.6,stagger:.012,ease:'power2.inOut'},1+i*.75);tl.to('.word:nth-child('+(i+1)+')',{opacity:1,y:0,duration:.55,ease:'power3.out'},1.35+i*.75);});
+tl.to(['#wave','#wave-playhead'],{opacity:0,duration:.4},3.7);tl.to('#words',{y:-120,duration:.8,ease:'power3.inOut'},3.75);tl.to('#under',{y:-120,scaleX:1,duration:.75,ease:'power3.out'},4.1);
+tl.set({},{},6.8);IMM.life(tl);tl.seek(0);
+})();</script></body></html>

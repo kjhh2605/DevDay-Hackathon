@@ -1,0 +1,14 @@
+/*!
+ * GSAP 3.14.2
+ * https://gsap.com
+ *
+ * @license Copyright 2025, GreenSock. All rights reserved.
+ * Subject to the terms at https://gsap.com/standard-license.
+ * @author: Jack Doyle, jack@greensock.com
+ */
+
+Bundled runtime: GSAP 3.14.2. Original upstream notice remains intact in gsap.min.js.
+Official package: https://github.com/greensock/GSAP/tree/3.14.2
+Applicable terms: https://gsap.com/community/standard-license/
+
+GSAP is provided under its Standard No Charge License, not the SIL Open Font License. Commercial use and AI-written GSAP code are permitted. Its restriction concerns no-code visual animation builders competing with Webflow. Preserve all proprietary notices. See the linked terms for the complete conditions.

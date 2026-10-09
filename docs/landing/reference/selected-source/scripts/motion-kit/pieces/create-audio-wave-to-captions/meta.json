@@ -1,0 +1,72 @@
+{
+  "slug": "create-audio-wave-to-captions",
+  "title_ko": "말소리를 읽을 수 있는 문장으로",
+  "category": "technique",
+  "size": [1080, 830],
+  "duration": 6.8,
+  "key_at": [0.5, 2.5, 4.3, 6.2],
+  "uses": ["shorts", "ad", "longform"],
+  "what": "파형의 세 발화 구간을 재생선이 지나간다. 각 구간이 한 덩어리의 단어로 접히고 아래의 자막 문장이 완성되며 읽는 부분만 강조된다.",
+  "how_to_use": "mk.py render create-audio-wave-to-captions --vars vars.json. headline, phrase를 교체한다.",
+  "vars": ["headline", "phrase"],
+  "pack": "immersive-2026-10",
+  "family": "creative-transform",
+  "source_refs": [
+    "https://jitter.video/template/the-prompt-text-to-image/",
+    "https://jitter.video/template/the-prompt-generative-ai-features/",
+    "https://gsap.com/docs/v3/GSAP/Timeline/",
+    "https://rive.app/docs/editor/animate-mode/interpolation-easing"
+  ],
+  "research_note": "공식 제품 데모의 입력→조작→결과 구조 및 seekable timeline 원리를 참고. 코드와 일러스트는 원본 제작이며 특정 도구의 실제 추론을 녹화한 영상이 아님.",
+  "beats": [
+    {
+      "time": 0.6,
+      "action": "파형 위 재생선 시작"
+    },
+    {
+      "time": 1,
+      "action": "첫 발화 구간을 단어로 전환"
+    },
+    {
+      "time": 2.5,
+      "action": "이어지는 발화가 순서대로 자막에 추가"
+    },
+    {
+      "time": 3.75,
+      "action": "완성된 자막을 중앙으로 정리"
+    },
+    {
+      "time": 4.85,
+      "action": "읽을 수 있는 결과 문장 유지"
+    }
+  ],
+  "distinction": "기존 karaoke-lime은 완성된 자막의 강조다. 여기서는 오디오 시간축의 구간과 결과 단어의 대응을 직접 보여준다.",
+  "sfx_cues": [
+    {
+      "time": 1,
+      "type": "soft-tap"
+    },
+    {
+      "time": 3.2,
+      "type": "short-whoosh"
+    },
+    {
+      "time": 5.4,
+      "type": "resolve-click"
+    }
+  ],
+  "audio": "silent; sfx_cues are editorial suggestions, not embedded audio",
+  "shorts_use": "AI·디자인 튜토리얼의 해당 기능 설명 직후 6.8초 삽입. 외부 자막은 Shorts 캡션 영역에 유지.",
+  "entry_state": "파형 위 재생선 시작",
+  "exit_state": "읽을 수 있는 결과 문장 유지",
+  "content_limits": {
+    "headline": "한글 22자 이내",
+    "word": "영문 3–8자 권장",
+    "prompt": "한글 24자 이내 권장",
+    "policy": "문자 수 한도를 넘으면 명시적으로 오류를 반환한다. 조용히 잘라내지 않는다."
+  },
+  "max_chars": {
+    "headline": 22,
+    "phrase": 18
+  }
+}

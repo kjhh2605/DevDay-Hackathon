@@ -1,0 +1,58 @@
+{
+  "slug": "record-punch-hold-return",
+  "title_ko": "중요한 순간만 가까이",
+  "category": "technique",
+  "size": [1080, 830],
+  "duration": 7.4,
+  "key_at": [0.3, 2.3, 4.4, 6.9],
+  "uses": ["shorts", "ad", "longform", "web"],
+  "what": "녹화의 핵심 결과를 빠르게 확대하고 읽을 시간을 확보한 뒤 전체 화면으로 돌아옵니다.",
+  "how_to_use": "실제 녹화 파일은 immersive.py render record-punch-hold-return --media /absolute/file.mp4 --vars values.json으로 넣습니다. 좌표와 확대 배율은 작성자가 지정하며 실제 커서의 자동 인식이 아닙니다. 영상 음성은 의도적으로 제외하여 편집 시 원본 오디오를 따로 배치합니다. 설명용 샘플 데이터이며 실제 제품 성능을 주장하지 않습니다.",
+  "vars": [
+    "recording",
+    "headline",
+    "note",
+    "focus_x",
+    "focus_y",
+    "zoom",
+    "callout",
+    "recording_aspect"
+  ],
+  "techniques": ["punch-hold-return", "deterministic", "source-bound"],
+  "pack": "immersive-2026-10",
+  "family": "recording-marketing",
+  "source_refs": [
+    "https://screen.studio/",
+    "https://www.ibm.com/design/language/animation/tips-and-techniques/"
+  ],
+  "beats": [
+    {
+      "at": 0.4,
+      "action": "맥락을 먼저 보여 준다"
+    },
+    {
+      "at": 2.2,
+      "action": "핵심 동작과 결과를 연결한다"
+    },
+    {
+      "at": 5.8,
+      "action": "결과를 읽을 수 있도록 정리한다"
+    }
+  ],
+  "distinction": "녹화의 핵심 결과를 빠르게 확대하고 읽을 시간을 확보한 뒤 전체 화면으로 돌아옵니다.",
+  "entry_state": "동작 전의 입력과 맥락",
+  "exit_state": "동작 결과와 전체 맥락",
+  "sfx_cues": [
+    {
+      "at": 1.3,
+      "type": "soft-whoosh"
+    },
+    {
+      "at": 4.8,
+      "type": "resolved-tick"
+    }
+  ],
+  "shorts_use": "기능을 실행한 증거와 결과를 하나의 짧은 장면으로 설명합니다.",
+  "evidence_note": "Original code/artwork; source references inform technique, not popularity. Default recording is an original simulated screen, visibly identified. Silent by design.",
+  "source_duration_min": 7.4
+}

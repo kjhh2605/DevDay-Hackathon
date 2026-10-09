@@ -17,7 +17,7 @@ export async function responseData<T>(response: APIResponse): Promise<T> {
 }
 
 export async function register(page: Page, displayName: string, handle = uniqueHandle('user')) {
-  await page.goto('/');
+  await page.goto('/study');
   await page.getByRole('textbox', { name: '이름', exact: true }).fill(displayName);
   await page.getByRole('textbox', { name: '아이디', exact: true }).fill(handle);
   const response = page.waitForResponse(

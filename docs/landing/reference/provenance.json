@@ -1,0 +1,167 @@
+{
+  "retrieved_at": "2026-10-09",
+  "page_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit",
+  "page_title": "따라 만드는 모션그래픽 160",
+  "page_update": "2026-10-03",
+  "creator": "Career Hacker Alex",
+  "purpose": "Local research material for original Malmoa screen-recording motion treatment; not app public assets",
+  "source_notice": "Original CHA material remains © Career Hacker Alex. The resource page permits personal learning and content creation with its videos and prompts. Third-party font and runtime terms remain separate.",
+  "artifacts": [
+    {
+      "slug": "record-camera-tour",
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/record-camera-tour.mp4",
+      "local_file": "record-camera-tour.mp4",
+      "sha256": "300d2f0f898bd6216511aa7a8514e39fff7050c4901eaef86c0bf5bb3659f14f",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 830,
+            "r_frame_rate": "30/1"
+          }
+        ],
+        "format": {
+          "duration": "7.400000",
+          "size": "2166145"
+        }
+      },
+      "reviewed": [
+        "prompt.md",
+        "meta.json",
+        "index.html",
+        "mp4 contact sheet sampled at 1 fps"
+      ],
+      "preview": "record-camera-tour-contact-sheet.jpg"
+    },
+    {
+      "slug": "record-punch-hold-return",
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/record-punch-hold-return.mp4",
+      "local_file": "record-punch-hold-return.mp4",
+      "sha256": "288f3d603fe7079739d25330562578ddcba6ce8911d95eb9d7fbdc2ec67af2cf",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 830,
+            "r_frame_rate": "30/1"
+          }
+        ],
+        "format": {
+          "duration": "7.400000",
+          "size": "2209780"
+        }
+      },
+      "reviewed": [
+        "prompt.md",
+        "meta.json",
+        "index.html",
+        "mp4 contact sheet sampled at 1 fps"
+      ],
+      "preview": "record-punch-hold-return-contact-sheet.jpg"
+    },
+    {
+      "slug": "record-linked-loupe",
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/record-linked-loupe.mp4",
+      "local_file": "record-linked-loupe.mp4",
+      "sha256": "931479fb12ffa7ea231537eb8bb336df8bccac6424b99f0069591c0d38cec0ca",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 830,
+            "r_frame_rate": "30/1"
+          }
+        ],
+        "format": {
+          "duration": "7.400000",
+          "size": "2037793"
+        }
+      },
+      "reviewed": [
+        "prompt.md",
+        "meta.json",
+        "index.html",
+        "mp4 contact sheet sampled at 1 fps"
+      ],
+      "preview": "record-linked-loupe-contact-sheet.jpg"
+    },
+    {
+      "slug": "record-detail-freeze-callout",
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/record-detail-freeze-callout.mp4",
+      "local_file": "record-detail-freeze-callout.mp4",
+      "sha256": "c5dd7b0ae5c374c81e0e529918844bc2a5b7c3e563af493b119fb63b9f28f2cc",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 830,
+            "r_frame_rate": "30/1"
+          }
+        ],
+        "format": {
+          "duration": "7.400000",
+          "size": "2330913"
+        }
+      },
+      "reviewed": [
+        "prompt.md",
+        "meta.json",
+        "index.html",
+        "mp4 contact sheet sampled at 1 fps"
+      ],
+      "preview": "record-detail-freeze-callout-contact-sheet.jpg"
+    },
+    {
+      "slug": "create-audio-wave-to-captions",
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/create-audio-wave-to-captions.mp4",
+      "local_file": "create-audio-wave-to-captions.mp4",
+      "sha256": "a486bb53c33a3a57e5bd84e9093146b0b428132e7022be6cde9411fde30c91fd",
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 830,
+            "r_frame_rate": "30/1"
+          }
+        ],
+        "format": {
+          "duration": "6.800000",
+          "size": "1010091"
+        }
+      },
+      "reviewed": [
+        "prompt.md",
+        "meta.json",
+        "index.html",
+        "mp4 contact sheet sampled at 1 fps"
+      ],
+      "preview": "create-audio-wave-to-captions-contact-sheet.jpg"
+    },
+    {
+      "source_url": "https://www.careerhackeralex.com/sharings/cha-motion-kit/downloads/immersive-61-source.zip",
+      "local_file": "immersive-61-source.zip",
+      "bytes": 2912231,
+      "sha256": "5cfe137509f34ea9e9f38b47a5e68ab1f34bd56d6e02bb0547685bb4ef284321"
+    }
+  ]
+}
