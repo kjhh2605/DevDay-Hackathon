@@ -1,12 +1,14 @@
 # 로컬 검증 실행 기록
 
-검증일: 2026-10-09 (Asia/Seoul). **G3 미통과 — 구현 및 자동 검증 진행 중이며, 두 물리 노트북·실마이크 인수는 미실행이다.**
+검증일: 2026-10-09 (Asia/Seoul). **G3 미통과 — 구현과 로컬 자동 검사를 수행했으며, 두 물리 노트북·실마이크 인수와 실제 음성 품질의 최종 판정은 남아 있다.**
 
 이 파일은 실제 실행 결과만 기록한다. 기계 판독 기록은 `local-validation.json`이며, AWS preflight는 G3 전체 항목 및 검증한 commit·lockfile·소스 지문을 확인하기 전 AWS API를 호출하지 않는다. G3 기록은 사용자 승인 절차를 추가하는 용도가 아니다.
 
 ## 대상과 환경
 
-- 대상: 현재 통합 worktree. 최종 자동 검사 완료 뒤 root가 검증 commit 및 lockfile/소스 SHA-256을 확정한다.
+- 검증 대상 구현 commit: `3d31883457a5aaaf6334a8a9a699102ff8cd6369`. 이후 증거만 별도 commit할 수 있으며, 구현 소스가 달라지면 관련 검사를 다시 수행한다.
+- lockfile SHA-256: `e8d49ab375ecb96da7c3fa9da86b871f054ea7bc06d76aa070be685d47def67e`.
+- 증거 경로를 제외한 소스 SHA-256: `770f79b787adc1c80fe65e9399e2032df577a7a17ac7b8cfd4acb743ed6ffa2a`.
 - 호스트: macOS 개발 노트북 1대. 사용자가 현재 두 번째 물리 노트북은 없다고 확인했다.
 - Node 24.20.0 / pnpm 10.33.2 / Docker 29.2.1 / Compose 5.1.0.
 - PostgreSQL 17.11: 실제 Docker `devday-study-local-postgres-1`, `127.0.0.1:5432`, 영속 volume `devday-study-local_postgres-data`.
@@ -36,10 +38,10 @@
 | build preview HTTPS/WSS probe | 통과 | CA·호스트명 검증, Secure/HttpOnly/SameSite=Lax 쿠키, 미가입 JSON 401, `/ws/events`와 `/ws/audio` 101 및 heartbeat |
 | `pnpm typecheck` | 통과 | 전체 workspace와 root 도구 strict TypeScript 검사 |
 | `pnpm contracts:check` | 통과 | 39개 계약 검사 |
-| `pnpm test:unit` | 통과 | 26개 파일, 221개 검사 |
+| `pnpm test:unit` | 통과 | A15 최종 수정 이후 26개 파일, 224개 검사 |
 | `pnpm test:integration` | 통과 | 실제 PostgreSQL 도메인/HTTP 통합 13개 |
 | `pnpm build` | 통과 | API bundle·web 정적 build |
-| `pnpm test:audio-browser` | 통과 | 실제 Chromium AudioWorklet·VAD·브라우저 오디오 경로. 입력은 합성/fake audio이며 실마이크 인수가 아님 |
+| `pnpm test:audio-browser` | 통과 | 실제 Chromium AudioWorklet·VAD 경로, capture 1회로 2개 stream·17개 chunk. 입력은 합성/fake audio이며 실마이크 인수가 아님 |
 
 ### 실제 OpenAI와 제품 연결
 
@@ -57,13 +59,13 @@ Playwright는 다음을 실제 HTTP/WS/DB와 UI로 확인했다: 가입과 중�
 
 ### API image와 재시작 결과
 
-최종 runtime 소스의 rebuild 후 2026-10-09T04:25:41.446Z에 image 검증을 완료했다. image ID는 `sha256:35611095620a6b0bd6346584623ad16ed9b69d5b4a547092aea4e06dc43fe0e5`, 실제 Node 버전은 `v24.20.0`이다. runtime에 `.env.local`·로컬 TLS 인증서가 없고 `/app/certs/global-bundle.pem`이 있음을 확인했다.
+최종 A15 runtime 수정의 rebuild 후 2026-10-09T04:30:59.624Z에 image 검증을 완료했다. image ID는 `sha256:c3e9c9797d6cc04eeb0fce056d761b91bd8c69acf5af239174cce1e6694ac272`, 실제 Node 버전은 `v24.20.0`이다. runtime에 `.env.local`·로컬 TLS 인증서가 없고 `/app/certs/global-bundle.pem`이 있음을 확인했다.
 
-별도 DB `devday_study_image_1791519920338`에서 API image의 `apps/api/dist/db/migrate.js`를 실행했다. `AI_MODE=mock`, 빈 OpenAI key로 경험과 실제 미디어 파일·개인 학습 항목 1개를 만들었다. 현재 주제를 검토하고 스터디를 종료한 다음 컨테이너를 재시작했다. 기존 쿠키의 사용자, 경험 ID/내용, 학습 항목, 이미지 bytes가 같았으며 B에게 A의 개인 기록이 노출되지 않았다. fixture PNG는 68 bytes, SHA-256 `5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15`다. 이 값은 **실제 OpenAI 생성 이미지 증거가 아니다**. 저장소 증거는 [image-validation.json](reports/image-validation.json), 로컬 로그는 `.local/image-validation.log`다.
+별도 DB `devday_study_image_1791520241692`에서 API image의 `apps/api/dist/db/migrate.js`를 실행했다. `AI_MODE=mock`, 빈 OpenAI key로 경험과 실제 미디어 파일·개인 학습 항목 1개를 만들었다. 현재 주제를 검토하고 스터디를 종료한 다음 컨테이너를 재시작했다. 기존 쿠키의 사용자, 경험 ID/내용, 학습 항목, 이미지 bytes가 같았으며 B에게 A의 개인 기록이 노출되지 않았다. fixture PNG는 68 bytes, SHA-256 `5e3d382db4dd83d59aa5742793ad6b7903409e865c83bcbc54835049f043bc15`다. 이 값은 **실제 OpenAI 생성 이미지 증거가 아니다**. 저장소 증거는 [image-validation.json](reports/image-validation.json), 로컬 로그는 `.local/image-validation.log`다.
 
 ### HTTPS·쿠키·WSS 결과
 
-최종 image로 2026-10-09T04:26:48.435Z에 Vite build preview `https://172.24.100.52:5176`에서 production API image port 3100으로 proxy를 검증했다. `scripts/local/verify-https.mjs`는 공개 mkcert CA를 명시하고 TLS 검증을 유지한 HTTPS/WSS 클라이언트다. 익명 `/api/v1/me`는 HTML 대신 JSON 401, 가입 쿠키는 Secure/HttpOnly/SameSite=Lax, 같은 쿠키로 me 조회 및 `/ws/events`·`/ws/audio` 101+heartbeat가 통과했다. [https-validation.json](reports/https-validation.json)에 결과를 남겼다. **OS/브라우저 신뢰·실마이크·두 물리 기기 결과는 아니다.**
+최종 image로 2026-10-09T04:31:48.919Z에 Vite build preview `https://172.24.100.52:5176`에서 production API image port 3100으로 proxy를 검증했다. `scripts/local/verify-https.mjs`는 공개 mkcert CA를 명시하고 TLS 검증을 유지한 HTTPS/WSS 클라이언트다. 익명 `/api/v1/me`는 HTML 대신 JSON 401, 가입 쿠키는 Secure/HttpOnly/SameSite=Lax, 같은 쿠키로 me 조회 및 `/ws/events`·`/ws/audio` 101+heartbeat가 통과했다. [https-validation.json](reports/https-validation.json)에 결과를 남겼다. **OS/브라우저 신뢰·실마이크·두 물리 기기 결과는 아니다.** 검사 후 해당 API 컨테이너와 TLS preview만 중지했다. PostgreSQL volume과 현재 live 개발 앱 4188/5188은 유지했다.
 
 ## G3 인수 상태
 

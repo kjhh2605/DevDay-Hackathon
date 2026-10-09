@@ -1,9 +1,9 @@
 {
   "gate": "pending",
-  "verifiedAt": null,
-  "targetCommit": "81fea17063516f60110bb3eca0d7b2f8d8f8fa9f",
-  "lockfileSha256": null,
-  "sourceSha256": null,
+  "verifiedAt": "2026-10-09T04:32:13.215Z",
+  "targetCommit": "3d31883457a5aaaf6334a8a9a699102ff8cd6369",
+  "lockfileSha256": "e8d49ab375ecb96da7c3fa9da86b871f054ea7bc06d76aa070be685d47def67e",
+  "sourceSha256": "770f79b787adc1c80fe65e9399e2032df577a7a17ac7b8cfd4acb743ed6ffa2a",
   "aiMode": "live",
   "models": {
     "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
@@ -27,7 +27,7 @@
     "infraSynth": "pass",
     "apiImage": "pass",
     "imageRestartPersistence": "pass",
-    "liveOpenAi": "pending",
+    "liveOpenAi": "partial",
     "twoPhysicalLaptops": "pending",
     "trustedHttps": "pending",
     "realMicrophones": "pending"
@@ -59,7 +59,7 @@
     "A24": "pending",
     "A25": "pending",
     "A26": "pending",
-    "A27": "pending",
+    "A27": "pass",
     "E01": "pending",
     "E02": "pending",
     "E03": "pending",
@@ -81,7 +81,11 @@
     "liveFlow": "docs/implementation/evidence/reports/live-flow.json",
     "openAi": "docs/implementation/evidence/reports/openai-final-audited-smoke.json",
     "e2e": "test-results/e2e-report",
-    "screenshots": ".local/validation/screenshots"
+    "screenshots": ".local/validation/screenshots",
+    "branches": "docs/implementation/evidence/reports/live-branches.json",
+    "namedParticipant": "docs/implementation/evidence/reports/live-named-participant.json",
+    "detailedExperience": "docs/implementation/evidence/reports/live-detailed-experience.json",
+    "archivedScreenshots": "docs/implementation/evidence/screenshots"
   },
   "localOrigin": "http://localhost:5188",
   "apiOrigin": "http://127.0.0.1:4188",
@@ -93,5 +97,18 @@
       "LOCAL_WEB_ORIGIN"
     ],
     "reason": "Existing unrelated application occupied localhost:5173; selected separate local ports."
+  },
+  "finalCounts": {
+    "unitTests": 224,
+    "unitFiles": 26,
+    "contracts": 39,
+    "postgresIntegration": 13,
+    "e2e": 4,
+    "audioBrowser": {
+      "streams": 2,
+      "chunks": 17,
+      "captureRequests": 1,
+      "physicalMicrophone": false
+    }
   }
 }
