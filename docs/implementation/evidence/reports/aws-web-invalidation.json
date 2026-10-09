@@ -1,0 +1,16 @@
+{
+  "id": "I58CWZW68FGKS9AK4T4JAX62LD",
+  "status": "Completed",
+  "createdAt": "2026-10-09T07:39:36.470000+00:00",
+  "paths": [
+    "/study/*",
+    "/study",
+    "/experiences/",
+    "/learning/",
+    "/experiences",
+    "/learning",
+    "/media/landing/*",
+    "/index.html",
+    "/"
+  ]
+}

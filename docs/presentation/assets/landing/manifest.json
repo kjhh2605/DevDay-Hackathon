@@ -1,0 +1,53 @@
+[
+  {
+    "file": "docs/presentation/assets/landing/experience.jpg",
+    "source": "apps/web/public/media/landing/experience.jpg",
+    "kind": "landing-poster",
+    "sha256": "dc421632cd0ce8cd14eb267f86b680996ec21a0db6e3a5d4d60a0d0095171268"
+  },
+  {
+    "file": "docs/presentation/assets/landing/conversation.jpg",
+    "source": "apps/web/public/media/landing/conversation.jpg",
+    "kind": "landing-poster",
+    "sha256": "14695e501730b2830d3aafbb149dea3ea87253e25472c79997ad3c3707c6086e"
+  },
+  {
+    "file": "docs/presentation/assets/landing/assistant.jpg",
+    "source": "apps/web/public/media/landing/assistant.jpg",
+    "kind": "landing-poster",
+    "sha256": "7686d4d064d54242812e77a3b68869341b134cb50cc48f023dc59a47b7a1a417"
+  },
+  {
+    "file": "docs/presentation/assets/landing/review.jpg",
+    "source": "apps/web/public/media/landing/review.jpg",
+    "kind": "landing-poster",
+    "sha256": "25e7b224753c01f28bef7426951c168dfb87da70409f3cffc29d6d6f7501699c"
+  },
+  {
+    "file": "docs/presentation/assets/landing/reuse.jpg",
+    "source": "apps/web/public/media/landing/reuse.jpg",
+    "kind": "landing-poster",
+    "sha256": "a2c38f0521fcd8ea3b12918e1e9256f40faf0ea243b928f50260ab5e3abf7ff7"
+  },
+  {
+    "file": "docs/presentation/assets/landing/transcript.png",
+    "source": "apps/web/public/media/landing/conversation.mp4",
+    "seconds": 10.1,
+    "kind": "landing-video-frame",
+    "sha256": "d42172cbe26359b0eb75fd762d9b9e0aa809748994422669cea870acaa669940"
+  },
+  {
+    "file": "docs/presentation/assets/landing/learning.png",
+    "source": "apps/web/public/media/landing/reuse.mp4",
+    "seconds": 2.2,
+    "kind": "landing-video-frame",
+    "sha256": "1befd2a354737759f3b2a91a77b24efafd0f2a6c76318bd4cc2497750285c74b"
+  },
+  {
+    "file": "docs/presentation/assets/landing/assistant-request.png",
+    "source": "apps/web/public/media/landing/assistant.mp4",
+    "seconds": 2.4,
+    "kind": "landing-video-frame",
+    "sha256": "ee7edc13975867236d0b726ce191438461b3dd156bb8d0902134dbed1ad7f7d5"
+  }
+]

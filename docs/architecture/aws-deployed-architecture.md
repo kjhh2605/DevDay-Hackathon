@@ -106,6 +106,6 @@ flowchart LR
 | Media bucket | `studyfoundationstack-mediabucketbcbb02ba-buzj9yp32o3x` |
 | Log group | `StudyApiStack-ApiLogs3D05D88B-EzLxGclRElPQ` |
 
-배포 image digest는 `sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1`이다. 배포 소스는 `35290d3` 기반의 검증된 G4 snapshot이며 이후 `8343973`의 랜딩 페이지 변경은 이 배포에 포함되지 않았다. 정확한 소스 지문·lockfile 지문은 [검증 기록](../implementation/evidence/local-validation.json)에 남겼다.
+API image digest는 `sha256:c5490ea9ed6e40c85b520eb3af95bc8a0f1d44018b14d966701da491351152e1`이며 `35290d3` 기반의 검증된 G4 snapshot이다. 웹은 독립적으로 S3에 게시한다. 최초 웹 배포 이후 랜딩 페이지·영상(`8343973`)과 테스트 초대 아이디 안내를 반영하는 재배포 이력은 [릴리스 기록](../implementation/evidence/release.md#웹-재배포와-테스트-계정-2026-10-09)을 따른다. API·네트워크 구성은 그대로이며, 각 검증의 소스 지문·lockfile 지문은 [검증 기록](../implementation/evidence/local-validation.json)에 남겼다.
 
 HTTPS·쿠키·캐시·두 WebSocket upgrade, 실제 OpenAI·RDS·S3 연결, ECS task 교체 후 데이터 재조회는 통과했다. **AWS URL에서 두 물리 노트북·실마이크로 수행하는 G4 인수 결과는 아직 미확인**이다. 자세한 범위와 증거는 [릴리스 기록](../implementation/evidence/release.md)을 따른다.

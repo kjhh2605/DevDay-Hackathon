@@ -1,0 +1,110 @@
+{
+  "origin": "https://d31qyxseqz8321.cloudfront.net",
+  "checkedAt": "2026-10-09T07:37:52.344Z",
+  "account": {
+    "id": "2af35067-d50b-4ae8-b47a-fd239fc5e46e",
+    "handle": "malmoa-demo",
+    "displayName": "말모아 체험 친구"
+  },
+  "syntheticData": true,
+  "experienceCount": 10,
+  "result": "pass",
+  "experiences": [
+    {
+      "id": "55d35a07-2fa5-4652-943f-a1155e4c5c52",
+      "summary": "영어 독서 모임에서 처음으로 짧은 발표를 했어요. 천천히 다시 설명해 달라고 말한 뒤 제 생각을 끝까지 전달해서 자신감이 생겼어요.",
+      "interests": []
+    },
+    {
+      "id": "4d12853b-80d2-4392-a7eb-6434eca58e69",
+      "summary": "제주도에서 자전거를 빌려 해안길을 달렸어요 작은 귤 농장에서 쉬면서 주인과 이야기를 나눴어요 다음 여행은 이동 시간을 넉넉하게 잡으려고 해요",
+      "interests": [
+        "자전거",
+        "해안길",
+        "작은 귤 농장"
+      ]
+    },
+    {
+      "id": "790611a8-6b03-4d5b-bd0c-aff026b83058",
+      "summary": "혼자 미술관에 가서 현대미술 전시를 봤어요 설명을 먼저 읽지 않고 그림을 보며 떠오르는 생각을 적었어요 같은 작품도 사람마다 다르게 느낄 수 있다는 점이 흥미로웠어요",
+      "interests": [
+        "같은 작품도 사람마다 다르게 느낄 수 있다는 점이 흥미로웠어요"
+      ]
+    },
+    {
+      "id": "c2ac4f69-9f05-432e-ba22-3778d91ebdaf",
+      "summary": "친구와 서울 도서관에서 영어책을 읽었어요 서로 좋아하는 문장을 소개하고 새로운 단어를 함께 정리했어요",
+      "interests": [
+        "영어책",
+        "새로운 단어"
+      ]
+    },
+    {
+      "id": "e88e4806-ff6c-4a1d-aab7-3dbae47bcd6f",
+      "summary": "동네 유기동물 보호소에서 강아지 산책 봉사를 했어요 처음에는 겁이 많던 강아지가 천천히 다가와 손의 냄새를 맡았어요 서두르지 않고 기다리는 방법을 배웠어요",
+      "interests": [
+        "강아지 산책 봉사",
+        "기다리는 방법"
+      ]
+    },
+    {
+      "id": "5fd3ce4e-b42c-4bef-8d0b-e559b1b2ee11",
+      "summary": "요리 수업에서 처음으로 생면 파스타를 만들었어요. 세 번째 시도에서 원하는 모양이 나왔어요. 가족에게 만들어 주니 모두 좋아했어요.",
+      "interests": [
+        "생면 파스타"
+      ]
+    },
+    {
+      "id": "f97b3bae-562c-4053-a6ad-81c2ea2a855d",
+      "summary": "친구들과 캠핑을 갔다가 갑자기 비를 만났어요. 함께 방수포를 치고 텐트 안에서 보드게임을 했어요. 빗소리를 들으며 나눈 대화가 즐거웠어요.",
+      "interests": [
+        "보드게임",
+        "빗소리를 들으며 나눈 대화"
+      ]
+    },
+    {
+      "id": "ad58974e-349e-4e3c-8e6c-eed487f1c0e8",
+      "summary": "처음으로 한강 5킬로미터 달리기에 도전했어요 친구의 응원을 듣고 끝까지 완주했어요 기록보다 꾸준함이 중요하다는 것을 느꼈어요",
+      "interests": [
+        "한강 5킬로미터 달리기"
+      ]
+    },
+    {
+      "id": "07becc3a-bb63-4565-9c06-4fe33f3cbc6b",
+      "summary": "주말마다 동네 베이커리 카페에서 책을 읽어요. 바리스타에게 원두의 산미와 고소한 맛의 차이를 배웠어요. 집에서 핸드드립 커피를 내려 보고 싶어요.",
+      "interests": [
+        "책을 읽어요",
+        "핸드드립 커피"
+      ]
+    },
+    {
+      "id": "aec81ecd-c05b-47f5-aeb9-6c785fbed293",
+      "summary": "지난봄 친구와 부산으로 2박 3일 여행을 갔어요. 해운대에서 일출을 보고 광안리에서 조개구이를 먹었어요. 길을 잘못 들어 작은 독립 서점을 발견한 것이 가장 기억에 남아요.",
+      "interests": [
+        "일출",
+        "조개구이",
+        "작은 독립 서점"
+      ]
+    }
+  ],
+  "failedPreparationAttempts": [
+    {
+      "jobId": "78acc1a5-4b17-4bf3-8819-81fd81b8f0ba",
+      "error": {
+        "code": "AI_FAILED",
+        "message": "AI 처리에 실패했습니다. 새 요청으로 다시 시도해 주세요.",
+        "details": null
+      },
+      "checkedAt": "2026-10-09T07:35:38.090Z"
+    },
+    {
+      "jobId": "d58f9dfa-3810-4af3-81e3-b20fa527c58d",
+      "error": {
+        "code": "AI_FAILED"
+      },
+      "originalText": "회사 동료들과 주말에 작은 해커톤에 참가했어요. 여행 일정 정리 앱을 만들면서 화면 디자인과 발표를 맡았어요. 마감 직전 오류를 함께 해결하고 시연을 마쳤을 때 뿌듯했어요.",
+      "checkedAt": "2026-10-09T07:37:36.886Z"
+    }
+  ],
+  "preparationNote": "One synthetic experience preparation failed twice with AI_FAILED. A different synthetic example was supplied; final 10 persisted experiences were retrieved and verified."
+}

@@ -1,0 +1,8 @@
+{
+  "path": ".local/validation/single-voice/weather.wav",
+  "synthetic": true,
+  "expectedText": "오늘은 좀 피곤해요. She don't like rainy days. We plan a trip to Busan.",
+  "sha256": "3ce6ccc8e26dea0ce28ccd58d2e214ff7b4f8d2bc68e8b8f736367c23f43c03b",
+  "durationSeconds": 5.884083333333334,
+  "inputPath": "Browser WebSocket → real service → live OpenAI; not physical microphone"
+}

@@ -1,0 +1,16 @@
+{
+  "method": "Unmodified source PNG elements, browser clipping/scaling, separate CSS borders and text. No generative image editing.",
+  "size": [
+    1920,
+    1080
+  ],
+  "files": [
+    "s03-experience.png",
+    "s04-topic.png",
+    "s05-chat.png",
+    "s06-review-edit.png",
+    "s06-learning.png",
+    "s08-transcript.png",
+    "s10-clarification.png"
+  ]
+}

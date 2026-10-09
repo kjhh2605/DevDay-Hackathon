@@ -248,7 +248,7 @@ export function StudyLobby({ onStudy }: { onStudy: (id: string) => void }) {
               setMissing([]);
             }}
             placeholder="예: minji, joon"
-            hint="여러 명은 쉼표로 구분해 주세요."
+            hint="여러 명은 쉼표로 구분해 주세요. 초대할 친구가 없다면 malmoa-demo를 입력해 보세요."
             required
             error={missing.length ? `${missing.join(', ')} 아이디를 확인해 주세요.` : undefined}
           />

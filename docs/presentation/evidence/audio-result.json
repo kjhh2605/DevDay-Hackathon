@@ -1,0 +1,113 @@
+{
+  "study": {
+    "id": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "revision": 3,
+    "status": "active",
+    "currentTopicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+    "transitionVersion": 1,
+    "members": [
+      {
+        "userId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+        "handle": "demo-a-919215",
+        "displayName": "민지",
+        "state": "joined"
+      },
+      {
+        "userId": "9bc4d90a-22ac-40e7-b14d-b1ca7fab843e",
+        "handle": "demo-b-919760",
+        "displayName": "지훈",
+        "state": "joined"
+      }
+    ],
+    "createdAt": "2026-10-09T06:39:11.621Z",
+    "endedAt": null
+  },
+  "topic": {
+    "id": "2d191a40-2112-457f-b276-e64b38990cd5",
+    "revision": 1,
+    "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "ordinal": 1,
+    "state": "talking",
+    "focusUserId": null,
+    "content": {
+      "title": "A Weekend by the Sea",
+      "situationText": "You and a friend spent a weekend in Haeundae, Busan. You walked along the beach and ate gukbap at a market. Talk about the outing and what you would like to photograph on a future trip.",
+      "conversationInstruction": "Describe the weekend to your conversation partner. Ask about their favorite seaside activities, then discuss a place you would like to visit and what you would photograph there.",
+      "sourceExperienceIds": [
+        "d69a351f-e79c-499b-9fcd-44e71c4250a1"
+      ],
+      "learningExpressionIds": [],
+      "sharedExpressionIds": [],
+      "kind": "image",
+      "imageMediaId": "b7e7d5e9-3836-4e37-a1cd-b40bda11bd1a",
+      "sentence": null
+    },
+    "generationJobId": "06f9182b-ebb2-42a5-9303-d9d1d64d9169",
+    "approvedAt": null
+  },
+  "segments": [
+    {
+      "id": "66c06a57-5ee2-415e-8ec6-e576da1e07ba",
+      "revision": 3,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "rawText": "오늘은 좀 피곤해요. She don't like rainy days. We planned a trip to Busan.",
+      "rawStatus": "ready",
+      "rawRevision": 1,
+      "correctedText": null,
+      "correctionStatus": "ready",
+      "sentenceStatus": "pending",
+      "groupId": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+      "noSpeech": false
+    }
+  ],
+  "speechGroups": [
+    {
+      "id": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+      "revision": 4,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "segmentIds": [
+        "66c06a57-5ee2-415e-8ec6-e576da1e07ba"
+      ],
+      "rawRevisions": [
+        1
+      ],
+      "rawText": "오늘은 좀 피곤해요. She don't like rainy days. We planned a trip to Busan.",
+      "correctedText": "오늘은 좀 피곤해요. She don't like rainy days. We plan a trip to Busan.",
+      "state": "ready",
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "closeReason": "silence_timeout",
+      "attemptId": "4837a5c9-e399-456e-9d7e-0c07a41f3ca5",
+      "error": null
+    }
+  ],
+  "utterances": [],
+  "feedback": [],
+  "sharedExpressions": [],
+  "jobs": [
+    {
+      "id": "06f9182b-ebb2-42a5-9303-d9d1d64d9169",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:39:12.816Z",
+      "finishedAt": "2026-10-09T06:39:25.261Z",
+      "kind": "topic.generate",
+      "result": {
+        "topicId": "2d191a40-2112-457f-b276-e64b38990cd5"
+      }
+    }
+  ]
+}

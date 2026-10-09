@@ -1,0 +1,41 @@
+[
+  {
+    "id": "4d294a2f-c918-4044-902b-4a037108db4b",
+    "ownerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+    "kind": "expression",
+    "expression": "We’re planning a trip to Busan.",
+    "meaning": "우리는 부산 여행을 계획하고 있어요.",
+    "example": "We’re planning a trip to Busan for next month.",
+    "source": "approved_feedback",
+    "sourceKey": "feedback:2d191a40-2112-457f-b276-e64b38990cd5:50159506-efd6-4ca9-90e5-781e2ac16a3e:34d45078-0683-4fb6-841d-db80965eb2c7",
+    "sourceStudyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "sourceUtteranceId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+    "createdAt": "2026-10-09T06:43:02.409Z"
+  },
+  {
+    "id": "c70976bd-9a6d-416f-b9f8-bc4b23d41d75",
+    "ownerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+    "kind": "expression",
+    "expression": "I’m a little tired today.",
+    "meaning": "오늘은 좀 피곤해요.",
+    "example": "I’m a little tired today, so I’m going to take it easy.",
+    "source": "approved_feedback",
+    "sourceKey": "feedback:2d191a40-2112-457f-b276-e64b38990cd5:58ff9087-ee24-45b1-b18b-d4bea2354d8a:c62e0d93-124f-4134-9376-480d35749ec3",
+    "sourceStudyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "sourceUtteranceId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+    "createdAt": "2026-10-09T06:43:02.406Z"
+  },
+  {
+    "id": "ddac860a-ffe7-4aa1-a6fd-72d71ff2756c",
+    "ownerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+    "kind": "expression",
+    "expression": "I like taking travel photos.",
+    "meaning": "여행 사진 찍는 것을 좋아해요.",
+    "example": "I like taking travel photos when I visit new places.",
+    "source": "chat",
+    "sourceKey": "chat:463c6ea7-9b8e-4d50-bd81-b897c9e17cd2:1",
+    "sourceStudyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "sourceUtteranceId": null,
+    "createdAt": "2026-10-09T06:40:32.252Z"
+  }
+]

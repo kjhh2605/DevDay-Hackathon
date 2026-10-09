@@ -30,7 +30,7 @@ export interface ChatDecisionInput {
   allowedChoices: ChatChoice[];
   pendingSharing: { id: string; expression: string } | null;
 }
-export const CHAT_DECISION_CONFIDENCE = 0.85;
+export const CHAT_DECISION_CONFIDENCE = 0.5;
 export function chatChoices(allowedActions: ToolName[], canShare: boolean): ChatChoice[] {
   return [
     ...allowedActions,

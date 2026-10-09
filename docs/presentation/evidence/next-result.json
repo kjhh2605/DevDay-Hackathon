@@ -1,0 +1,191 @@
+{
+  "trigger": "button",
+  "study": {
+    "id": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "revision": 7,
+    "status": "active",
+    "currentTopicId": "92e4d587-1642-42bf-9ae4-0a665342e1ca",
+    "transitionVersion": 4,
+    "members": [
+      {
+        "userId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+        "handle": "demo-a-919215",
+        "displayName": "민지",
+        "state": "joined"
+      },
+      {
+        "userId": "9bc4d90a-22ac-40e7-b14d-b1ca7fab843e",
+        "handle": "demo-b-919760",
+        "displayName": "지훈",
+        "state": "joined"
+      }
+    ],
+    "createdAt": "2026-10-09T06:39:11.621Z",
+    "endedAt": null
+  },
+  "topic": {
+    "id": "92e4d587-1642-42bf-9ae4-0a665342e1ca",
+    "revision": 1,
+    "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "ordinal": 2,
+    "state": "talking",
+    "focusUserId": null,
+    "content": {
+      "title": "A Weekend in Busan",
+      "situationText": "You and a friend are walking along the beach in Busan after visiting a market. Talk about the weekend, the food, and taking photos while traveling.",
+      "conversationInstruction": "Describe what you did in Busan and what you enjoyed. Use “I like taking travel photos” and “We’re planning a trip to Busan” to talk about travel photos and future travel plans.",
+      "sourceExperienceIds": [
+        "d69a351f-e79c-499b-9fcd-44e71c4250a1"
+      ],
+      "learningExpressionIds": [
+        "4d294a2f-c918-4044-902b-4a037108db4b"
+      ],
+      "sharedExpressionIds": [
+        "1aee4592-bdcb-4f76-b7a1-42a6fc24c363"
+      ],
+      "kind": "image",
+      "imageMediaId": "840ae1d5-54e4-4a8b-abf7-a0ff2729ebcd",
+      "sentence": null
+    },
+    "generationJobId": "fdb2c4f4-be00-411d-8814-5e920990d40a",
+    "approvedAt": null
+  },
+  "segments": [],
+  "speechGroups": [],
+  "utterances": [],
+  "feedback": [],
+  "sharedExpressions": [
+    {
+      "id": "1aee4592-bdcb-4f76-b7a1-42a6fc24c363",
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "contributorUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "expression": "I like taking travel photos.",
+      "meaning": "여행 사진 찍는 것을 좋아해요.",
+      "example": "I like taking travel photos when I visit new places.",
+      "sourceProposalId": "2f55f5ed-5a46-4e15-a909-6dac3ba845b2"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "06f9182b-ebb2-42a5-9303-d9d1d64d9169",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:39:12.816Z",
+      "finishedAt": "2026-10-09T06:39:25.261Z",
+      "kind": "topic.generate",
+      "result": {
+        "topicId": "2d191a40-2112-457f-b276-e64b38990cd5"
+      }
+    },
+    {
+      "id": "1ce7b28a-4b91-4748-84f7-60cb699d9002",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:09.128Z",
+      "finishedAt": "2026-10-09T06:41:14.556Z",
+      "kind": "topic.close",
+      "result": {
+        "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+        "utteranceIds": [
+          "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+          "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+          "50159506-efd6-4ca9-90e5-781e2ac16a3e"
+        ]
+      }
+    },
+    {
+      "id": "e44a30f3-fedf-48cd-a65a-c5af6cd9366c",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.738Z",
+      "finishedAt": "2026-10-09T06:41:14.216Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "16e846b1-1e39-419a-b26a-1bb8bed0d9a4",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.749Z",
+      "finishedAt": "2026-10-09T06:41:14.364Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "d77700bc-c7bc-40d8-9b4c-b1c5f07131d9",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.757Z",
+      "finishedAt": "2026-10-09T06:41:14.544Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "4751b31f-1534-4c88-a920-7715cd71ff69",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:42:12.800Z",
+      "finishedAt": "2026-10-09T06:42:14.356Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+        "inputCorrectionRevision": 1
+      }
+    },
+    {
+      "id": "fdb2c4f4-be00-411d-8814-5e920990d40a",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "92e4d587-1642-42bf-9ae4-0a665342e1ca",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:43:02.414Z",
+      "finishedAt": "2026-10-09T06:43:18.165Z",
+      "kind": "topic.generate",
+      "result": {
+        "topicId": "92e4d587-1642-42bf-9ae4-0a665342e1ca"
+      }
+    }
+  ]
+}

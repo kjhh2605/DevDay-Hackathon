@@ -1,9 +1,9 @@
 {
   "gate": "pass",
-  "verifiedAt": "2026-10-09T06:52:20.231Z",
-  "targetCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
+  "verifiedAt": "2026-10-09T07:38:20.835Z",
+  "targetCommit": "8b755ac5b629232c568ccb8b9a1fb70c226239e3",
   "lockfileSha256": "23c68c2eeae53f9dc0f4fd19734af0fe884b34227b21a73f3102e6bd403283c6",
-  "sourceSha256": "51709040ccfc119051381927ced0b145aa4c111cbb1f74769f05eefd6c228c2d",
+  "sourceSha256": "422738ea069d77423147ee3d799c4913d6a3b8f0a0c27ced2f7ed436fcce58c9",
   "aiMode": "live",
   "models": {
     "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
@@ -165,6 +165,24 @@
     "baseCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
     "workingTree": "Uncommitted G4 deployment additions identified by sourceSha256; unrelated prompts/project-presentation.md preserved."
   },
-  "releaseWorkspace": "/Users/gnar/orca/projects/DevDay-Hackathon-g4-release",
-  "concurrentWork": "During API deployment another session changed app/E2E/landing files. Release worktree was reconstructed from the staged CDK Docker context; its complete source fingerprint exactly matches this validation record. The main workspace now has separate unvalidated changes; this record does not attest them."
+  "releaseWorkspace": "/Users/gnar/orca/projects/DevDay-Hackathon",
+  "concurrentWork": "The landing commit is now included in the web release and revalidated with 10 browser tests. Untracked presentation and prompt documents are excluded from runtime artifacts.",
+  "webRedeployment": {
+    "previousValidation": {
+      "targetCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
+      "sourceSha256": "51709040ccfc119051381927ced0b145aa4c111cbb1f74769f05eefd6c228c2d",
+      "verifiedAt": "2026-10-09T06:52:20.231Z",
+      "releaseWorkspace": "/Users/gnar/orca/projects/DevDay-Hackathon-g4-release"
+    },
+    "scope": "Frontend-only deployment: landing page/media from 8343973 and one invitation hint for malmoa-demo on 8b755ac. apps/api/src and packages source match the deployed release workspace byte-for-byte. Infrastructure and API image are unchanged.",
+    "automatedChecks": {
+      "typecheck": "pass",
+      "webBuild": "pass",
+      "e2e": "pass",
+      "e2eTests": 10,
+      "infraSynth": "pass"
+    },
+    "inheritedChecks": "Unit/contracts/integration/container/TLS/live provider/physical-device G3 results remain historical results for the unchanged server and shared packages. No new two-physical-laptop or microphone test was performed. AWS G4 physical acceptance remains pending.",
+    "workingTree": "One-line StudyPage.tsx hint plus architecture/evidence documentation; sourceSha256 binds the exact source."
+  }
 }

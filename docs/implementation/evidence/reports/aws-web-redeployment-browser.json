@@ -1,0 +1,144 @@
+{
+  "origin": "https://d31qyxseqz8321.cloudfront.net",
+  "startedAt": "2026-10-09T07:42:30.485Z",
+  "account": "malmoa-demo",
+  "assetChecks": [
+    {
+      "key": "assets/ServiceApp-ClFsoa0T.js",
+      "result": "pass"
+    },
+    {
+      "key": "assets/ServiceApp-DR1xkTQf.css",
+      "result": "pass"
+    },
+    {
+      "key": "assets/index-BhRQpujy.js",
+      "result": "pass"
+    },
+    {
+      "key": "assets/index-CV-lgHOa.css",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/assistant.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/assistant.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/assistant.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/conversation.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/conversation.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/conversation.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/experience.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/experience.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/experience.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/overview.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/overview.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/overview.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/reuse.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/reuse.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/reuse.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/review.jpg",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/review.mp4",
+      "result": "pass"
+    },
+    {
+      "key": "media/landing/review.vtt",
+      "result": "pass"
+    },
+    {
+      "key": "index.html",
+      "result": "pass"
+    }
+  ],
+  "videos": [
+    {
+      "src": "/media/landing/overview.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 39.2
+    },
+    {
+      "src": "/media/landing/experience.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 11.8
+    },
+    {
+      "src": "/media/landing/conversation.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 12
+    },
+    {
+      "src": "/media/landing/assistant.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 12
+    },
+    {
+      "src": "/media/landing/review.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 11.8
+    },
+    {
+      "src": "/media/landing/reuse.mp4",
+      "width": 1600,
+      "height": 900,
+      "duration": 13
+    }
+  ],
+  "finishedAt": "2026-10-09T07:44:02.259Z",
+  "result": "pass",
+  "experienceCount": 10,
+  "invitationHint": "여러 명은 쉼표로 구분해 주세요. 초대할 친구가 없다면 malmoa-demo를 입력해 보세요.",
+  "pageErrors": [],
+  "mobileOverflow": false,
+  "uiVerificationNote": "A real pending invitation was dismissed locally without accepting it. Final UI checks awaited dialog exit before navigation."
+}

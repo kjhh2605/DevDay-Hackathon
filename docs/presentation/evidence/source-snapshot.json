@@ -1,0 +1,70 @@
+{
+  "inspectedAt": "2026-10-09T06:55:45.945Z",
+  "head": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
+  "files": [
+    {
+      "path": "design/tokens.css",
+      "sha256": "f4ed0cd1c62ec063a68be03ec1b31e368efc9746787c0a7674f0840201014195"
+    },
+    {
+      "path": "apps/web/src/shared/seed-theme.css",
+      "sha256": "0c4219cf614bf9316ed72b2fa754341a10abdfcfae7871eb9132b60b65317860"
+    },
+    {
+      "path": "apps/web/src/app/App.tsx",
+      "sha256": "38d1d3b0439e2541f974472ee18f260f02dbf263f59ed03de881b66865aceda1"
+    },
+    {
+      "path": "apps/web/src/features/study/ReviewPanel.tsx",
+      "sha256": "1c64d9d821728d10f836913590c653e30b5da565f64dda46131ad94fc261bbe9"
+    },
+    {
+      "path": "apps/web/src/features/study/StudyPage.tsx",
+      "sha256": "67488534d0be24cb74d338ca092cecf34a7b0b9c31f98e22e742f848d6c41d5f"
+    },
+    {
+      "path": "packages/ai/src/config.ts",
+      "sha256": "db5954c9430d17ae26e5fb42889b2204519fdc8e27829a44efd8f0a495ebfa07"
+    },
+    {
+      "path": "packages/ai/src/provider.ts",
+      "sha256": "670d230ee485877d92ba6f17da5b2ce220972714bd4fd4c98bffa0f615434ee1"
+    },
+    {
+      "path": "packages/ai/src/jobs.ts",
+      "sha256": "e92de35da73626a2db886d2fbcf7798741a244d9c24497de0c77fa2246460ab9"
+    },
+    {
+      "path": "packages/ai/src/chat.ts",
+      "sha256": "ed59adf2184a78f4108298b454e8c76ecbac6996901620c53d93c7fcb406945c"
+    },
+    {
+      "path": "packages/ai/src/chat-decision.ts",
+      "sha256": "8ae51372b5f60984d4a5475cf864b5a0869250fbd007eab22509eb927608750c"
+    },
+    {
+      "path": "packages/ai/src/speech.ts",
+      "sha256": "6853db67bb4b1cb188b390c26a7619b495ca71833d5ad5c243c75f73c46ca723"
+    },
+    {
+      "path": "packages/ai/src/speech-boundary.ts",
+      "sha256": "d92a9e906b8b8ab9083bf6773f88f927bfe55a26a0ab6d21fd0bd0e6ed5c6839"
+    },
+    {
+      "path": "packages/ai/src/sentences.ts",
+      "sha256": "4607022b0df45428b38a8250407f9c30c9d016d4a1d92f4e6ee9ad889d8291b2"
+    },
+    {
+      "path": "packages/ai/src/group-sentences.ts",
+      "sha256": "cd9e9ee847cdced4db79e79cd9bbfd77b93b9908115a41f4606a29fef37161ce"
+    },
+    {
+      "path": "apps/api/src/domain/commands.ts",
+      "sha256": "240081aef24402e90aca20218e1d5a80883eb7beb0785611da29d1682e83b43e"
+    },
+    {
+      "path": "apps/api/src/domain/private.ts",
+      "sha256": "32ab4dd5905f8acce6827c3c2067ca94caf00945250859c807dea96bbc6dd2b5"
+    }
+  ]
+}

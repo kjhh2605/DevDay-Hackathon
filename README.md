@@ -4,6 +4,8 @@
 
 말모아는 사람끼리 진행하는 영어 스터디를 AI가 지원하는 웹 서비스입니다. 참여자의 경험을 대화 주제로 만들고, 각자의 음성을 전사해 함께 확인하며, 주제 종료 후 문장별 피드백을 검토하고 승인하면 발화자의 개인 학습 기록에 저장합니다.
 
+**서비스:** [https://d31qyxseqz8321.cloudfront.net](https://d31qyxseqz8321.cloudfront.net) 
+
 ## 프로젝트 소개
 
 영어 스터디에서는 대화 주제를 준비하고, 말하는 중 떠오르지 않는 표현을 찾고, 대화 후 배운 내용을 따로 정리해야 합니다. 말모아는 이 과정을 하나의 스터디 흐름으로 연결합니다.
@@ -16,9 +18,9 @@
 
 ## 주요 기능
 
-
 | 기능       | 사용자가 할 수 있는 일                                                                   |
 | -------- | ------------------------------------------------------------------------------- |
+| 서비스 소개 | 가입 전 랜딩에서 사용 흐름과 기능별 시연 영상을 확인합니다. [영상·동작 안내](docs/landing/README.md) |
 | 가입·초대    | 표시 이름과 아이디로 가입하고, 상대 아이디로 스터디에 초대합니다. 초대는 다른 화면에서도 확인할 수 있습니다.                  |
 | 나의 경험    | 경험을 자유롭게 입력하고 선택적 보충 질문에 답하거나 건너뜁니다. 원문·정리본·맥락을 확인하고 수정해 저장합니다.                 |
 | 맞춤 대화 주제 | 저장된 경험과 학습·공유 표현을 바탕으로 이미지 또는 문장 주제와 대화 진행 안내를 생성합니다. 특정 참여자의 경험을 지정할 수도 있습니다.  |
@@ -27,7 +29,6 @@
 | 개인 챗봇    | 단어 뜻·영어 표현을 묻고 개인 기록에 저장합니다. “다음 주제로 넘어갈게” 같은 요청을 스터디 명령으로 연결합니다.               |
 | 표현 공유    | 개인 챗봇에서 얻은 표현은 사용자가 공유에 동의한 뒤 공통 화면과 다음 주제 생성에 반영합니다.                           |
 | 나의 학습    | 승인된 피드백을 해당 발화자의 기록으로 저장합니다. 스터디 피드백·챗봇 단어·챗봇 표현 등 출처별로 조회합니다.                  |
-
 
 개인 챗봇과 학습 기록은 사용자별로 구분합니다. 공통 스터디 상태는 WebSocket으로 동기화하며, 승인·저장·주제 전환은 서버의 권한과 상태 검사를 거칩니다.
 
@@ -51,12 +52,12 @@
 | `gpt-6-luna`                     | Responses API · 구조화 출력       | 경험 정리·보충 질문  | 사용자가 쓴 경험과 답변 → 원문에 근거한 정리본, 관심사·상황 정보, 선택적 질문             |
 | `gpt-6-luna`                     | Responses API · 구조화 출력       | 대화 주제 설계     | 경험·학습 표현·공유 표현 → 이미지/문장 유형, 주제 제목·상황·진행 안내, 이미지 생성 프롬프트    |
 | `gpt-6-luna`                     | Responses API · 구조화 출력       | 문장 분할·학습 피드백 | 전사·보정문 → 검토할 문장 단위; 각 문장의 최신 보정문 → 한국어 설명과 영어 표현·예문        |
-| `gpt-6-luna`                     | Responses API · 도구 호출        | 개인 챗봇·자연어 조작 | 사용자의 요청과 허용된 스터디 맥락 → 주제 진행, 단어·표현 학습 및 저장 등의 제품 도구 실행     |
+| `gpt-6-luna`                     | Decisions API                  | 개인 챗봇 행동 선택 | 사용자 요청과 현재 허용된 행동 → 실행할 기능 또는 되묻기 선택                     |
+| `gpt-6-luna`                     | Responses API · 구조화 출력·답변   | 챗봇 인자·결과 설명 | 선택된 기능의 인자를 추출해 서버에서 한 번 실행 → 실행 결과를 사용자에게 설명              |
 | `gpt-live-transcribe`            | Realtime API · transcription | 대화 중 원문 전사   | 브라우저에서 전송한 24 kHz PCM 음성 → 실시간 부분 전사와 확정 원문                |
 | `gpt-6-luna`                     | Decisions API                | 발화 묶음의 완료 판단 | 같은 화자의 전사와 침묵 시간 → `complete`·`continue`·`uncertain` 및 신뢰도 |
 | `gpt-transcribe`                 | Audio Transcriptions API     | 음성 기반 인식 보정  | 발화 묶음의 원본 오디오와 대화 맥락 → 원문과 별도로 보관하는 보정 전사                  |
 | `gpt-image-2.5-flare-2026-09-08` | Images API                   | 경험 기반 이미지 주제 | 주제 설계에서 만든 프롬프트 → 공통 스터디 화면에 표시하는 1024×1024 PNG            |
-
 
 ### 음성에서 학습 기록까지
 
@@ -75,10 +76,12 @@
 
 Decisions API는 기본적으로 발화 종료 후 1초 시점부터 완료 여부를 판단하며, 완료 신뢰도 기준은 `0.85`입니다. 발화가 재개되면 이전 판정을 무효화하고, 최대 침묵 10초에서 묶음 경계를 확정합니다. 관련 구현은 [`speech-boundary.ts`](packages/ai/src/speech-boundary.ts)에 있습니다.
 
+챗봇은 Decisions로 의도를 분류한 다음 허용된 기능 하나의 인자를 구조화 추출합니다. 현재 소스의 챗봇 분류 신뢰도 기준은 `0.5`이고, **AWS에 배포된 API 이미지는 이전 기준 `0.85`를 사용합니다.** 음성 완료 판단 기준 `0.85`와는 별개입니다. 분류 실패·불명확한 요청은 실행하지 않고 되묻습니다. [챗봇 처리 규칙](docs/implementation/chat-decisions.md)을 참고하세요.
+
 ### 모델 출력과 제품 동작의 연결
 
 - 구조화 출력은 JSON Schema로 요청하고 Zod 스키마로 검증합니다. 경험 정리는 원문·답변의 실제 문자열을 근거로 검사합니다.
-- 개인 챗봇의 도구 호출은 서버가 사용자·권한·현재 주제·수정 버전을 확인한 뒤 실행합니다. 표현 공유 여부는 사용자의 동의로 결정합니다.
+- 개인 챗봇은 Decisions에서 선택한 기능 하나만 서버에서 실행합니다. 서버가 사용자·권한·현재 주제·수정 버전을 확인하고, 표현 공유 여부는 사용자의 동의로 결정합니다.
 - 보정문을 수정하면 해당 버전으로 피드백을 다시 생성합니다. 승인 시 최신 피드백을 확인하고 발화자에게 학습 항목을 저장합니다.
 - OpenAI API 키는 서버 환경변수로 관리합니다. 브라우저는 애플리케이션 API와 음성 WebSocket에 연결합니다.
 
@@ -96,7 +99,7 @@ Fastify API
 ```
 
 
-AWS 구성은 CDK 코드로 정의되어 있습니다. CloudFront·S3, ALB·ECS Fargate, RDS PostgreSQL, Secrets Manager 등의 구성과 실행 절차는 [`infra/README.md`](infra/README.md)에 정리되어 있습니다.
+AWS 서울 리전에 실제 배포된 구성은 CDK 코드로 정의되어 있습니다. CloudFront·S3, 내부 ALB·ECS Fargate, RDS PostgreSQL, Secrets Manager의 요청 경로와 배포 버전은 [현재 아키텍처](docs/architecture/aws-deployed-architecture.md), 실행 절차는 [`infra/README.md`](infra/README.md)에 정리되어 있습니다. 웹 정적 파일의 재배포와 API 이미지의 배포 시점은 서로 다릅니다.
 
 ## 프로젝트 구조
 
@@ -106,8 +109,9 @@ pnpm 워크스페이스 기반 모노레포입니다. 실행 애플리케이션�
 .
 ├─ apps/                         # 실행 애플리케이션
 │  ├─ web/                       # React · Vite 웹 프런트엔드
-│  │  ├─ src/app/                # 앱 진입 화면, 라우팅, 전역 상태·스타일
-│  │  ├─ src/features/           # 가입(auth), 스터디(study), 챗봇(chat), 경험(experiences), 학습(learning)
+│  │  ├─ src/app/                # 공개 랜딩·서비스 진입, 라우팅, 전역 상태·스타일
+│  │  ├─ src/features/           # 랜딩(landing), 가입(auth), 스터디(study), 챗봇(chat), 경험(experiences), 학습(learning)
+│  │  ├─ public/media/landing/   # 기능 소개 영상·포스터·자막
 │  │  ├─ src/shared/             # 공통 UI, API·이벤트·세션·오디오 연결
 │  │  └─ seed-design/ui/         # SEED Design 기반 UI 컴포넌트
 │  └─ api/                       # Fastify HTTP · WebSocket 서버
@@ -139,13 +143,15 @@ pnpm 워크스페이스 기반 모노레포입니다. 실행 애플리케이션�
 │  ├─ e2e/                     # Playwright 기반 브라우저 흐름·오류·화면 배치 검증
 │  └─ live/                    # 실제 OpenAI를 사용하는 서비스 흐름·분기 검증
 ├─ docs/                        # 제품 요구사항과 개발·운영 문서
-│  ├─ architecture/            # MVP 시스템 아키텍처
+│  ├─ architecture/            # MVP 설계와 실제 AWS 배포 아키텍처
 │  ├─ implementation/          # 구현 계획, 로컬 실행·AWS 배포·검증 절차
 │  │  ├─ env/                  # 로컬·배포 환경변수 예시
 │  │  └─ evidence/             # 검증 결과와 실행 보고서
+│  ├─ landing/                 # 랜딩·영상 제작과 검증 근거
+│  ├─ presentation/            # 발표 자료와 실행 근거
 │  └─ sessions/                # 개발 세션별 작업 범위와 인수인계 문서
 ├─ design/                      # 디자인 시스템 HTML과 공통 디자인 토큰
-├─ prompts/                     # 구현 계획·테스트 음성 데이터 작업용 프롬프트
+├─ prompts/                     # 구현·랜딩·발표·테스트 음성 데이터 작업용 프롬프트
 └─ .github/workflows/           # GitHub Actions CI 워크플로
 ```
 
@@ -165,7 +171,7 @@ pnpm preflight --target=local
 pnpm dev
 ```
 
-새 환경의 기본 웹 주소는 `http://localhost:5173`입니다. API는 `127.0.0.1:3000`, PostgreSQL은 `127.0.0.1:5432`이며 웹의 `/api`·`/ws` 프록시를 사용합니다. 실제 접속 주소는 `.env.local`의 `LOCAL_WEB_ORIGIN`과 Vite 실행 로그에서 확인하세요. 포트 변경 시 `PORT`, `WEB_PORT`, `LOCAL_WEB_ORIGIN`을 함께 설정합니다.
+새 환경의 기본 웹 주소는 `http://localhost:5173`입니다. `/`는 API 없이 볼 수 있는 공개 랜딩이고 `/study`가 서비스 진입 경로입니다. API는 `127.0.0.1:3000`, PostgreSQL은 `127.0.0.1:5432`이며 웹의 `/api`·`/ws` 프록시를 사용합니다. 실제 접속 주소는 `.env.local`의 `LOCAL_WEB_ORIGIN`과 Vite 실행 로그에서 확인하세요. 포트 변경 시 `PORT`, `WEB_PORT`, `LOCAL_WEB_ORIGIN`을 함께 설정합니다.
 
 `setup:local`은 기존 환경파일과 DB volume을 보존합니다. 실제 모델을 사용하는 기본 설정은 `AI_MODE=live`이며 API 사용 요금이 발생합니다. 테스트용 AI 구현은 `AI_MODE=mock`으로 선택합니다. LAN에서 다른 기기의 마이크를 사용할 때 필요한 HTTPS 설정은 [로컬 실행서](docs/implementation/local-validation.md)를 따릅니다.
 
@@ -186,3 +192,11 @@ pnpm build:api-image
 # 실제 OpenAI를 호출하는 별도 유료 검사
 pnpm smoke:openai
 ```
+
+## 관련 자료
+
+- [랜딩과 시연 영상](docs/landing/README.md)
+- [현재 AWS 아키텍처](docs/architecture/aws-deployed-architecture.md) · [배포 및 검증 결과](docs/implementation/evidence/release.md)
+- [10분 발표 자료](docs/presentation/index.html) · [발표 지시서](docs/presentation/slide-guide.md) · [발표 근거](docs/presentation/evidence-audit.md)
+
+발표 근거의 챗봇 분류 사례는 당시 기준 `0.85`로 캡처했습니다. 현재 로컬 소스의 기준 `0.5`와 구분해 읽어 주세요.

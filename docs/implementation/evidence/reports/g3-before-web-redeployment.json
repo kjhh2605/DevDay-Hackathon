@@ -1,0 +1,170 @@
+{
+  "gate": "pass",
+  "verifiedAt": "2026-10-09T06:52:20.231Z",
+  "targetCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
+  "lockfileSha256": "23c68c2eeae53f9dc0f4fd19734af0fe884b34227b21a73f3102e6bd403283c6",
+  "sourceSha256": "51709040ccfc119051381927ced0b145aa4c111cbb1f74769f05eefd6c228c2d",
+  "aiMode": "live",
+  "models": {
+    "OPENAI_CORRECTION_MODEL": "gpt-transcribe",
+    "OPENAI_IMAGE_MODEL": "gpt-image-2.5-flare-2026-09-08",
+    "OPENAI_LIVE_TRANSCRIBE_MODEL": "gpt-live-transcribe",
+    "OPENAI_TEXT_MODEL": "gpt-6-luna",
+    "OPENAI_DECISION_MODEL": "gpt-6-luna"
+  },
+  "physicalDevices": [
+    {
+      "device": "Laptop A",
+      "status": "user-confirmed G3 completion; device/browser details not supplied"
+    },
+    {
+      "device": "Laptop B",
+      "status": "user-confirmed G3 completion; device/browser details not supplied"
+    }
+  ],
+  "checks": {
+    "typecheck": "pass",
+    "contracts": "pass",
+    "unit": "pass",
+    "integration": "pass",
+    "e2e": "pass",
+    "build": "pass",
+    "infraSynth": "pass",
+    "apiImage": "pass",
+    "imageRestartPersistence": "pass",
+    "liveOpenAi": "pass",
+    "twoPhysicalLaptops": "pass",
+    "trustedHttps": "pass",
+    "realMicrophones": "pass"
+  },
+  "acceptance": {
+    "A01": "pass",
+    "A02": "pass",
+    "A03": "pass",
+    "A04": "pass",
+    "A05": "pass",
+    "A06": "pass",
+    "A07": "pass",
+    "A08": "pass",
+    "A09": "pass",
+    "A10": "pass",
+    "A11": "pass",
+    "A12": "pass",
+    "A13": "pass",
+    "A14": "pass",
+    "A15": "pass",
+    "A16": "pass",
+    "A17": "pass",
+    "A18": "pass",
+    "A19": "pass",
+    "A20": "pass",
+    "A21": "pass",
+    "A22": "pass",
+    "A23": "pass",
+    "A24": "pass",
+    "A25": "pass",
+    "A26": "pass",
+    "A27": "pass",
+    "E01": "pass",
+    "E02": "pass",
+    "E03": "pass",
+    "E04": "pass",
+    "E05": "pass",
+    "E06": "pass",
+    "E07": "pass",
+    "E08": "pass"
+  },
+  "blockers": [],
+  "report": "docs/implementation/evidence/local-validation.md",
+  "artifacts": {
+    "image": "docs/implementation/evidence/reports/image-validation.json",
+    "https": "docs/implementation/evidence/reports/https-validation.json",
+    "liveFlow": "docs/implementation/evidence/reports/live-flow.json",
+    "openAi": "docs/implementation/evidence/reports/openai-final-audited-smoke.json",
+    "e2e": "tests/e2e/test-results/e2e-report/index.html",
+    "screenshots": ".local/validation/screenshots",
+    "branches": "docs/implementation/evidence/reports/live-branches.json",
+    "namedParticipant": "docs/implementation/evidence/reports/live-named-participant.json",
+    "detailedExperience": "docs/implementation/evidence/reports/live-detailed-experience.json",
+    "archivedScreenshots": "docs/implementation/evidence/screenshots",
+    "e2eLayout": "tests/e2e/test-results/e2e-layout-report/index.html",
+    "e2eFailure": "tests/e2e/test-results/e2e-failure-report/index.html",
+    "layoutMeasurements": "docs/implementation/evidence/reports/layout-independence",
+    "providerFailure": "docs/implementation/evidence/reports/e07-provider-failure.json",
+    "audioDelayedReady": "docs/implementation/evidence/reports/audio-delayed-ready.json"
+  },
+  "localOrigin": "http://localhost:5188",
+  "apiOrigin": "http://127.0.0.1:4188",
+  "configurationChanges": {
+    "preservedCredentials": true,
+    "changedKeys": [
+      "PORT",
+      "WEB_PORT",
+      "LOCAL_WEB_ORIGIN"
+    ],
+    "reason": "Existing unrelated application occupied localhost:5173; selected separate local ports."
+  },
+  "finalCounts": {
+    "unitTests": 250,
+    "unitFiles": 27,
+    "contracts": 39,
+    "postgresIntegration": 15,
+    "e2e": 4,
+    "e2eDurationSeconds": 41.5,
+    "layoutE2e": 2,
+    "layoutE2eDurationSeconds": 31.6,
+    "providerFailureE2e": 1,
+    "providerFailureE2eDurationSeconds": 32.5,
+    "audioBrowser": {
+      "streams": 2,
+      "segments": 3,
+      "chunks": 32,
+      "captureRequests": 1,
+      "physicalMicrophone": false
+    }
+  },
+  "liveValidationScope": {
+    "rerunOnCurrentTarget": false,
+    "scope": "Historical real OpenAI reports preserve their original timestamps, failures, and request IDs. Continuation fixes covered delayed audio acknowledgements, atomic timeout failure persistence, and smoke verification; provider requests and prompts did not change. No additional paid live calls were made during this continuation.",
+    "archivedWithImplementationCommit": "3d31883457a5aaaf6334a8a9a699102ff8cd6369",
+    "exactHistoricalSourceIdentity": "Only available where an individual historical report recorded it; the archive commit does not assert every earlier request ran on that exact source revision."
+  },
+  "continuationChecks": {
+    "delayedAudioReadiness": "pass",
+    "atomicFeedbackTimeout": "pass",
+    "layoutIndependence": "pass",
+    "providerFailureExplicitRetry": "pass",
+    "smokeAuditHelpers": "pass",
+    "ciExecution": "not_run"
+  },
+  "runtime": {
+    "SPEECH_DECISION_TIMEOUT_MS": "2000",
+    "CHAT_DECISION_TIMEOUT_MS": "10000",
+    "SPEECH_DECISION_CONFIDENCE": "0.85"
+  },
+  "manualEvidence": {
+    "source": "user confirmation in G4 session on 2026-10-09",
+    "statements": [
+      "검증 완료 — 결과 전달",
+      "현재 코드로 배포 진행"
+    ],
+    "scope": "User reported completion of the outstanding G3 two-laptop/real-microphone checks on the current application code. This is user-attested acceptance, not an agent-observed physical-device test; device/browser details and recordings were not supplied."
+  },
+  "g4Preparation": {
+    "unitTests": 306,
+    "integrationTests": 17,
+    "e2eTests": 4,
+    "e2eDurationSeconds": 50.8,
+    "contracts": 39,
+    "typecheck": "pass",
+    "build": "pass",
+    "infraSynth": "pass",
+    "apiImage": "pass",
+    "imageRestartPersistence": "pass",
+    "changes": "Deployment scripts, CDK Decisions settings/readiness and documentation; application runtime source unchanged in this session.",
+    "baseCommit": "35290d32715d4c2852c0c3f62aa12b1c3d726a79",
+    "workingTree": "Uncommitted G4 deployment additions identified by sourceSha256; unrelated prompts/project-presentation.md preserved."
+  },
+  "releaseWorkspace": "/Users/gnar/orca/projects/DevDay-Hackathon-g4-release",
+  "concurrentWork": "During API deployment another session changed app/E2E/landing files. Release worktree was reconstructed from the staged CDK Docker context; its complete source fingerprint exactly matches this validation record. The main workspace now has separate unvalidated changes; this record does not attest them."
+}

@@ -1,0 +1,541 @@
+{
+  "slides": 12,
+  "durations_seconds": [
+    40,
+    45,
+    50,
+    55,
+    50,
+    50,
+    60,
+    50,
+    65,
+    40,
+    50,
+    45
+  ],
+  "total_seconds": 600,
+  "references": [
+    {
+      "from": "slide-guide.md",
+      "target": "index.html",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "../../design/tokens.css",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "../../design/design-system.html",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "../../apps/web/src/shared/seed-theme.css",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/brand-from-ui.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e01-서비스-맥락과-화면",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s03-experience.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/01-experience-input.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/02-experience-review.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/03-experience-saved.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e02-경험과-주제-생성",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s04-topic.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/04-invitation.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/05-topic.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/08-transcript.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s08-transcript.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e03-음성-보정과-문장-검토",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s05-chat.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/06b-chat-expression.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/09-review.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e04-챗봇의-판단과-서버-실행",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s06-review-edit.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s06-learning.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/11-editing.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/12-edited-stale.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/13-refeedback.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/14-next-topic.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/15-learning.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e05-승인과-개인-학습-저장",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e06-모델과-api-호출",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s08-transcript.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/08-transcript.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/09-review.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e07-검증과-남은-실패",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/annotated/s10-clarification.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/06-chat-expression.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "assets/raw/14a-next-clarified.png",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e07-검증과-남은-실패",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e08-도입-가설",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md#e09-codex-활용-근거",
+      "exists": true
+    },
+    {
+      "from": "slide-guide.md",
+      "target": "evidence-audit.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "slide-guide.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/source-snapshot.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/environment.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/captures.jsonl",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/provider-audit.jsonl",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/decisions.jsonl",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/audio-source.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/app/App.tsx",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/features/study/StudyPage.tsx",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../README.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../implementation/chat-decisions.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../design/tokens.css",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../design/design-system.html",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/shared/seed-theme.css",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/index.html",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/app/App.module.css",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/jobs.ts#L76",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/jobs.ts#L117",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/schemas.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/prompts.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/review-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/next-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/provider.ts#L364",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/speech.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/speech-boundary.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/provider.ts#L307",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/jobs.ts#L169",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/sentences.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/group-sentences.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/audio-source.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/audio-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/review-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/edit-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/features/study/ReviewPanel.tsx",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat-decision.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/provider.ts#L194",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.ts#L99",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.ts#L183",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.ts#L355",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.ts#L388",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/api/src/domain/commands.ts#L208",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/decisions.jsonl",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/api/src/domain/commands.ts#L121",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/web/src/features/learning/LearningPage.tsx",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/learning-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/peer-learning-result.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/config.ts#L19",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/environment.json",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "evidence/provider-audit.jsonl",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/test-voice/VALIDATION.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../implementation/evidence/2026-10-09-decisions-speech.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../implementation/chat-decisions.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/test-voice/README.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/test-voice/VALIDATION.md",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/speech-boundary.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/speech.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../apps/api/src/db/migrations/0002_speech_groups.sql",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat-decision.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "../../packages/ai/src/chat.test.ts",
+      "exists": true
+    },
+    {
+      "from": "evidence-audit.md",
+      "target": "slide-guide.md",
+      "exists": true
+    }
+  ],
+  "missing": []
+}

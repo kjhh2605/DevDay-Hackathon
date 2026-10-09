@@ -1,0 +1,18 @@
+{
+  "startedAt": "2026-10-09T06:37:47.735Z",
+  "database": "malmoa_presentation_1791527867400",
+  "origin": "http://127.0.0.1:5185",
+  "aiMode": "live",
+  "models": {
+    "text": "gpt-6-luna",
+    "decision": "gpt-6-luna",
+    "raw": "gpt-live-transcribe",
+    "correction": "gpt-transcribe",
+    "image": "gpt-image-2.5-flare-2026-09-08"
+  },
+  "limitations": [
+    "One laptop, two isolated browser sessions",
+    "Synthetic audio file is not a physical microphone acceptance test",
+    "Presentation-only sample accounts; no production user data"
+  ]
+}

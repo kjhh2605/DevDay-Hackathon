@@ -296,7 +296,7 @@ describe('Decision routed chat', () => {
     expect(JSON.stringify(test.resultInputs())).toContain('STALE_TOPIC');
   });
 
-  it.each([0.84, NaN, Infinity, 1.01])(
+  it.each([0.49, NaN, Infinity, 1.01])(
     'does not execute a low or malformed confidence %s',
     async (confidence) => {
       const test = setup();

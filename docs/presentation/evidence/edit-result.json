@@ -1,0 +1,363 @@
+{
+  "study": {
+    "id": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "revision": 5,
+    "status": "active",
+    "currentTopicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+    "transitionVersion": 3,
+    "members": [
+      {
+        "userId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+        "handle": "demo-a-919215",
+        "displayName": "민지",
+        "state": "joined"
+      },
+      {
+        "userId": "9bc4d90a-22ac-40e7-b14d-b1ca7fab843e",
+        "handle": "demo-b-919760",
+        "displayName": "지훈",
+        "state": "joined"
+      }
+    ],
+    "createdAt": "2026-10-09T06:39:11.621Z",
+    "endedAt": null
+  },
+  "topic": {
+    "id": "2d191a40-2112-457f-b276-e64b38990cd5",
+    "revision": 3,
+    "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+    "ordinal": 1,
+    "state": "review",
+    "focusUserId": null,
+    "content": {
+      "title": "A Weekend by the Sea",
+      "situationText": "You and a friend spent a weekend in Haeundae, Busan. You walked along the beach and ate gukbap at a market. Talk about the outing and what you would like to photograph on a future trip.",
+      "conversationInstruction": "Describe the weekend to your conversation partner. Ask about their favorite seaside activities, then discuss a place you would like to visit and what you would photograph there.",
+      "sourceExperienceIds": [
+        "d69a351f-e79c-499b-9fcd-44e71c4250a1"
+      ],
+      "learningExpressionIds": [],
+      "sharedExpressionIds": [],
+      "kind": "image",
+      "imageMediaId": "b7e7d5e9-3836-4e37-a1cd-b40bda11bd1a",
+      "sentence": null
+    },
+    "generationJobId": "06f9182b-ebb2-42a5-9303-d9d1d64d9169",
+    "approvedAt": null
+  },
+  "segments": [
+    {
+      "id": "66c06a57-5ee2-415e-8ec6-e576da1e07ba",
+      "revision": 4,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "rawText": "오늘은 좀 피곤해요. She don't like rainy days. We planned a trip to Busan.",
+      "rawStatus": "ready",
+      "rawRevision": 1,
+      "correctedText": null,
+      "correctionStatus": "ready",
+      "sentenceStatus": "ready",
+      "groupId": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+      "noSpeech": false
+    }
+  ],
+  "speechGroups": [
+    {
+      "id": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+      "revision": 4,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "segmentIds": [
+        "66c06a57-5ee2-415e-8ec6-e576da1e07ba"
+      ],
+      "rawRevisions": [
+        1
+      ],
+      "rawText": "오늘은 좀 피곤해요. She don't like rainy days. We planned a trip to Busan.",
+      "correctedText": "오늘은 좀 피곤해요. She don't like rainy days. We plan a trip to Busan.",
+      "state": "ready",
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "closeReason": "silence_timeout",
+      "attemptId": "4837a5c9-e399-456e-9d7e-0c07a41f3ca5",
+      "error": null
+    }
+  ],
+  "utterances": [
+    {
+      "id": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+      "revision": 0,
+      "sentenceIndex": 0,
+      "sourceRanges": [
+        {
+          "version": 2,
+          "groupId": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+          "rawSources": [
+            {
+              "segmentId": "66c06a57-5ee2-415e-8ec6-e576da1e07ba",
+              "start": 0,
+              "end": 11
+            }
+          ],
+          "correctedStart": 0,
+          "correctedEnd": 11,
+          "audioSegmentIds": [
+            "66c06a57-5ee2-415e-8ec6-e576da1e07ba"
+          ]
+        }
+      ],
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "rawText": "오늘은 좀 피곤해요.",
+      "correctedText": "오늘은 좀 피곤해요.",
+      "correctionStatus": "ready",
+      "correctionRevision": 0,
+      "correctedBy": "ai",
+      "updatedAt": "2026-10-09T06:41:11.719Z"
+    },
+    {
+      "id": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "revision": 1,
+      "sentenceIndex": 1,
+      "sourceRanges": [
+        {
+          "version": 2,
+          "groupId": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+          "rawSources": [
+            {
+              "segmentId": "66c06a57-5ee2-415e-8ec6-e576da1e07ba",
+              "start": 11,
+              "end": 38
+            }
+          ],
+          "correctedStart": 11,
+          "correctedEnd": 38,
+          "audioSegmentIds": [
+            "66c06a57-5ee2-415e-8ec6-e576da1e07ba"
+          ]
+        }
+      ],
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "rawText": " She don't like rainy days.",
+      "correctedText": "She doesn't like rainy days.",
+      "correctionStatus": "ready",
+      "correctionRevision": 1,
+      "correctedBy": "human",
+      "updatedAt": "2026-10-09T06:42:12.105Z"
+    },
+    {
+      "id": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+      "revision": 0,
+      "sentenceIndex": 2,
+      "sourceRanges": [
+        {
+          "version": 2,
+          "groupId": "7790297d-5ccf-42b2-ae9d-b1dbf7970ae1",
+          "rawSources": [
+            {
+              "segmentId": "66c06a57-5ee2-415e-8ec6-e576da1e07ba",
+              "start": 38,
+              "end": 66
+            }
+          ],
+          "correctedStart": 38,
+          "correctedEnd": 63,
+          "audioSegmentIds": [
+            "66c06a57-5ee2-415e-8ec6-e576da1e07ba"
+          ]
+        }
+      ],
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "speakerUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "startOrder": 0,
+      "startedAt": "2026-10-09T06:40:53.374Z",
+      "endedAt": "2026-10-09T06:40:59.258Z",
+      "rawText": " We planned a trip to Busan.",
+      "correctedText": " We plan a trip to Busan.",
+      "correctionStatus": "ready",
+      "correctionRevision": 0,
+      "correctedBy": "ai",
+      "updatedAt": "2026-10-09T06:41:11.722Z"
+    }
+  ],
+  "feedback": [
+    {
+      "utteranceId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+      "revision": 1,
+      "inputCorrectionRevision": 0,
+      "status": "ready",
+      "items": [
+        {
+          "id": "c62e0d93-124f-4134-9376-480d35749ec3",
+          "category": "자연스러운 표현",
+          "summary": "“I’m a little tired today.”",
+          "explanation": "오늘 조금 피곤하다는 뜻으로 자연스럽게 말할 수 있어요. ‘좀’은 여기서 ‘a little’로 표현하면 됩니다.",
+          "expression": "I’m a little tired today.",
+          "meaning": "오늘은 좀 피곤해요.",
+          "example": "I’m a little tired today, so I’m going to take it easy."
+        }
+      ],
+      "error": null
+    },
+    {
+      "utteranceId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "revision": 4,
+      "inputCorrectionRevision": 1,
+      "status": "ready",
+      "items": [],
+      "error": null
+    },
+    {
+      "utteranceId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+      "revision": 1,
+      "inputCorrectionRevision": 0,
+      "status": "ready",
+      "items": [
+        {
+          "id": "34d45078-0683-4fb6-841d-db80965eb2c7",
+          "category": "자연스러운 표현",
+          "summary": "여행을 계획 중이라면 현재진행형이 더 자연스러워요.",
+          "explanation": "“We plan a trip to Busan”도 문법적으로 가능하지만, 지금 부산 여행을 준비하고 있다는 뜻이라면 “We’re planning a trip to Busan”이라고 하는 것이 더 자연스럽습니다.",
+          "expression": "We’re planning a trip to Busan.",
+          "meaning": "우리는 부산 여행을 계획하고 있어요.",
+          "example": "We’re planning a trip to Busan for next month."
+        }
+      ],
+      "error": null
+    }
+  ],
+  "sharedExpressions": [
+    {
+      "id": "1aee4592-bdcb-4f76-b7a1-42a6fc24c363",
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "contributorUserId": "2b52a0d3-c183-41c9-b9c2-33ba07c2c9ed",
+      "expression": "I like taking travel photos.",
+      "meaning": "여행 사진 찍는 것을 좋아해요.",
+      "example": "I like taking travel photos when I visit new places.",
+      "sourceProposalId": "2f55f5ed-5a46-4e15-a909-6dac3ba845b2"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "06f9182b-ebb2-42a5-9303-d9d1d64d9169",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:39:12.816Z",
+      "finishedAt": "2026-10-09T06:39:25.261Z",
+      "kind": "topic.generate",
+      "result": {
+        "topicId": "2d191a40-2112-457f-b276-e64b38990cd5"
+      }
+    },
+    {
+      "id": "1ce7b28a-4b91-4748-84f7-60cb699d9002",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "2d191a40-2112-457f-b276-e64b38990cd5",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:09.128Z",
+      "finishedAt": "2026-10-09T06:41:14.556Z",
+      "kind": "topic.close",
+      "result": {
+        "topicId": "2d191a40-2112-457f-b276-e64b38990cd5",
+        "utteranceIds": [
+          "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+          "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+          "50159506-efd6-4ca9-90e5-781e2ac16a3e"
+        ]
+      }
+    },
+    {
+      "id": "e44a30f3-fedf-48cd-a65a-c5af6cd9366c",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.738Z",
+      "finishedAt": "2026-10-09T06:41:14.216Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "58ff9087-ee24-45b1-b18b-d4bea2354d8a",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "16e846b1-1e39-419a-b26a-1bb8bed0d9a4",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.749Z",
+      "finishedAt": "2026-10-09T06:41:14.364Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "d77700bc-c7bc-40d8-9b4c-b1c5f07131d9",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:41:11.757Z",
+      "finishedAt": "2026-10-09T06:41:14.544Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "50159506-efd6-4ca9-90e5-781e2ac16a3e",
+        "inputCorrectionRevision": 0
+      }
+    },
+    {
+      "id": "4751b31f-1534-4c88-a920-7715cd71ff69",
+      "revision": 1,
+      "scope": "study",
+      "ownerUserId": null,
+      "studyId": "fb01f183-a658-4572-80ff-5a6bd49b6a3b",
+      "targetId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+      "status": "succeeded",
+      "error": null,
+      "createdAt": "2026-10-09T06:42:12.800Z",
+      "finishedAt": "2026-10-09T06:42:14.356Z",
+      "kind": "utterance.feedback",
+      "result": {
+        "utteranceId": "f917f3c8-fc40-49f0-8b76-91165cbb5df1",
+        "inputCorrectionRevision": 1
+      }
+    }
+  ]
+}

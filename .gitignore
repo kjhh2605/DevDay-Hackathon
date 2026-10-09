@@ -13,3 +13,4 @@ test-results/
 *.pem
 *.key
 *.wav
+~$*.pptx

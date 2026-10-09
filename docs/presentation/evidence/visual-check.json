@@ -1,0 +1,169 @@
+{
+  "checkedAt": "2026-10-09T06:58:39.658Z",
+  "pageErrors": [],
+  "images": [
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "loaded": true,
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "zoomWorks": true,
+  "anchors": [
+    {
+      "href": "#판정-기준",
+      "exists": true
+    },
+    {
+      "href": "#캡처-실행-환경과-범위",
+      "exists": true
+    },
+    {
+      "href": "#e01-서비스-맥락과-화면",
+      "exists": true
+    },
+    {
+      "href": "#e02-경험과-주제-생성",
+      "exists": true
+    },
+    {
+      "href": "#e03-음성-보정과-문장-검토",
+      "exists": true
+    },
+    {
+      "href": "#e04-챗봇의-판단과-서버-실행",
+      "exists": true
+    },
+    {
+      "href": "#e05-승인과-개인-학습-저장",
+      "exists": true
+    },
+    {
+      "href": "#e06-모델과-api-호출",
+      "exists": true
+    },
+    {
+      "href": "#e07-검증과-남은-실패",
+      "exists": true
+    },
+    {
+      "href": "#e08-도입-가설",
+      "exists": true
+    },
+    {
+      "href": "#e09-codex-활용-근거",
+      "exists": true
+    },
+    {
+      "href": "#파일-사용과-재생성",
+      "exists": true
+    }
+  ],
+  "rawHashes": [
+    {
+      "name": "01-experience-input",
+      "hashMatches": true
+    },
+    {
+      "name": "02-experience-review",
+      "hashMatches": true
+    },
+    {
+      "name": "03-experience-saved",
+      "hashMatches": true
+    },
+    {
+      "name": "04-invitation",
+      "hashMatches": true
+    },
+    {
+      "name": "05-topic",
+      "hashMatches": true
+    },
+    {
+      "name": "06-chat-expression",
+      "hashMatches": true
+    },
+    {
+      "name": "06b-chat-expression",
+      "hashMatches": true
+    },
+    {
+      "name": "07-chat-shared",
+      "hashMatches": true
+    },
+    {
+      "name": "08-transcript",
+      "hashMatches": true
+    },
+    {
+      "name": "09-review",
+      "hashMatches": true
+    },
+    {
+      "name": "10-shared-confirmed",
+      "hashMatches": true
+    },
+    {
+      "name": "11-editing",
+      "hashMatches": true
+    },
+    {
+      "name": "12-edited-stale",
+      "hashMatches": true
+    },
+    {
+      "name": "13-refeedback",
+      "hashMatches": true
+    },
+    {
+      "name": "14a-next-clarified",
+      "hashMatches": true
+    },
+    {
+      "name": "14b-next-clarified",
+      "hashMatches": true
+    },
+    {
+      "name": "14-next-topic",
+      "hashMatches": true
+    },
+    {
+      "name": "15-learning",
+      "hashMatches": true
+    }
+  ],
+  "finalAnnotationAdjustment": "Moved sharing emphasis border below saved-status text; kept source screenshot unchanged.",
+  "presentationServersStopped": true,
+  "finalEmbeddedImages": true
+}

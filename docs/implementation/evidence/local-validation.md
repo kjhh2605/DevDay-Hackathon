@@ -139,3 +139,11 @@ G3 필수 항목이 남아 있으므로 bootstrap, stack deploy, ECR 게시, 웹
 배포 대상은 사용자가 선택한 `default` / `004376454721` / `ap-northeast-2`이다. 기준 commit은 `35290d32715d4c2852c0c3f62aa12b1c3d726a79`이며 G4 추가 파일은 아직 commit하지 않은 작업 트리다. 정확한 소스·lockfile 지문은 JSON에 기록했다. 사용자 소유 `prompts/project-presentation.md`는 수정하지 않았다.
 
 이번 세션에서 타입 검사, 단위 306개, 계약 39개, PostgreSQL 통합 17개, E2E 4개(50.8초), build, CDK synth, linux/amd64 image build, 동일 image migration 및 재시작 후 저장 재조회가 통과했다. 앱 기능 코드는 바꾸지 않았고 배포 도구·Decisions 환경 전달·컨테이너 readiness만 추가했다. AWS 환경의 실기기 G4 인수는 이 확인과 별개로 [릴리스 기록](release.md)에 남긴다.
+
+## 웹 재배포 검증 (2026-10-09)
+
+사용자 요청으로 랜딩 페이지·영상과 `malmoa-demo` 초대 힌트를 반영했다. `8b755ac` + 한 줄 UI 변경을 대상으로 전체 TypeScript 검사, 웹 production build, E2E 10개(기존 서비스 4개·랜딩 6개, 1.1분), offline CDK synth를 통과했다. API·공유 package 소스는 현재 AWS API image를 만든 release worktree와 파일 비교 결과 동일하다.
+
+검증 기록의 현재 소스 지문은 `422738ea069d77423147ee3d799c4913d6a3b8f0a0c27ced2f7ed436fcce58c9`이다. 이전 G3 JSON은 [보관본](reports/g3-before-web-redeployment.json)에 남겼으며, 실기기·실마이크 및 변경 없는 서버의 기존 검증은 역사적 근거로 유지한다. 이번 웹 재배포에서 물리 기기 검사를 다시 수행하지 않았다.
+
+웹 게시, 실제 배포 브라우저 확인, 가상 경험 10개를 가진 테스트 계정의 결과는 [릴리스 기록](release.md#웹-재배포와-테스트-계정-2026-10-09)에 있다.
