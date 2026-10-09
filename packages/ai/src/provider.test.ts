@@ -299,3 +299,79 @@ describe('Decisions speech classification adapter', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('Decisions chat routing adapter', () => {
+  const input: import('./chat-decision.js').ChatDecisionInput = {
+    text: 'queue 뜻을 알려줘',
+    history: [],
+    context: {},
+    pendingSharing: null,
+    allowedChoices: ['explain_word', 'general_chat', 'clarify_intent'],
+  };
+  it('offers only available choices and validates the chat answer', async () => {
+    const fetch = vi.fn(async () =>
+      Response.json({
+        answers: [
+          { type: 'choice', name: 'chat_action', choice: 'explain_word', confidence: 0.94 },
+        ],
+      }),
+    );
+    const audit = vi.fn();
+    const provider = new OpenAIProvider(config, { fetch, onAudit: audit });
+    expect(await provider.decideChat(input)).toEqual({ choice: 'explain_word', confidence: 0.94 });
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.openai.com/v1/decisions');
+    const body = JSON.parse(init.body as string);
+    expect(body.questions[0]).toMatchObject({ type: 'choice', name: 'chat_action' });
+    expect(body.questions[0].choices.map((choice: { value: string }) => choice.value)).toEqual(
+      input.allowedChoices,
+    );
+    expect(JSON.parse(body.input)).toEqual(input);
+    expect(body).not.toHaveProperty('tools');
+    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ capability: 'decision' }));
+  });
+  it.each([
+    {},
+    { answers: [] },
+    { answers: [null] },
+    { answers: [{ type: 'refusal', name: 'chat_action' }] },
+    {
+      answers: [
+        { type: 'choice', name: 'speech_completion', choice: 'explain_word', confidence: 1 },
+      ],
+    },
+    { answers: [{ type: 'choice', name: 'chat_action', choice: 'finish_study', confidence: 1 }] },
+    { answers: [{ type: 'choice', name: 'chat_action', choice: 'unknown', confidence: 1 }] },
+    {
+      answers: [{ type: 'choice', name: 'chat_action', choice: 'explain_word', confidence: -0.1 }],
+    },
+    { answers: [{ type: 'choice', name: 'chat_action', choice: 'explain_word', confidence: 1.1 }] },
+    { answers: [{ type: 'choice', name: 'chat_action', choice: 'explain_word', confidence: '1' }] },
+    { answers: [{ type: 'choice', name: 'chat_action', choice: 'explain_word' }] },
+  ])('clarifies invalid/refused/unavailable output %#', async (body) => {
+    const fetch = vi.fn(async () => Response.json(body));
+    expect(await new OpenAIProvider(config, { fetch }).decideChat(input)).toEqual({
+      choice: 'clarify_intent',
+      confidence: 0,
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+  it.each([429, 500, 503])('does not retry HTTP %s', async (status) => {
+    const fetch = vi.fn(async () => new Response('', { status }));
+    expect((await new OpenAIProvider(config, { fetch }).decideChat(input)).choice).toBe(
+      'clarify_intent',
+    );
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+  it('uses the independent chat deadline and fails closed on abort', async () => {
+    const fetch = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const signal = init!.signal!;
+      return await new Promise<Response>((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+      });
+    });
+    const provider = new OpenAIProvider({ ...config, chatDecisionTimeoutMs: 5 }, { fetch });
+    expect(await provider.decideChat(input)).toEqual({ choice: 'clarify_intent', confidence: 0 });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+});

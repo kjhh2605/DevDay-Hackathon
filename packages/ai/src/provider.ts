@@ -3,6 +3,7 @@ import type { ResponseInput, ResponseOutputItem, Tool } from 'openai/resources/r
 import WebSocket from 'ws';
 import { loadAiConfig, type AiConfig } from './config.js';
 import { PROMPTS } from './prompts.js';
+import { CHAT_CHOICES, type ChatDecision, type ChatDecisionInput } from './chat-decision.js';
 
 export type {
   ResponseInput,
@@ -45,6 +46,7 @@ export interface SpeechDecisionInput {
   previousContext?: string;
 }
 export interface AiProvider {
+  decideChat(input: ChatDecisionInput, signal?: AbortSignal): Promise<ChatDecision>;
   decideSpeech(input: SpeechDecisionInput, signal?: AbortSignal): Promise<SpeechDecision>;
 
   structured<T>(
@@ -186,6 +188,58 @@ export class OpenAIProvider implements AiProvider {
       return { choice: answer.choice as SpeechDecision['choice'], confidence: answer.confidence };
     } catch {
       return uncertain;
+    }
+  }
+
+  async decideChat(input: ChatDecisionInput, signal?: AbortSignal): Promise<ChatDecision> {
+    const fallback: ChatDecision = { choice: 'clarify_intent', confidence: 0 };
+    try {
+      const response = await this.fetch('https://api.openai.com/v1/decisions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(this.config.chatDecisionTimeoutMs)])
+          : AbortSignal.timeout(this.config.chatDecisionTimeoutMs),
+        body: JSON.stringify({
+          model: this.config.decisionModel,
+          input: JSON.stringify(input),
+          questions: [
+            {
+              type: 'choice',
+              name: 'chat_action',
+              instructions: PROMPTS.chatDecision,
+              choices: CHAT_CHOICES.filter(({ value }) => input.allowedChoices.includes(value)),
+            },
+          ],
+        }),
+      });
+      this.onAudit({
+        capability: 'decision',
+        model: this.config.decisionModel,
+        requestId: response.headers.get('x-request-id'),
+      });
+      if (!response.ok) return fallback;
+      const body = (await response.json()) as { answers?: unknown[] };
+      if (!Array.isArray(body.answers) || body.answers.length !== 1) return fallback;
+      const answer = body.answers[0] as Record<string, unknown> | null;
+      if (
+        !answer ||
+        answer.type !== 'choice' ||
+        answer.name !== 'chat_action' ||
+        !input.allowedChoices.includes(answer.choice as ChatDecision['choice']) ||
+        !CHAT_CHOICES.some(({ value }) => value === answer.choice) ||
+        typeof answer.confidence !== 'number' ||
+        !Number.isFinite(answer.confidence) ||
+        answer.confidence < 0 ||
+        answer.confidence > 1
+      )
+        return fallback;
+      return { choice: answer.choice as ChatDecision['choice'], confidence: answer.confidence };
+    } catch {
+      return fallback;
     }
   }
 

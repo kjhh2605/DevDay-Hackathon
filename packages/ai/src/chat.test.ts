@@ -6,7 +6,9 @@ import type {
   ResponseInput,
   ResponseOutputItem,
 } from 'openai/resources/responses/responses';
+import type { ChatDecision } from './chat-decision.js';
 import type { AiProvider } from './provider.js';
+import { MockAiProvider } from './mock-provider.js';
 import { runChat } from './chat.js';
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -143,12 +145,20 @@ function setup(overrides: Partial<ChatExecutionContext> = {}) {
     },
   };
   const provider = {
+    decideChat: vi.fn(
+      async (_input: import('./chat-decision.js').ChatDecisionInput): Promise<ChatDecision> => ({
+        choice: 'general_chat',
+        confidence: 1,
+      }),
+    ),
     respond: vi.fn(async (_input: ResponseInput, _tools: unknown) => response()),
-    structured: vi.fn(async () => ({
-      expression: 'keep going',
-      meaning: '계속하다',
-      example: 'Keep going.',
-    })),
+    structured: vi.fn(
+      async (..._args: unknown[]): Promise<unknown> => ({
+        expression: 'keep going',
+        meaning: '계속하다',
+        example: 'Keep going.',
+      }),
+    ),
   };
   const ports = services as unknown as ApplicationPorts;
   const run = () => runChat(id(99), ports, provider as unknown as AiProvider);
@@ -168,298 +178,236 @@ function setup(overrides: Partial<ChatExecutionContext> = {}) {
   return { context, snapshot, services, provider, run, resultInputs };
 }
 
-describe('private chat tools', () => {
-  it('saves word then expression serially, preserves reasoning, and records only persisted IDs', async () => {
-    const test = setup();
-    const reasoning = {
-      type: 'reasoning' as const,
-      id: 'reasoning-id',
-      summary: [],
-      encrypted_content: 'encrypted-reasoning',
-    };
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        reasoning,
-        call('explain_word', { word: 'resilient', context: null }),
-        call('learn_expression', { text: '포기하지 않다', context: null }),
-      ]),
-    );
-    const order: string[] = [];
-    test.provider.structured.mockImplementation(async () => {
-      order.push('generate');
-      return { expression: 'keep going', meaning: '계속하다', example: 'Keep going.' };
-    });
-    test.services.learning.saveFromChat.mockImplementation(async (_actor, input) => {
-      order.push('save');
-      return {
-        id: id(30 + input.toolOrdinal),
-        ownerUserId: actor.userId,
-        kind: input.kind,
-        ...input,
-        source: 'chat',
-        sourceKey: `chat:${input.messageId}:${input.toolOrdinal}`,
-        sourceStudyId: id(2),
-        sourceUtteranceId: null,
-        createdAt: stamp,
-      };
-    });
-    await test.run();
-    expect(order).toEqual(['generate', 'save', 'generate', 'save']);
-    expect(test.provider.respond.mock.calls[1]![0]).toContainEqual(reasoning);
-    expect(test.services.learning.saveFromChat).toHaveBeenNthCalledWith(
-      1,
-      actor,
-      expect.objectContaining({ studyId: id(2), messageId: id(3), toolOrdinal: 1, kind: 'word' }),
-    );
-    expect(test.services.learning.saveFromChat).toHaveBeenNthCalledWith(
-      2,
-      actor,
-      expect.objectContaining({ toolOrdinal: 2, kind: 'expression' }),
-    );
-    expect(test.services.sharing.createProposal).toHaveBeenCalledExactlyOnceWith(actor, {
-      studyId: id(2),
-      learningItemId: id(32),
-    });
-    expect(test.services.chat.complete).toHaveBeenCalledWith(
-      id(3),
-      expect.objectContaining({ learningItemIds: [id(31), id(32)], shareProposalId: id(20) }),
-    );
-    expect(test.provider.respond.mock.calls[0]![1]).toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: 'explain_word', strict: true })]),
-    );
-  });
+function select(
+  test: ReturnType<typeof setup>,
+  choice: ChatDecision['choice'],
+  args: unknown = {},
+) {
+  test.provider.decideChat.mockResolvedValue({ choice, confidence: 1 });
+  test.provider.structured.mockResolvedValueOnce({ arguments: args });
+}
 
-  it('does not create a sharing proposal for a word', async () => {
-    const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([call('explain_word', { word: 'resilient', context: null })]),
-    );
-    await test.run();
-    expect(test.services.learning.saveFromChat).toHaveBeenCalledOnce();
-    expect(test.services.sharing.createProposal).not.toHaveBeenCalled();
-  });
-
+describe('Decision routed chat', () => {
   it.each([
-    ['start_study', 'study.start', null],
-    ['advance_topic', 'topic.advance', id(4)],
-    ['close_topic', 'topic.close', id(4)],
-    ['finish_study', 'study.finish', id(4)],
-  ] as const)('maps %s to its reserved domain command', async (tool, command, expectedTopicId) => {
-    const test = setup({ expectedTopicId });
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call(tool, tool === 'start_study' || tool === 'advance_topic' ? { focusUserId: null } : {}),
-      ]),
-    );
+    ['start_study', 'study.start', null, 'waiting', null],
+    ['advance_topic', 'topic.advance', id(4), 'active', 'review'],
+    ['close_topic', 'topic.close', id(4), 'active', 'talking'],
+    ['finish_study', 'study.finish', id(4), 'active', 'review'],
+  ] as const)(
+    'executes selected %s exactly once with reserved versions',
+    async (tool, command, topicId, status, state) => {
+      const test = setup({ expectedTopicId: topicId });
+      test.snapshot.study.status = status;
+      test.snapshot.topic = state ? { ...test.snapshot.topic!, state } : null;
+      select(
+        test,
+        tool,
+        tool === 'start_study' || tool === 'advance_topic' ? { focusUserId: null } : {},
+      );
+      await test.run();
+      expect(test.services.studyCommands.execute).toHaveBeenCalledExactlyOnceWith(actor, {
+        studyId: id(2),
+        command: expect.objectContaining({
+          type: command,
+          expectedTopicId: topicId,
+          expectedTransitionVersion: 7,
+          commandId: expect.any(String),
+        }),
+      });
+      expect(test.provider.respond).toHaveBeenCalledOnce();
+      expect(test.provider.respond.mock.calls[0]![1]).toEqual([]);
+    },
+  );
+
+  it.each(['explain_word', 'learn_expression'] as const)(
+    'generates and privately saves %s',
+    async (choice) => {
+      const test = setup();
+      select(
+        test,
+        choice,
+        choice === 'explain_word'
+          ? { word: 'queue', context: null }
+          : { text: '계속하다', context: null },
+      );
+      await test.run();
+      expect(test.services.learning.saveFromChat).toHaveBeenCalledExactlyOnceWith(
+        actor,
+        expect.objectContaining({
+          kind: choice === 'explain_word' ? 'word' : 'expression',
+          messageId: id(3),
+          toolOrdinal: 1,
+        }),
+      );
+      expect(test.services.sharing.createProposal).toHaveBeenCalledTimes(
+        choice === 'explain_word' ? 0 : 1,
+      );
+      expect(test.services.chat.complete).toHaveBeenCalledWith(
+        id(3),
+        expect.objectContaining({ learningItemIds: [id(31)] }),
+      );
+    },
+  );
+
+  it('reads shared state without mutations', async () => {
+    const test = setup();
+    select(test, 'get_study_context');
     await test.run();
-    expect(test.services.studyCommands.execute).toHaveBeenCalledExactlyOnceWith(actor, {
-      studyId: id(2),
-      command: expect.objectContaining({
-        type: command,
-        expectedTopicId,
-        expectedTransitionVersion: 7,
-        commandId: expect.stringMatching(/^[\da-f-]{36}$/),
-      }),
-    });
-    expect(test.services.chat.complete).toHaveBeenCalledWith(
-      id(3),
-      expect.objectContaining({
-        commandResults: [expect.objectContaining({ outcome: 'applied' })],
-      }),
-    );
+    expect(test.services.studies.snapshot).toHaveBeenCalledTimes(2);
+    expect(test.services.studyCommands.execute).not.toHaveBeenCalled();
   });
 
-  it('keeps the reserved target after state reads and multiple commands', async () => {
+  it('filters learning records to the authenticated owner', async () => {
     const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('get_study_context'),
-        call('advance_topic', { focusUserId: null }),
-        call('finish_study'),
-      ]),
-    );
-    test.snapshot.study.currentTopicId = id(44);
-    test.snapshot.study.transitionVersion = 100;
-    await test.run();
-    for (const [_actor, input] of test.services.studyCommands.execute.mock.calls)
-      expect(input.command).toMatchObject({ expectedTopicId: id(4), expectedTransitionVersion: 7 });
-  });
-
-  it('queries only the authenticated user and requests feedback at the latest revision', async () => {
-    const test = setup();
+    select(test, 'list_my_learning', { query: 'queue' });
     test.services.learning.list.mockResolvedValue([
       { id: id(70), ownerUserId: actor.userId },
       { id: id(71), ownerUserId: id(9) },
     ]);
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('list_my_learning', { query: 'queue' }),
-        call('request_sentence_feedback', { utteranceId: id(50) }),
-      ]),
-    );
     await test.run();
     expect(test.services.learning.list).toHaveBeenCalledExactlyOnceWith(actor, 'queue');
+    expect(JSON.stringify(test.resultInputs())).toContain(id(70));
+    expect(JSON.stringify(test.resultInputs())).not.toContain(id(71));
+  });
+
+  it('requests feedback at the latest revision', async () => {
+    const test = setup();
+    select(test, 'request_sentence_feedback', { utteranceId: id(50) });
+    await test.run();
     expect(test.services.feedback.start).toHaveBeenCalledExactlyOnceWith(
       actor,
       id(50),
       12,
       expect.any(String),
     );
-    expect(JSON.stringify(test.resultInputs())).toContain(id(70));
-    expect(JSON.stringify(test.resultInputs())).not.toContain(id(71));
   });
 
-  it('rejects another topic sentence without starting feedback', async () => {
+  it('rejects another topic sentence', async () => {
     const test = setup();
+    select(test, 'request_sentence_feedback', { utteranceId: id(50) });
     test.services.feedback.getUtterance.mockResolvedValue({
       id: id(50),
       studyId: id(2),
       topicId: id(88),
       correctionRevision: 12,
     });
-    test.provider.respond.mockResolvedValueOnce(
-      response([call('request_sentence_feedback', { utteranceId: id(50) })]),
-    );
     await test.run();
     expect(test.services.feedback.start).not.toHaveBeenCalled();
-    expect(test.resultInputs()).toContainEqual(
-      expect.objectContaining({
-        ok: false,
-        error: expect.objectContaining({ code: 'STALE_TOPIC' }),
-      }),
-    );
+    expect(JSON.stringify(test.resultInputs())).toContain('STALE_TOPIC');
   });
 
-  it('strictly rejects injected actor args and unknown consent tools', async () => {
-    const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('explain_word', { word: 'queue', context: null, userId: id(9) }),
-        call('decide_share', { accepted: true }),
-      ]),
-    );
-    await test.run();
-    expect(test.services.learning.saveFromChat).not.toHaveBeenCalled();
-    expect(test.services.sharing.decide).not.toHaveBeenCalled();
-    expect(
-      test.resultInputs().every((result) => !result.ok && result.error?.code === 'INVALID_INPUT'),
-    ).toBe(true);
-  });
+  it.each([0.84, NaN, Infinity, 1.01])(
+    'does not execute a low or malformed confidence %s',
+    async (confidence) => {
+      const test = setup();
+      test.provider.decideChat.mockResolvedValue({ choice: 'finish_study', confidence });
+      await test.run();
+      expect(test.services.studyCommands.execute).not.toHaveBeenCalled();
+      expect(test.provider.structured).not.toHaveBeenCalled();
+      expect(test.provider.respond).not.toHaveBeenCalled();
+    },
+  );
 
-  it('asks for a handle when a participant name is ambiguous', async () => {
-    const test = setup({ text: '민수 경험으로 다음 주제 만들어줘' });
-    test.snapshot.study.members.push(
-      { userId: id(8), displayName: '민수', handle: 'm1', state: 'joined' },
-      { userId: id(9), displayName: '민수', handle: 'm2', state: 'joined' },
-    );
-    test.provider.respond.mockResolvedValueOnce(
-      response([call('advance_topic', { focusUserId: id(8) })]),
-    );
+  it('does not substitute topic closing for unavailable next topic', async () => {
+    const test = setup({ text: '다음 주제로 넘어가자' });
+    test.snapshot.topic!.state = 'talking';
+    test.provider.decideChat.mockResolvedValue({ choice: 'advance_topic', confidence: 1 });
     await test.run();
+    expect(test.provider.decideChat.mock.calls[0]).toBeDefined();
     expect(test.services.studyCommands.execute).not.toHaveBeenCalled();
-    expect(JSON.stringify(test.resultInputs())).toContain('AMBIGUOUS_PARTICIPANT');
-    expect(JSON.stringify(test.resultInputs())).toContain('m1');
-    expect(JSON.stringify(test.resultInputs())).toContain('m2');
+    expect(test.services.chat.complete).toHaveBeenCalledWith(
+      id(3),
+      expect.objectContaining({ text: expect.stringContaining('피드백을 검토') }),
+    );
   });
 
-  it('rejects a nonmember focus and permits an explicitly chosen handle', async () => {
-    const test = setup({ text: '@m1 경험으로 다음 주제 만들어줘' });
-    test.snapshot.study.members.push(
-      { userId: id(8), displayName: '민수', handle: 'm1', state: 'joined' },
-      { userId: id(9), displayName: '민수', handle: 'm2', state: 'joined' },
-    );
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('advance_topic', { focusUserId: id(88) }, 'bad'),
-        call('advance_topic', { focusUserId: id(8) }, 'good'),
-      ]),
-    );
+  it('asks about ambiguous or compound requests without executing', async () => {
+    const test = setup({ text: '단어 저장하고 스터디 종료해줘' });
+    test.provider.decideChat.mockResolvedValue({ choice: 'clarify_intent', confidence: 1 });
     await test.run();
-    expect(test.services.studyCommands.execute).toHaveBeenCalledOnce();
-    expect(test.services.studyCommands.execute.mock.calls[0]![1].command.focusUserId).toBe(id(8));
+    expect(test.provider.structured).not.toHaveBeenCalled();
+    expect(test.services.studyCommands.execute).not.toHaveBeenCalled();
+    expect(test.services.learning.saveFromChat).not.toHaveBeenCalled();
   });
 
-  it('canonicalizes mutation args and does not retry failed or successful mutations', async () => {
+  it('asks when arguments are unresolved', async () => {
     const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('explain_word', { word: 'queue', context: null }, 'a'),
-        {
-          ...call('explain_word'),
-          call_id: 'b',
-          arguments: '{ "context": null, "word": "queue" }',
-        },
-        call('finish_study', {}, 'c'),
-        call('finish_study', {}, 'd'),
-      ]),
-    );
+    select(test, 'request_sentence_feedback', null);
+    await test.run();
+    expect(test.services.feedback.start).not.toHaveBeenCalled();
+    expect(test.provider.respond).not.toHaveBeenCalled();
+  });
+
+  it('rejects injected actor arguments', async () => {
+    const test = setup();
+    select(test, 'explain_word', { word: 'queue', context: null, userId: id(9) });
+    await expect(test.run()).rejects.toThrow();
+    expect(test.services.learning.saveFromChat).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])(
+    'validates duplicate participant names (explicit handle: %s)',
+    async (explicit) => {
+      const test = setup({ text: explicit ? '@m1 경험으로 다음 주제' : '민수 경험으로 다음 주제' });
+      test.snapshot.study.members.push(
+        { userId: id(8), displayName: '민수', handle: 'm1', state: 'joined' },
+        { userId: id(9), displayName: '민수', handle: 'm2', state: 'joined' },
+      );
+      select(test, 'advance_topic', { focusUserId: id(8) });
+      await test.run();
+      expect(test.services.studyCommands.execute).toHaveBeenCalledTimes(explicit ? 1 : 0);
+      if (!explicit) expect(JSON.stringify(test.resultInputs())).toContain('AMBIGUOUS_PARTICIPANT');
+    },
+  );
+
+  it('does not retry a failed command or expose its exception', async () => {
+    const test = setup();
+    select(test, 'finish_study');
     test.services.studyCommands.execute.mockRejectedValue(new Error('secret SQL password'));
     await test.run();
-    expect(test.services.learning.saveFromChat).toHaveBeenCalledOnce();
     expect(test.services.studyCommands.execute).toHaveBeenCalledOnce();
     expect(JSON.stringify(test.resultInputs())).not.toContain('secret SQL');
   });
 
-  it('prevents a reused call id from changing args, including an id first seen on a cache hit', async () => {
+  it('cannot execute a tool emitted by the final response', async () => {
     const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('explain_word', { word: 'queue', context: null }, 'a'),
-        call('explain_word', { word: 'queue', context: null }, 'b'),
-        call('explain_word', { word: 'other', context: null }, 'b'),
-      ]),
-    );
-    await test.run();
-    expect(test.services.learning.saveFromChat).toHaveBeenCalledOnce();
-    expect(test.resultInputs()).toContainEqual(
-      expect.objectContaining({ error: expect.objectContaining({ code: 'INVALID_INPUT' }) }),
-    );
-  });
-
-  it('refreshes successful reads with a new call id after a write', async () => {
-    const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([
-        call('list_my_learning', { query: null }, 'a'),
-        call('explain_word', { word: 'queue', context: null }),
-        call('list_my_learning', { query: null }, 'b'),
-      ]),
-    );
-    await test.run();
-    expect(test.services.learning.list).toHaveBeenCalledTimes(2);
-  });
-
-  it('stops after six responses and retains successful saves in a failed message', async () => {
-    const test = setup();
-    test.provider.respond.mockImplementation(async () =>
-      response([call('explain_word', { word: 'queue', context: null })]),
-    );
+    select(test, 'explain_word', { word: 'queue', context: null });
+    test.provider.respond.mockResolvedValue(response([call('finish_study')]));
     await expect(test.run()).rejects.toThrow('AI_FAILED');
-    expect(test.provider.respond).toHaveBeenCalledTimes(6);
-    expect(test.services.learning.saveFromChat).toHaveBeenCalledOnce();
+    expect(test.services.studyCommands.execute).not.toHaveBeenCalled();
     expect(test.services.chat.fail).toHaveBeenCalledWith(
       id(3),
-      expect.objectContaining({ code: 'AI_FAILED' }),
+      expect.anything(),
       expect.objectContaining({ learningItemIds: [id(31)] }),
     );
-    expect(test.services.chat.complete).not.toHaveBeenCalled();
   });
 
-  it('does not save late model output after the job becomes terminal', async () => {
-    const test = setup();
-    test.provider.respond.mockResolvedValueOnce(
-      response([call('explain_word', { word: 'queue', context: null })]),
-    );
-    test.provider.structured.mockImplementation(async () => {
-      test.services.jobs.isRunning.mockResolvedValue(false);
-      return { expression: 'queue', meaning: '줄', example: 'Join the queue.' };
-    });
-    await expect(test.run()).rejects.toThrow('PROCESS_INTERRUPTED');
-    expect(test.services.learning.saveFromChat).not.toHaveBeenCalled();
-    expect(test.services.chat.complete).not.toHaveBeenCalled();
-  });
+  it.each(['decision', 'arguments', 'learning'])(
+    'discards late %s output after job termination',
+    async (stage) => {
+      const test = setup();
+      select(test, 'explain_word', { word: 'queue', context: null });
+      if (stage === 'decision')
+        test.provider.decideChat.mockImplementation(async () => {
+          test.services.jobs.isRunning.mockResolvedValue(false);
+          return { choice: 'explain_word', confidence: 1 };
+        });
+      else {
+        if (stage === 'arguments') test.provider.structured.mockReset();
+        test.provider.structured.mockImplementation(async () => {
+          test.services.jobs.isRunning.mockResolvedValue(false);
+          return stage === 'arguments'
+            ? { arguments: { word: 'queue', context: null } }
+            : { expression: 'queue', meaning: '줄', example: 'Queue.' };
+        });
+      }
+      await expect(test.run()).rejects.toThrow('PROCESS_INTERRUPTED');
+      expect(test.services.learning.saveFromChat).not.toHaveBeenCalled();
+      expect(test.services.chat.complete).not.toHaveBeenCalled();
+    },
+  );
 
-  it('keeps foreign private history and raw transcript out of model inputs', async () => {
+  it('keeps foreign history and raw transcripts out of all model inputs', async () => {
     const test = setup({
       history: [
         message({ ownerUserId: id(9), text: 'FOREIGN_PRIVATE' }),
@@ -469,65 +417,89 @@ describe('private chat tools', () => {
     });
     test.snapshot.segments = [{ rawText: 'UNTRUSTED_RAW' }] as StudySnapshot['segments'];
     await test.run();
-    const input = JSON.stringify(test.provider.respond.mock.calls[0]![0]);
+    const input = JSON.stringify([
+      test.provider.respond.mock.calls,
+      test.provider.decideChat.mock.calls,
+    ]);
     expect(input).toContain('OWN_CONTEXT');
     expect(input).not.toMatch(/FOREIGN_PRIVATE|OTHER_STUDY_PRIVATE|UNTRUSTED_RAW/);
+    expect(test.provider.structured).not.toHaveBeenCalled();
   });
 });
 
-describe('server-side natural language sharing decisions', () => {
+describe('Decision sharing routes', () => {
   it.each([
-    ['yes', true],
-    ['네', true],
-    ['no', false],
-    ['아니요', false],
+    ['응, 그 표현 공유해줘', true],
+    ['나만 볼게', false],
   ] as const)(
-    'accepts direct %s only for the immediately preceding sole pending proposal',
+    'handles %s against the sole immediately preceding proposal',
     async (text, accepted) => {
       const test = setup({ text, history: [message({ shareProposalId: id(20) })] });
       test.services.sharing.listPending.mockResolvedValue([proposal()]);
+      test.provider.decideChat.mockResolvedValue({
+        choice: accepted ? 'accept_expression_share' : 'decline_expression_share',
+        confidence: 1,
+      });
       await test.run();
       expect(test.services.sharing.decide).toHaveBeenCalledExactlyOnceWith(actor, {
         proposalId: id(20),
         accepted,
         commandId: expect.any(String),
       });
+      expect(test.provider.structured).not.toHaveBeenCalled();
       expect(test.provider.respond).not.toHaveBeenCalled();
     },
   );
 
-  it.each(['multiple', 'unrelated-latest', 'late-proposal', 'foreign-proposal'] as const)(
-    'does not infer consent for %s',
-    async (scenario) => {
-      const test = setup({ text: 'yes', history: [message({ shareProposalId: id(20) })] });
-      test.services.sharing.listPending.mockResolvedValue([proposal()]);
-      if (scenario === 'multiple')
-        test.services.sharing.listPending.mockResolvedValue([proposal(), proposal({ id: id(21) })]);
-      if (scenario === 'unrelated-latest')
-        test.context.history.push(
-          message({ id: id(11), text: '다른 답변', shareProposalId: null }),
-        );
-      if (scenario === 'late-proposal')
-        test.services.sharing.listPending.mockResolvedValue([proposal({ id: id(21) })]);
-      if (scenario === 'foreign-proposal')
-        test.services.sharing.listPending.mockResolvedValue([proposal({ ownerUserId: id(9) })]);
-      await test.run();
-      expect(test.services.sharing.decide).not.toHaveBeenCalled();
-      expect(test.services.chat.complete).toHaveBeenCalledWith(
-        id(3),
-        expect.objectContaining({ text: expect.stringContaining('표현') }),
-      );
-    },
-  );
+  it.each([
+    'multiple',
+    'unrelated-latest',
+    'late-proposal',
+    'foreign-proposal',
+    'other-study',
+    'already-decided',
+  ] as const)('blocks consent for %s even if the model selects acceptance', async (scenario) => {
+    const test = setup({ text: 'yes', history: [message({ shareProposalId: id(20) })] });
+    test.services.sharing.listPending.mockResolvedValue([proposal()]);
+    if (scenario === 'multiple')
+      test.services.sharing.listPending.mockResolvedValue([proposal(), proposal({ id: id(21) })]);
+    if (scenario === 'unrelated-latest')
+      test.context.history.push(message({ id: id(11), shareProposalId: null }));
+    if (scenario === 'late-proposal')
+      test.services.sharing.listPending.mockResolvedValue([proposal({ id: id(21) })]);
+    if (scenario === 'foreign-proposal')
+      test.services.sharing.listPending.mockResolvedValue([proposal({ ownerUserId: id(9) })]);
+    if (scenario === 'other-study')
+      test.services.sharing.listPending.mockResolvedValue([proposal({ studyId: id(8) })]);
+    if (scenario === 'already-decided')
+      test.services.sharing.listPending.mockResolvedValue([proposal({ status: 'accepted' })]);
+    test.provider.decideChat.mockResolvedValue({
+      choice: 'accept_expression_share',
+      confidence: 1,
+    });
+    await test.run();
+    expect(test.services.sharing.decide).not.toHaveBeenCalled();
+  });
+});
 
-  it.each(['yes, but do not share', '"yes"라는 뜻?', 'yes no'])(
-    'does not treat %s as consent',
-    async (text) => {
-      const test = setup({ text, history: [message({ shareProposalId: id(20) })] });
-      test.services.sharing.listPending.mockResolvedValue([proposal()]);
-      await test.run();
-      expect(test.services.sharing.decide).not.toHaveBeenCalled();
-      expect(test.provider.respond).toHaveBeenCalledOnce();
-    },
-  );
+describe('development mock through the full chat pipeline', () => {
+  it('saves an expression, answers from the result, then shares via Decisions', async () => {
+    const test = setup({ text: '함께 해냈어요 영어 표현 알려줘' });
+    const provider = new MockAiProvider();
+    await runChat(id(99), test.services as unknown as ApplicationPorts, provider);
+    expect(test.services.learning.saveFromChat).toHaveBeenCalledOnce();
+    expect(test.services.chat.complete).toHaveBeenLastCalledWith(
+      id(3),
+      expect.objectContaining({ text: expect.stringContaining('공유할까요?') }),
+    );
+    test.context.text = '응, 그 표현 공유해줘';
+    test.context.messageId = id(6);
+    test.context.history = [message({ shareProposalId: id(20) })];
+    test.services.sharing.listPending.mockResolvedValue([proposal()]);
+    await runChat(id(98), test.services as unknown as ApplicationPorts, provider);
+    expect(test.services.sharing.decide).toHaveBeenCalledExactlyOnceWith(
+      actor,
+      expect.objectContaining({ accepted: true, proposalId: id(20) }),
+    );
+  });
 });

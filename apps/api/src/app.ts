@@ -44,6 +44,7 @@ export async function createApp(options: AppOptions = {}) {
         OPENAI_API_KEY: config.openai.apiKey,
         OPENAI_TEXT_MODEL: config.openai.textModel,
         OPENAI_DECISION_MODEL: config.openai.decisionModel,
+        CHAT_DECISION_TIMEOUT_MS: config.openai.chatDecisionTimeoutMs,
         SPEECH_DECISION_TIMEOUT_MS: config.openai.decisionTimeoutMs,
         SPEECH_DECISION_CONFIDENCE: config.openai.decisionConfidence,
         OPENAI_LIVE_TRANSCRIBE_MODEL: config.openai.liveTranscribeModel,

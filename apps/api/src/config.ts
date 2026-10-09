@@ -26,6 +26,7 @@ export interface ApiConfig {
     textModel: string;
     decisionModel: string;
     decisionTimeoutMs: string;
+    chatDecisionTimeoutMs: string;
     decisionConfidence: string;
     liveTranscribeModel: string;
     correctionModel: string;
@@ -169,6 +170,7 @@ export function parseConfig(env: Environment, options: { workspaceRoot?: string 
       textModel: required('OPENAI_TEXT_MODEL', 'gpt-6-luna'),
       decisionModel: required('OPENAI_DECISION_MODEL', 'gpt-6-luna'),
       decisionTimeoutMs: required('SPEECH_DECISION_TIMEOUT_MS', '2000'),
+      chatDecisionTimeoutMs: required('CHAT_DECISION_TIMEOUT_MS', '10000'),
       decisionConfidence: required('SPEECH_DECISION_CONFIDENCE', '0.85'),
       liveTranscribeModel: required('OPENAI_LIVE_TRANSCRIBE_MODEL', 'gpt-live-transcribe'),
       correctionModel: required('OPENAI_CORRECTION_MODEL', 'gpt-transcribe'),
@@ -183,6 +185,7 @@ export function parseConfig(env: Environment, options: { workspaceRoot?: string 
     tls: { ...(certPath ? { certPath } : {}), ...(keyPath ? { keyPath } : {}) },
   };
   for (const [key, text, min, max] of [
+    ['CHAT_DECISION_TIMEOUT_MS', config.openai.chatDecisionTimeoutMs, 1, 60000],
     ['SPEECH_DECISION_TIMEOUT_MS', config.openai.decisionTimeoutMs, 1, 10000],
     ['SPEECH_DECISION_CONFIDENCE', config.openai.decisionConfidence, 0, 1],
   ] as const)

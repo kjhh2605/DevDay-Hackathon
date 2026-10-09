@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { ChatDecision, ChatDecisionInput } from './chat-decision.js';
 import type { TopicContext } from '@devday/application-ports';
 import type { ResponseInput, ResponseOutputItem, Tool } from 'openai/resources/responses/responses';
 import {
@@ -44,6 +45,35 @@ function message(outputText: string): { output: ResponseOutputItem[]; outputText
   };
 }
 
+function mockAction(request: string) {
+  let name: string | null = null;
+  let args: Record<string, unknown> = {};
+  if (/학습.*(?:기록|목록)|my\s*learning/iu.test(request)) {
+    name = 'list_my_learning';
+    args = { query: null };
+  } else if (/피드백|feedback/iu.test(request)) {
+    name = 'request_sentence_feedback';
+    args = { utteranceId: request.match(/[0-9a-f]{8}-[0-9a-f-]{27}/iu)?.[0] ?? '' };
+  } else if (/단어|word|뜻/iu.test(request) && !/표현|expression/iu.test(request)) {
+    name = 'explain_word';
+    args = { word: request.match(/[a-z][a-z'-]*/iu)?.[0] ?? request, context: null };
+  } else if (/표현|expression/iu.test(request)) {
+    name = 'learn_expression';
+    args = { text: request, context: null };
+  } else if (/다음\s*주제|next\s*topic/iu.test(request)) {
+    name = 'advance_topic';
+    args = { focusUserId: null };
+  } else if (/주제.*(?:종료|마감|끝)|(?:close|end)\s*(?:the\s*)?topic/iu.test(request))
+    name = 'close_topic';
+  else if (/스터디.*(?:종료|끝)|(?:finish|end)\s*(?:the\s*)?study/iu.test(request))
+    name = 'finish_study';
+  else if (/시작|start.*study/iu.test(request)) {
+    name = 'start_study';
+    args = { focusUserId: null };
+  } else if (/상태|참여자|context|status/iu.test(request)) name = 'get_study_context';
+  return { name, args };
+}
+
 /** Explicit development fixture. No method calls an AI service or provides real-AI acceptance evidence. */
 export class MockAiProvider implements AiProvider {
   private readonly transcript: string;
@@ -55,6 +85,20 @@ export class MockAiProvider implements AiProvider {
     return { choice: 'complete' as const, confidence: 1 };
   }
 
+  async decideChat(input: ChatDecisionInput): Promise<ChatDecision> {
+    const request = input.text.trim();
+    let choice: ChatDecision['choice'];
+    if (/^(yes|네|예|응|응, 그 표현 공유해줘|공유해줘)$/iu.test(request))
+      choice = 'accept_expression_share';
+    else if (/^(no|아니요|아니오|나만 볼게|공유하지 마)$/iu.test(request))
+      choice = 'decline_expression_share';
+    else choice = (mockAction(request).name as ChatDecision['choice']) ?? 'general_chat';
+    return {
+      choice: input.allowedChoices.includes(choice) ? choice : 'clarify_intent',
+      confidence: 1,
+    };
+  }
+
   async structured<T>(
     name: string,
     _schema: Record<string, unknown>,
@@ -64,6 +108,17 @@ export class MockAiProvider implements AiProvider {
     const source = record(input);
     let result: unknown;
     switch (name) {
+      case 'chat_arguments': {
+        const action = mockAction(text(source.text));
+        result = {
+          arguments:
+            action.name === source.action &&
+            (action.name !== 'request_sentence_feedback' || action.args.utteranceId)
+              ? action.args
+              : null,
+        };
+        break;
+      }
       case 'experience_analysis': {
         const originalText = text(source.originalText);
         if (!originalText.trim())
@@ -222,7 +277,7 @@ export class MockAiProvider implements AiProvider {
     input: ResponseInput,
     tools: Tool[],
   ): Promise<{ output: ResponseOutputItem[]; outputText: string }> {
-    const latest = input.at(-1);
+    const latest = input.findLast((item) => item.type === 'function_call_output');
     if (latest?.type === 'function_call_output') {
       const result = record(JSON.parse(text(latest.output)));
       if (!result.ok)
@@ -246,28 +301,7 @@ export class MockAiProvider implements AiProvider {
     }
     const lastUser = input.findLast((item) => 'role' in item && item.role === 'user');
     const request = lastUser && 'content' in lastUser ? text(lastUser.content) : '';
-    let name: string | null = null;
-    let args: Record<string, unknown> = {};
-    if (/단어|word|뜻/iu.test(request) && !/표현|expression/iu.test(request)) {
-      name = 'explain_word';
-      args = { word: request.match(/[a-z][a-z'-]*/iu)?.[0] ?? request, context: null };
-    } else if (/표현|expression/iu.test(request)) {
-      name = 'learn_expression';
-      args = { text: request, context: null };
-    } else if (/다음\s*주제|next\s*topic/iu.test(request)) {
-      name = 'advance_topic';
-      args = { focusUserId: null };
-    } else if (/주제.*(?:종료|마감|끝)|(?:close|end)\s*(?:the\s*)?topic/iu.test(request))
-      name = 'close_topic';
-    else if (/스터디.*(?:종료|끝)|(?:finish|end)\s*(?:the\s*)?study/iu.test(request))
-      name = 'finish_study';
-    else if (/시작|start.*study/iu.test(request)) {
-      name = 'start_study';
-      args = { focusUserId: null };
-    } else if (/학습.*(?:기록|목록)|my\s*learning/iu.test(request)) {
-      name = 'list_my_learning';
-      args = { query: null };
-    } else if (/상태|참여자|context|status/iu.test(request)) name = 'get_study_context';
+    const { name, args } = mockAction(request);
     if (!name || !tools.some((tool) => tool.type === 'function' && tool.name === name))
       return message('개발용 모의 응답입니다. 단어, 표현 또는 스터디 명령을 입력해 주세요.');
     return {
